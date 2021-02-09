@@ -1,4 +1,5 @@
 local meta = FindMetaTable("Player")
+local _Global_Teams = Global_Teams
 
 local SteamIDs = {}
 
@@ -20,7 +21,7 @@ end
 local function LoadUsers()
 	local txt = file.Read("nadmin/users.txt", "DATA")
 	if ( !txt ) then
-		MsgN( "Failed to load nadmin/users.txt!" )
+		MsgN( "nadmin/users.txt не обнаружен! Создаём..." )
 		file.Write("nadmin/users.txt")
 		return
 	end
@@ -39,14 +40,14 @@ hook.Add("PlayerAuthed", "PlayerAuthSpawn", function(ply)
 	local steamid = ply:SteamID()
 	if (game.SinglePlayer() or ply:IsListenServerHost()) then
 		ply:SetUserGroup("superadmin")
-		ply:SetTeam(Global_Teams["superadmin"].num)
+		ply:SetTeam(_Global_Teams["superadmin"].num)
 		return
 	end
 	if (SteamIDs[steamid] == nil) then
 		ply:SetUserGroup("user")
-		ply:SetTeam(Global_Teams["user"].num)
+		ply:SetTeam(_Global_Teams["user"].num)
 		return
 	end
 	ply:SetUserGroup(SteamIDs[steamid].group)
-	ply:SetTeam(Global_Teams[SteamIDs[steamid].group].num)
+	ply:SetTeam(_Global_Teams[SteamIDs[steamid].group].num)
 end)

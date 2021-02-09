@@ -1,3 +1,5 @@
+-- https://github.com/PAC3-Server/notagain/blob/master/lua/notagain/aowl/commands/physics.lua
+
 nAdmin.AddCommand("weldlag", false, function(ply, cmd, args)
 	if not nAdmin.GetAccess("weldlag", ply) then
 		return
@@ -13,24 +15,23 @@ nAdmin.AddCommand("weldlag", false, function(ply, cmd, args)
 			t[v] = true
 		end
 	end
-	local lags={}
+	local lags = {}
 	for ent in next, t do
 		local found
 		for lagger, group in next, lags do
-			if ent==lagger or group[ent] then
-				found=true
+			if ent == lagger or group[ent] then
+				found = true
 				break
 			end
 		end
 		if not found then
-			lags[ent]=constraint.GetAllConstrainedEntities(ent) or {}
+			lags[ent] = constraint.GetAllConstrainedEntities(ent) or {}
 		end
 	end
 	for _, cents in next, lags do
-		p(cents)
 		local count, lagc = 0, t[k] and 1 or 0
 		local owner
-		for k,v in next, cents do
+		for k, v in next, cents do
 			count = count + 1
 			if t[k] then
 				lagc = lagc + 1

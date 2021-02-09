@@ -13,6 +13,7 @@ nAdmin.SetTAndDesc("example", "user", "Тестовый текст.")
 ]]--
 
 local bans = bans or util.JSONToTable(file.Read("nadmin/bans.txt", "DATA"))
+local next = next
 nAdmin.BanList = bans
 
 local singleplayer = game.SinglePlayer()
@@ -36,7 +37,7 @@ function nAdmin.UpdateBans()
 end
 
 function nAdmin.AddBan(ply_, minutes, reason, o, banid_)
-	local ply_Kick = nAdmin.AltFindByNick(ply_)
+	local ply_Kick = nAdmin.FindByNick(ply_)
 	local reason_warn = ""
 	if banid_ then
 		goto zcont
@@ -45,7 +46,7 @@ function nAdmin.AddBan(ply_, minutes, reason, o, banid_)
 		nAdmin.Warn(o, "Игрока с таким именем нет на сервере!")
 		return
 	end
-	if ply_Kick == o or o:SteamID64() == ply_ then
+	if ply_Kick == o or o:SteamID() == ply_ then
 		nAdmin.Warn(o, "Вы не можете забанить самого себя!")
 		return
 	end
@@ -67,7 +68,7 @@ function nAdmin.AddBan(ply_, minutes, reason, o, banid_)
 	end
 	nAdmin.UpdateBans()
 	nAdmin.unbanUpdate()
-	nAdmin.PrintMessage({Color(0, 255, 0), tostring(ply) .. " был заблокирован с причиной: " .. bans[ply].reason .. "; на: " .. string.NiceTime(bans[ply].time - tonumber(os.time()))})
+	nAdmin.WarnAll(tostring(ply) .. " был заблокирован с причиной: " .. bans[ply].reason .. "; на: " .. string.NiceTime(bans[ply].time - tonumber(os.time())))
 end
 
 hook.Add("CheckPassword", "ban_System", function(id)
@@ -83,7 +84,9 @@ function nAdmin.unban(id)
 end
 
 function nAdmin.unbanUpdate()
-	timer.Create("nAdmin_unbanUpdate", 3600, 0, nAdmin.unbanUpdate)
+	if not timer.Exists("nAdmin_unbanUpdate") then
+		timer.Create("nAdmin_unbanUpdate", 3600, 0, nAdmin.unbanUpdate)
+	end
 	for id, data in next, bans do
 		if data.time ~= 0 then
 			if data.time - os.time() < 3600 then
@@ -178,7 +181,7 @@ nAdmin.AddCommand("unban", true, function(ply, cmd, args)
 		return
 	end
 	nAdmin.unban(args[1]:Trim())
-	nAdmin.PrintMessage({Color(0, 255, 0), tostring(ply) .. " разблокировал: " .. tostring(args[1])})
+	nAdmin.WarnAll(ply:Name().. " разблокировал: " .. tostring(args[1]))
 end)
 nAdmin.SetTAndDesc("unban", "moderator", "Разбанивает игрока. arg1 - SteamID игрока.")
 
@@ -205,14 +208,14 @@ nAdmin.AddCommand("kick", true, function(ply, cmd, args)
 		return
 	end
 	curtime = CurTime() + 10
-	local pl = nAdmin.AltFindByNick(args[1])
+	local pl = nAdmin.FindByNick(args[1])
 	local reason = args[2]
 	if reason then
-		nAdmin.Print(ply:Name() .. " кикнул: " .. pl:Name() .. "; с причиной: " .. reason)
+		nAdmin.WarnAll(ply:Name() .. " кикнул: " .. pl:Name() .. ", с причиной: " .. reason)
 		pl:Kick("Вас кикнул " .. ply:Name() .. "; с причиной: " .. reason)
 		return
 	end
-	nAdmin.Print(ply:Name() .. " кикнул: " .. pl:Name())
+	nAdmin.WarnAll(ply:Name() .. " кикнул: " .. pl:Name())
 	pl:Kick("Вы были кикнуты админом: " .. ply:Name() .. ".")
 end)
 nAdmin.SetTAndDesc("kick", "moderator", "Кикает игрока. arg1 - ник игрока.")
@@ -246,7 +249,6 @@ nAdmin.AddCommand("jail", true, function(ply, cmd, args)
 	end
 	nAdmin.PrintAndWarn(ply:Name() .. " засунул в гулаг " .. pl:Name() .. ".")
 	::skip::
-	p(pl:Name() .. " посажен в гулаг на " .. arg2 .. " секунд")
 	pl.InJail = true
 	pl:SetPos(vec)
 	timer.Create(tostring(pl) .. "nAdmin_ToJail", .2, 0, function()
@@ -371,7 +373,7 @@ nAdmin.AddCommand("gag", false, function(ply, cmd, args)
 	else
 		pl.Gagged = false
 	end
-	nAdmin.Print(ply:Name() .. " " .. (pl.Gagged and "запретил" or "разрешил") .. " говорить в ГЧ " .. pl:Name().. ".")
+	nAdmin.PrintAndWarn(ply:Name() .. " " .. (pl.Gagged and "запретил" or "разрешил") .. " говорить в ГЧ " .. pl:Name().. ".")
 end)
 nAdmin.SetTAndDesc("gag", "moderator", "Запретить/разрешить игроку говорить. arg1 - ник.")
 
@@ -396,7 +398,7 @@ nAdmin.AddCommand("goto", false, function(ply, cmd, args)
 		return
 	end
 	ply:SetPos(pl:EyePos() + Vector(pl:EyeAngles():Right()[1], 0, 0) * 150)
-	nAdmin.Print(ply:Name() .. " телепортировался к " .. pl:Name().. ".")
+	nAdmin.PrintAndWarn(ply:Name() .. " телепортировался к " .. pl:Name().. ".")
 end)
 nAdmin.SetTAndDesc("goto", "e2_coder", "Телепортироваться к игроку. arg1 - ник.")
 
@@ -414,7 +416,7 @@ nAdmin.AddCommand("bring", false, function(ply, cmd, args)
 		return
 	end
 	pl:SetPos(ply:EyePos() + Vector(ply:EyeAngles():Right()[1], 0, 0) * 150)
-	nAdmin.Print(ply:Name() .. " телепортировал к себе " .. pl:Name().. ".")
+	nAdmin.PrintAndWarn(ply:Name() .. " телепортировал к себе " .. pl:Name().. ".")
 end)
 nAdmin.SetTAndDesc("bring", "osobenniy2", "Телепортировать игрока к себе. arg1 - ник.")
 
@@ -436,7 +438,7 @@ nAdmin.AddCommand("mute", false, function(ply, cmd, args)
 	else
 		pl.Muted = false
 	end
-	nAdmin.Print(ply:Name() .. " " .. (pl.Gagged and "запретил" or "разрешил") .. " писать в чат " .. pl:Name().. ".")
+	nAdmin.PrintAndWarn(ply:Name() .. " " .. (pl.Gagged and "запретил" or "разрешил") .. " писать в чат " .. pl:Name().. ".")
 end)
 nAdmin.SetTAndDesc("mute", "osobenniy2", "Запретить/разрешить игроку писать в чат. arg1 - ник.")
 
@@ -475,7 +477,7 @@ nAdmin.AddCommand("mgag", false, function(ply, cmd, args)
 		pl.Muted = true
 		nAdmin.Print("Значения Gag и Mute различаются. Мучу и запрещаю игроку писать в чат!")
 	end
-	nAdmin.Print(ply:Name() .. " " .. (pl.Gagged and "запретил" or "разрешил") .. "  писать в чат и говорить в ГЧ " .. pl:Name().. ".")
+	nAdmin.PrintAndWarn(ply:Name() .. " " .. (pl.Gagged and "запретил" or "разрешил") .. "  писать в чат и говорить в ГЧ " .. pl:Name().. ".")
 end)
 nAdmin.SetTAndDesc("mgag", "admin", "Запретить/разрешить игроку писать в чат и говорить в ГЧ. arg1 - ник.")
 
@@ -508,6 +510,7 @@ nAdmin.AddCommand("banip", true, function(ply, cmd, args)
 	end
 	RunConsoleCommand("addip", m2, args[1]:Trim())
 	RunConsoleCommand("writeip")
+	nAdmin.Print(ply:Name() .. " забанил: " .. args[1]:Trim())
 end)
 nAdmin.SetTAndDesc("banip", "admin", "Банит IP адрес. arg1 - время, arg2 - IP.")
 
@@ -526,5 +529,6 @@ nAdmin.AddCommand("unbanip", true, function(ply, cmd, args)
 	curtime = CurTime() + 10
 	RunConsoleCommand("removeip", args[1]:Trim())
 	RunConsoleCommand("writeip")
+	nAdmin.Print(ply:Name() .. " разбанивает: " .. args[1]:Trim())
 end)
 nAdmin.SetTAndDesc("unbanip", "admin", "Разбанивает IP адрес. arg1 - IP.")

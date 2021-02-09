@@ -65,33 +65,6 @@ if SERVER then
 		return tbl
 	end
 
-	function nAdmin.SteamID(nick)
-		local players = player.GetAll()
-		local steamId64 = "0"
-		for i = 1, #players do
-			local v = players[i]
-			if string.match(v:Name(), nick) then
-				steamId64 = v:SteamID()
-				steamId64 = util.SteamIDTo64(steamId64)
-				break
-			end
-		end
-		return steamId64
-	end
-
-	function nAdmin.IsNick(str)
-		local players = player.GetAll()
-		local bool = false
-		for i = 1, #players do
-			local pl = players[i]
-			if string.match(pl:Name(), str) then
-				bool = true
-				break
-			end
-		end
-		return bool
-	end
-
 	function nAdmin.FirstAddCommand()
 		concommand.Add("n", function(pl, cmd, args)
 			local arg1 = args[1]
@@ -243,7 +216,7 @@ if CLIENT or SERVER then
 		end
 	end
 
-	function nAdmin.AltFindByNick(nick)
+	function nAdmin.FindByNick(nick)
 		local ent
 		nick = nick or ""
 		nick = string.lower(nick)
@@ -260,10 +233,6 @@ if CLIENT or SERVER then
 	local str = getmetatable("")
 	function isstring(var)
 		return getmetatable(var) == str
-	end
-
-	function nAdmin.FindByNick(nick)
-		return nAdmin.AltFindByNick(nick)
 	end
 
 	function nAdmin.SetTAndDesc(cmd, T, desc)

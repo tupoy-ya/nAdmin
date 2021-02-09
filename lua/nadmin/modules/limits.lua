@@ -21,6 +21,7 @@ local alllogs = {
 
 for i = 1, #alllogs do
 	local _log = alllogs[i]
+	local tostring = tostring
 	hook.Add("PlayerSpawned" .. _log, "nAdminLog", function(a, b)
 		p(a:Name() .. " заспавнил: " .. tostring(b))
 	end)
