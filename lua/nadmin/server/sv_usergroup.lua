@@ -2,6 +2,7 @@ local meta = FindMetaTable("Player")
 local _Global_Teams = Global_Teams
 
 local SteamIDs = {}
+_G.nGSteamIDs = {}
 
 if not file.Exists("nadmin", "DATA") then
 	file.CreateDir("nadmin")
@@ -12,14 +13,10 @@ function meta:SetUserGroup(group)
 	timer.Simple(0, function()
 		self:SetTeam(_Global_Teams[group].num)
 	end)
-	if not SteamIDs[self:SteamID()] then
-		for k, v in next, SteamIDs do
-			if k == self:SteamID() then
-				SteamIDs[k].group = group
-				file.Write("nadmin/users.txt", util.TableToJSON(SteamIDs))
-				break
-			end
-		end
+	if group ~= "user" and SteamIDs[self:SteamID()] == nil then
+		SteamIDs[self:SteamID()] = {}
+		SteamIDs[self:SteamID()].group = self:GetNWString("usergroup")
+		file.Write("nadmin/users.txt", util.TableToJSON(SteamIDs))
 	end
 end
 
@@ -37,6 +34,7 @@ local function LoadUsers()
 		SteamIDs[steamid] = {}
 		SteamIDs[steamid].group = v.group
 	end
+	nGSteamIDs = SteamIDs
 end
 
 LoadUsers()

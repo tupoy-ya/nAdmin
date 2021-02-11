@@ -14,6 +14,9 @@ if CLIENT then
 	nAdmin.AddCommand("browser", function()
 		gui.OpenURL("https://yandex.ru/")
 	end)
+	nAdmin.AddCommand("git", function(...)
+		gui.OpenURL("https://github.com/search?q=" .. table.concat({...}, "+"))
+	end)
 	nAdmin.AddCommand("mutecl", function(a)
 		local ent = nAdmin.FindByNick(a[1])
 		if ent == nil then return end
@@ -46,6 +49,7 @@ if CLIENT then
 		nAdmin.Commands[str].func(unpack(t or {}))
 	end)
 	nAdmin.SetTAndDesc("g", "user", "Поиск чего-нибудь в Google. arg1 - что-то искать.")
+	nAdmin.SetTAndDesc("git", "user", "Поиск чего-нибудь в GitHub. arg1 - что-то искать.")
 	nAdmin.SetTAndDesc("browser", "user", "Открыть браузер.")
 	nAdmin.SetTAndDesc("mutecl", "user", "Замутить на клиенте игрока. arg1 - ник игрока.")
 	nAdmin.SetTAndDesc("unmutecl", "user", "Размутить на клиенте игрока. arg1 - ник игрока.")
@@ -88,11 +92,14 @@ if SERVER then
 	nAdmin.AddCommand("y", true, function(ply, cmd, args)
 		ply:SendF("y", args)
 	end)
+	nAdmin.AddCommand("git", true, function(ply, cmd, args)
+		ply:SendF("git", args)
+	end)
 	nAdmin.AddCommand("menu", true, function(ply, cmd, args)
-		ply:SendF("menu", args)
+		ply:SendF("menu")
 	end)
 	nAdmin.AddCommand("giveammo", false, function(ply, cmd, args)
-		local check = nAdmin.ValidCheckCommand(args, 1, ply, "mgag")
+		local check = nAdmin.ValidCheckCommand(args, 1, ply, "giveammo")
 		if not check then
 			return
 		end

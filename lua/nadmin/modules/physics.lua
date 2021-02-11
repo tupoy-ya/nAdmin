@@ -1,9 +1,6 @@
 -- https://github.com/PAC3-Server/notagain/blob/master/lua/notagain/aowl/commands/physics.lua
 
 nAdmin.AddCommand("weldlag", false, function(ply, cmd, args)
-	if not nAdmin.GetAccess("weldlag", ply) then
-		return
-	end
 	local t = {}
 	for _, v in ipairs(ents.GetAll()) do
 		local count = v:GetPhysicsObjectCount()
@@ -46,3 +43,36 @@ nAdmin.AddCommand("weldlag", false, function(ply, cmd, args)
 	end
 end)
 nAdmin.SetTAndDesc("weldlag", "admin", "Найти лагающие констрейны пропов.")
+
+nAdmin.AddCommand("fp", true, function(ply)
+	for _, ent in ipairs(ents.GetAll()) do
+		local own = ent:CPPIGetOwner()
+		if own then
+			local phys = ent:GetPhysicsObject()
+			if phys:IsValid() then
+				phys:EnableMotion(false)
+			end
+		end
+	end
+	nAdmin.WarnAll(ply:Name() .. " зафризил все энтити.")
+end)
+nAdmin.SetTAndDesc("fp", "builderreal", "Зафризить все энтити.")
+
+nAdmin.AddCommand("fppl", true, function(ply, _, args)
+	local pl = nAdmin.FindByNick(args[1])
+	if pl == nil then
+		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
+		return
+	end
+	for _, ent in ipairs(ents.GetAll()) do
+		local own = ent:CPPIGetOwner()
+		if own == pl then
+			local phys = ent:GetPhysicsObject()
+			if phys:IsValid() then
+				phys:EnableMotion(false)
+			end
+		end
+	end
+	nAdmin.WarnAll(ply:Name() .. " зафризил энтити " .. pl:Name() .. ".")
+end)
+nAdmin.SetTAndDesc("fppl", "builderreal", "Зафризить энтити какого-то игрока. arg1 - ник игрока.")

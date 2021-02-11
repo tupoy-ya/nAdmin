@@ -4,6 +4,7 @@ nAdmin.Modules = {}
 
 if SERVER then
 	local meta = FindMetaTable"Player"
+	local table_concat = table.concat
 
 	local plCached = {}
 
@@ -80,10 +81,22 @@ if SERVER then
 			if nAdmin.Commands[cmd] and not nAdmin.Commands[cmd].argsCount then
 				table.Merge(nAdmin.Commands[cmd], {argsCount = count})
 			end
+			if pl.B and arg1:find("noclip") then
+				goto skipCheck
+			end
+			if not nAdmin.GetAccess(arg1, pl) then
+				return
+			end
+			::skipCheck::
 			command(pl, cmd, args)
-			net.Start("nadmin_message")
-				net.WriteUInt(3, 2)
-			net.Broadcast()
+			for _, v in ipairs(player.GetHumans()) do
+				if v:IsAdmin() then
+					net.Start("nadmin_message")
+						net.WriteUInt(3, 2)
+						net.WriteString(pl:Name() .. " > CMD: " .. arg1 .. " " .. table_concat(args) .. "")
+					net.Send(v)
+				end
+			end
 		end, nAdmin.AutoComplete)
 	end
 
@@ -91,11 +104,13 @@ if SERVER then
 
 	function nAdmin.Message(ply, msg)
 		if not IsValid(ply) then
-			nAdmin.Print("nAdmin.Message -> игрок не валидный.")
+			nAdmin.Print("nAdmin.Message - ошибка.")
+			debug.Trace()
 			return
 		end
 		if not msg then
-			nAdmin.Print("nAdmin.Message -> не хватает сообщения.")
+			nAdmin.Print("nAdmin.Message - ошибка.")
+			debug.Trace()
 			return
 		end
 		msg = util.TableToJSON(msg)
@@ -110,7 +125,8 @@ if SERVER then
 
 	function nAdmin.PrintMessage(msg)
 		if not msg then
-			nAdmin.Print("nAdmin.Message -> не хватает сообщения.")
+			nAdmin.Print("nAdmin.Message - ошибка.")
+			debug.Trace()
 			return
 		end
 		msg = util.TableToJSON(msg)
@@ -161,9 +177,12 @@ if SERVER then
 	end
 
 	function nAdmin.GetAccess(cmd, pl)
-		local TF = pl:Team() < Global_Teams[nAdmin.Commands[cmd].T].num
+		if nAdmin.Commands[cmd].T == nil then
+			return true
+		end
+		local TF = pl:Team() <= Global_Teams[nAdmin.Commands[cmd].T].num
 		if TF == false then
-			nAdmin.Warn(ply, "У вас нет прав использовать эту команду.")
+			nAdmin.Warn(pl, "У вас нет прав использовать эту команду.")
 		end
 		return TF
 	end
@@ -172,21 +191,24 @@ end
 if CLIENT then
 	net.Receive("nadmin_message", function()
 		local mode = net.ReadUInt(2)
+		if mode == 3 then
+			local a = net.ReadString()
+			nAdmin.LastSystime = SysTime()
+			if IsValid(nGUI) then
+				hook.Run("nAdmin_SystimeUpdate", nAdmin.LastSystime, a)
+			end
+			return
+		end
 		local int = net.ReadUInt(16)
 		local data = net.ReadData(int)
 		local decompress = util.Decompress(data)
 		decompress = util.JSONToTable(decompress or "{}")
 		if mode == 1 then
-			chat.AddText(Color(200, 100, 0), "[nAdmin] ", Color(255, 255, 255), unpack(decompress))
+			chat.AddText(unpack(decompress))
 		elseif mode == 2 then
 			for k, v in next, decompress do
 				if nAdmin.Commands[k] then continue end
 				nAdmin.Commands[k] = v
-			end
-		elseif mode == 3 then
-			nAdmin.LastSystime = SysTime()
-			if IsValid(nGUI) then
-				hook.Run("nAdmin_SystimeUpdate", nAdmin.LastSystime)
 			end
 		end
 	end)
@@ -237,6 +259,9 @@ if CLIENT or SERVER then
 
 	function nAdmin.SetTAndDesc(cmd, T, desc)
 		local tCmds = nAdmin.Commands[cmd]
+		if tCmds == nil then
+			debug.Trace()
+		end
 		if tCmds.T or tCmds.desc then
 			return
 		end

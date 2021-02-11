@@ -1,5 +1,5 @@
 surface.CreateFont("nAdmin_desc", {font = "Roboto", size = 18, antialias = true, extended = true})
-surface.CreateFont("logs", {font = "Roboto Bold", size = 14, antialias = true, extended = true})
+surface.CreateFont("logs", {font = "Roboto Bold", size = 12, antialias = true, extended = true})
 if IsValid(nGUI) then
 	nGUI:Remove()
 	gui.EnableScreenClicker(false)
@@ -79,6 +79,13 @@ function nAdmin.GUI()
 			end
 		end
 		entries = {}
+		if nAdmin.Commands[row:GetValue(1)] == nil then
+			nAdmin.Print("Ошибка при обновлении списка команд. Обновляю таблицу...")
+			net.Start("nadmin_message")
+				net.WriteUInt(1, 1)
+			net.SendToServer()
+			return
+		end
 		local t = nAdmin.Commands[row:GetValue(1)].T or ""
 		cm = row:GetValue(1)
 		if Global_Teams[t] and Global_Teams[t].n then
@@ -190,8 +197,6 @@ function nAdmin.GUI()
 	end
 	but.DoClick = function()
 		local a = SysTime()
-		logs:InsertColorChange(200, 200, 200, 255)
-		logs:AppendText("Загрузка...\n")
 		local gTN = tonumber(gT)
 		local ch = gTN ~= nil and gTN or 1
 		if ply:Team() > ch then
@@ -214,9 +219,11 @@ function nAdmin.GUI()
 	copy.DoClick = function()
 		SetClipboardText(runCommand:GetText())
 	end
-	hook.Add("nAdmin_SystimeUpdate", "", function(a)
-		logs:InsertColorChange(30, 230, 30, 255)
-		logs:AppendText("Выполнено за: " .. (SysTime() - a or SysTime()) .. "\n")
+	hook.Add("nAdmin_SystimeUpdate", "", function(a, b)
+		logs:InsertColorChange(200, 200, 200, 255)
+		logs:AppendText("[" .. os.date("%H:%M:%S") .. "] " .. b .. "\n")
+		logs:InsertColorChange(30, 180, 30, 255)
+		logs:AppendText("Выполнено за: " .. math.Round((SysTime() - a or SysTime()), 5) .. "\n")
 	end)
 end
 

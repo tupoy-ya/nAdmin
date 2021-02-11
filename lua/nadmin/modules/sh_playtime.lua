@@ -8,7 +8,7 @@ if CLIENT or SERVER then
 	function meta:GetSessionTime()
 		return CurTime() - self:GetNWInt("StartTimeSession", 0)
 	end
-	
+
 	function meta:GetStartTimeSession()
 		return self:GetNWInt("StartTimeSession", 0)
 	end
@@ -101,4 +101,14 @@ if SERVER then
 	end
 
 	timer.Create("savePTime", 120, 0, savePTime)
+
+	hook.Add("PlayerInitialSpawn", "restoretime", function(ply)
+		timer.Simple(.5, function()
+			local query = sql.QueryRow("SELECT totaltime FROM utime WHERE player = " .. ply:UniqueID() .. ";")
+			if query ~= nil then
+				ply:SetPTime(query)
+				sql.Query("DELETE FROM utime WHERE player = " .. ply:UniqueID() .. ";")
+			end
+		end)
+	end)
 end

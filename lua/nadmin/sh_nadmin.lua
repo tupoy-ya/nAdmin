@@ -42,7 +42,7 @@ if CLIENT or SERVER then
 			["effects"] = 999,
 		},
 		["admin"] = {
-			["props"] = 750,
+			["props"] = 999,
 			["sents"] = 70,
 			["npcs"] = 10,
 			["vehicles"] = 25,
@@ -50,7 +50,7 @@ if CLIENT or SERVER then
 			["effects"] = 15,
 		},
 		["moderator"] = {
-			["props"] = 500,
+			["props"] = 650,
 			["sents"] = 50,
 			["npcs"] = 0,
 			["vehicles"] = 15,
@@ -66,7 +66,7 @@ if CLIENT or SERVER then
 			["effects"] = 10,
 		},
 		["osobenniy2"] = {
-			["props"] = 400,
+			["props"] = 450,
 			["sents"] = 40,
 			["npcs"] = 0,
 			["vehicles"] = 10,
@@ -74,7 +74,7 @@ if CLIENT or SERVER then
 			["effects"] = 8,
 		},
 		["osobenniy"] = {
-			["props"] = 300,
+			["props"] = 350,
 			["sents"] = 30,
 			["npcs"] = 0,
 			["vehicles"] = 6,
@@ -82,7 +82,7 @@ if CLIENT or SERVER then
 			["effects"] = 6,
 		},
 		["builderreal"] = {
-			["props"] = 750,
+			["props"] = 850,
 			["sents"] = 80,
 			["npcs"] = 0,
 			["vehicles"] = 30,
@@ -90,7 +90,7 @@ if CLIENT or SERVER then
 			["effects"] = 30,
 		},
 		["e2_coder"] = {
-			["props"] = 300,
+			["props"] = 350,
 			["sents"] = 30,
 			["npcs"] = 0,
 			["vehicles"] = 6,
@@ -98,7 +98,7 @@ if CLIENT or SERVER then
 			["effects"] = 6,
 		},
 		["noclip"] = {
-			["props"] = 250,
+			["props"] = 300,
 			["sents"] = 20,
 			["npcs"] = 0,
 			["vehicles"] = 5,
@@ -106,7 +106,7 @@ if CLIENT or SERVER then
 			["effects"] = 4,
 		},
 		["user"] = {
-			["props"] = 200,
+			["props"] = 250,
 			["sents"] = 15,
 			["npcs"] = 0,
 			["vehicles"] = 4,
