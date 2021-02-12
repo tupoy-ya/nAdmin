@@ -4,7 +4,7 @@ if IsValid(nGUI) then
 	nGUI:Remove()
 	gui.EnableScreenClicker(false)
 end
-function nAdmin.GUI()
+function nAdmin.mGUI()
 	local a = {}
 	local cYes = {}
 	nGUI = vgui.Create'DFrame'
@@ -271,29 +271,14 @@ function nAdmin.GUI()
 	hook.Add("nAdmin_SystimeUpdate", "", function(a, b)
 		logs:InsertColorChange(200, 200, 200, 255)
 		logs:AppendText("[" .. os.date("%H:%M:%S") .. "] " .. b .. "\n")
+		if not b:find(LocalPlayer():Name()) then return end
 		logs:InsertColorChange(30, 180, 30, 255)
 		logs:AppendText("Выполнено за: " .. math.Round((SysTime() - a or SysTime()), 5) .. "\n")
 	end)
 end
 
-hook.Add("PlayerBindPress", "nAdmin_GUIopen", function(a, b, c, d)
-	if b:find("n menu") then
-		if IsValid(nGUI) then
-			if nGUI:IsVisible() then
-				gui.EnableScreenClicker(false)
-				nGUI:AlphaTo(0, .1, 0, function()
-					nGUI:SetVisible(false)
-				end)
-			else
-				nGUI:SetVisible(true)
-				gui.EnableScreenClicker(true)
-				nGUI:AlphaTo(255, .1, 0)
-			end
-		end
-	end
-end)
-
 local function getKeyboardFocus(pnl)
+	if not IsValid(nGUI) then return end
 	pnl:SetKeyboardInputEnabled(true)
 	nGUI:SetKeyboardInputEnabled(true)
 	pnl:RequestFocus()
@@ -301,6 +286,7 @@ end
 hook.Add("OnTextEntryGetFocus", "nAdmin_GUIfocus", getKeyboardFocus)
 
 local function loseKeyboardFocus(pnl)
+	if not IsValid(nGUI) then return end
 	pnl:SetKeyboardInputEnabled(false)
 	nGUI:SetKeyboardInputEnabled(false)
 end

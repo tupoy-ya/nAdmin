@@ -1,4 +1,8 @@
-local bans = bans or util.JSONToTable(file.Read("nadmin/bans.txt", "DATA"))
+if not file.Exists("nadmin/bans.txt", "DATA") then
+	nAdmin.Print("Файл \"nadmin/bans.txt\" не существует. Создаю...")
+	file.Write("nadmin/bans.txt", "{}")
+end
+local bans = util.JSONToTable(file.Read("nadmin/bans.txt", "DATA") or "{}")
 local next = next
 nAdmin.BanList = bans
 
@@ -9,10 +13,6 @@ if singleplayer then
 end
 
 function nAdmin.UpdateBans()
-	if not file.Exists("nadmin/bans.txt", "DATA") then
-		nAdmin.Print("Файл \"nadmin/bans.txt\" не существует. Создаю...")
-		file.Write("nadmin/bans.txt", "{}")
-	end
 	local function write_bans()
 		file.Write("nadmin/bans.txt", util.TableToJSON(bans))
 		coroutine.yield()
@@ -42,6 +42,7 @@ function nAdmin.AddBan(ply_, minutes, reason, o, banid_)
 	end
 	::zcont::
 	if banid_ == true then
+		ply_ = ply_:Trim()
 		if not string.StartWith(ply_, "STEAM_0") then
 			nAdmin.Warn(o, "Неправильно введён аргумент!")
 			return
@@ -58,21 +59,28 @@ function nAdmin.AddBan(ply_, minutes, reason, o, banid_)
 			nAdmin.Warn(o, "Вы не можете забанить данный SteamID, т.к. у него выше/равная привилегия.")
 			return
 		end
-		ply = ply_
+		ply_ = util.SteamIDTo64(ply_)
+		ply_Kick = ply_
 	end
-	bans[ply] = {time = tonumber(os.time()) + (minutes * 60), reason = reason}
-	if ply_Kick ~= false and not banid_ then
-		ply_Kick:Kick("Вы забанены. Причина: " .. bans[ply].reason .. "; время: " .. string.NiceTime(bans[ply].time - tonumber(os.time())))
+	if ply_Kick ~= false and not banid_ and ply_Kick:IsPlayer() then
+		local stid = ply_Kick:SteamID64()
+		bans[stid] = {time = tonumber(os.time()) + (minutes * 60), reason = reason}
+		ply_Kick:Kick("Вы забанены. Причина: " .. bans[stid].reason .. "; время: " .. string.NiceTime(bans[stid].time - tonumber(os.time())))
+		goto skipb
 	end
+	bans[ply_Kick] = {time = tonumber(os.time()) + (minutes * 60), reason = reason}
+	nAdmin.WarnAll(util.SteamIDFrom64(ply_Kick) .. " был заблокирован с причиной: " .. bans[ply_Kick].reason .. "; на: " .. string.NiceTime(bans[ply_Kick].time - tonumber(os.time())) .. "; админом: " .. o:Name())
+	::skipb::
 	nAdmin.UpdateBans()
 	nAdmin.unbanUpdate()
-	nAdmin.WarnAll(tostring(ply) .. " был заблокирован с причиной: " .. bans[ply].reason .. "; на: " .. string.NiceTime(bans[ply].time - tonumber(os.time())) .. "; админом: " .. o:Name())
 end
 
 hook.Add("CheckPassword", "ban_System", function(id)
 	if bans[id] then
+		local reas = bans[id].reason
+		nAdmin.Print(util.SteamIDFrom64(id) .. " попытался зайти на сервер, но у него блокировка по причине: " .. reas)
 		return false,
-		"Вы забанены на [RU] Уютный Сандбокс. Причина: " .. bans[id].reason .. "; время до разбана: " .. bans[id].time - tonumber(os.time())
+		"Вы забанены на [RU] Уютный Сандбокс. Причина: " .. reas .. "; время до разбана: " .. bans[id].time - tonumber(os.time())
 	end
 end)
 
@@ -169,7 +177,7 @@ nAdmin.AddCommand("unban", true, function(ply, cmd, args)
 	if not check then
 		return
 	end
-	nAdmin.unban(args[1]:Trim())
+	nAdmin.unban(util.SteamIDTo64(args[1]:Trim()))
 	nAdmin.WarnAll(ply:Name().. " разблокировал: " .. tostring(args[1]))
 end)
 nAdmin.SetTAndDesc("unban", "moderator", "Разбанивает игрока. arg1 - SteamID игрока.")
@@ -226,7 +234,7 @@ nAdmin.AddCommand("jail", true, function(ply, cmd, args)
 	::skip::
 	pl.InJail = true
 	pl:SetPos(vec)
-	timer.Create(tostring(pl) .. "nAdmin_ToJail", .2, 0, function()
+	timer.Create(tostring(pl) .. "nAdmin_ToJail", .05, 0, function()
 		if pl.InJail == true then
 			pl:SetPos(vec)
 		else
@@ -314,7 +322,7 @@ nAdmin.AddCommand("spectate", true, function(ply, cmd, args)
 	end)
 	hook.Add("PlayerSpawn", ply:EntIndex() .. "_nAdmin_UnSpectate", upd_Spectate)
 end)
-nAdmin.SetTAndDesc("spectate", "moderator", "Включает режим наблюдения за игроком. arg1 - имя игрока.")
+nAdmin.SetTAndDesc("spectate", "moderator", "Включает режим наблюдения за игроком. arg1 - ник игрока.")
 
 nAdmin.AddCommand("gag", false, function(ply, cmd, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "gag")

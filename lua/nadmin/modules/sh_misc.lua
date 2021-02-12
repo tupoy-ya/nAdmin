@@ -2,11 +2,22 @@ if CLIENT then
 	nAdmin.AddCommand("menu", function(...)
 		nAdmin.VisibleGUI = not nAdmin.VisibleGUI
 		if not IsValid(nGUI) then
-			nAdmin.GUI()
+			nAdmin.mGUI()
+		elseif IsValid(nGUI) then
+			if nGUI:IsVisible() then
+				gui.EnableScreenClicker(false)
+				nGUI:AlphaTo(0, .1, 0, function()
+					nGUI:SetVisible(false)
+				end)
+			else
+				nGUI:SetVisible(true)
+				gui.EnableScreenClicker(true)
+				nGUI:AlphaTo(255, .1, 0)
+			end
 		end
 	end)
 	nAdmin.AddCommand("g", function(...)
-		gui.OpenURL("https://www.google.com/#q=" .. table.concat({...}, "+"))
+		gui.OpenURL("https://www.google.com/search?&q=" .. table.concat({...}, "+"))
 	end)
 	nAdmin.AddCommand("y", function(...)
 		gui.OpenURL("https://yandex.ru/search/?text=" .. table.concat({...}, "%20"))

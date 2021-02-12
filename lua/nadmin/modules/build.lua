@@ -37,6 +37,7 @@ nAdmin.AddCommand("pvp", false, function(ply, cmd, args)
 		ply.B = false
 		ply:GodDisable()
 		ply.NoB = false
+		ply:Spawn()
 	end)
 end)
 nAdmin.SetTAndDesc("pvp", "user", "Включить ПВП-режим.")

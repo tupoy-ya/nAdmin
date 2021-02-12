@@ -23,6 +23,7 @@ if SERVER then
 		next_Kick = CurTime() + 25
 		local results = {}
 		local answers = {[1] = "Да.", [2] = "Нет."}
+		table.sort(answers, function(a, b) return #a < #b end)
 		local a = util.Compress(util.TableToJSON(answers))
 		net.Start("nAdmin_votekick")
 			net.WriteUInt(1, 3)
@@ -95,6 +96,8 @@ if SERVER then
 		for i = 1, #args do
 			answers[i] = args_copy[i + 1]
 		end
+		table.sort(answers, function(a, b) return #a < #b end)
+		PT(answers)
 		local a = util.Compress(util.TableToJSON(answers))
 		net.Start("nAdmin_votekick")
 			net.WriteUInt(1, 3)
@@ -118,7 +121,6 @@ if SERVER then
 				final[vote] = (final[vote] or 0) + 1
 			end
 			local first = table.GetWinningKey(final)
-			PT(answers)
 			nAdmin.WarnAll("В голосовании победил ответ: " .. answers[first])
 			results = {}
 		end)
@@ -146,22 +148,25 @@ if CLIENT then
 	surface.CreateFont("nAdmin_votekick_Font", {font = "Roboto", size = 24, antialias = true, extended = true})
 	local results = {}
 	local function create_vote(reason, TB)
-		table.sort(TB, function(a, b) return #a < #b end)
 		results = {}
 		local max_ = 0
 		local lerp = -50
-		hook.Add("HUDPaint", "VoteShow", function()
-			lerp = Lerp(FrameTime() * 6, lerp, 30)
-			surface.SetFont("nAdmin_votekick_Font")
-			local count = #TB
-			local w, h = surface.GetTextSize(reason)
+		local count = #TB
+		local w, h = utf8.len(reason) * 15
 
+		for i = 1, table.Count(TB) do
 			for k, v in next, TB do
-				local as = surface.GetTextSize(v)
+				local as = utf8.len(v) * 15
 				if as > w then
 					w = as
 				end
 			end
+		end
+
+		hook.Add("HUDPaint", "VoteShow", function()
+			lerp = Lerp(FrameTime() * 6, lerp, 30)
+			surface.SetFont("nAdmin_votekick_Font")
+
 			surface.SetDrawColor(200, 200, 200)
 			surface.DrawRect(ScrW() / 2 - w / 2 - 2 - 10, ScrH() - lerp - count * 24, w + 24, 29 + count * 24)
 
@@ -181,7 +186,7 @@ if CLIENT then
 		hook.Add("PlayerBindPress", "plBindVote", function(ply, bind, pressed)
 			if string.find(bind, "slot*") then
 				local num = tonumber(string.sub(bind, #bind, #bind))
-					if TB[num] then
+				if TB[num] then
 					net.Start("nAdmin_votekick")
 						net.WriteUInt(1, 3)
 						net.WriteFloat(num)
@@ -202,7 +207,6 @@ if CLIENT then
 			local int = net.ReadUInt(16)
 			local t = net.ReadData(int)
 			t = util.JSONToTable(util.Decompress(t))
-			PT(t)
 			cT = t
 			create_vote(str, t)
 			surface.PlaySound("buttons/button3.wav")
