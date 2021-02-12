@@ -9,6 +9,7 @@ end)
 nAdmin.SetTAndDesc("fixpac", "user", "Фикс PAC3. (делает реквест одежки)")
 
 nAdmin.AddCommand("wear", false, function(ply, cmd, args)
+	if not args[1] then return end
 	ply:ConCommand("pac_wear_parts \"" .. args[1] or '' .."\"")
 end)
 nAdmin.SetTAndDesc("wear", "user", "Надеть одежку из PAC3. arg1 - название пака.")

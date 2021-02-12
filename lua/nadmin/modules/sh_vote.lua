@@ -7,9 +7,6 @@ if SERVER then
 			nAdmin.Warn(ply, "В данный момент уже идет какое-то голосование!")
 			return
 		end
-		if not nAdmin.GetAccess("votekick", ply) then
-			return
-		end
 		local check = nAdmin.ValidCheckCommand(args, 2, ply, "votekick")
 		if not check then
 			return
@@ -26,10 +23,12 @@ if SERVER then
 		next_Kick = CurTime() + 25
 		local results = {}
 		local answers = {[1] = "Да.", [2] = "Нет."}
+		local a = util.Compress(util.TableToJSON(answers))
 		net.Start("nAdmin_votekick")
 			net.WriteUInt(1, 3)
 			net.WriteString("Выгнать " .. pl:Name() .. "? (Причина: " .. args[2] .. ")")
-			net.WriteTable(answers) -- потом
+			net.WriteUInt(#a, 16)
+			net.WriteData(a)
 		net.Broadcast()
 		current_status = true
 		timer.Simple(20, function()
@@ -71,11 +70,76 @@ if SERVER then
 		end)
 	end)
 	nAdmin.SetTAndDesc("votekick", "user", "Запускает голование на кик игрока. arg1 - ник, arg2 - причина.")
-	--[[
 	nAdmin.AddCommand("vote", false, function(ply, cmd, args)
-
+		if current_status then
+			nAdmin.Warn(ply, "В данный момент уже идет какое-то голосование!")
+			return
+		end
+		local check = nAdmin.ValidCheckCommand(args, 2, ply, "vote")
+		if not check then
+			return
+		end
+		if next_Kick > CurTime() then
+			nAdmin.Warn(ply, "Подождите ещё: " .. math.Round(next_Kick - CurTime()) .. " секунд!")
+			return
+		end
+		if table.Count(args) >= 7 then
+			nAdmin.Warn(ply, "Нельзя сделать больше 7 ответов")
+			return
+		end
+		next_Kick = CurTime() + 20
+		local results = {}
+		local dop = {}
+		local answers = {}
+		local args_copy = table.Copy(args)
+		for i = 1, #args do
+			answers[i] = args_copy[i + 1]
+		end
+		local a = util.Compress(util.TableToJSON(answers))
+		net.Start("nAdmin_votekick")
+			net.WriteUInt(1, 3)
+			net.WriteString(args[1])
+			net.WriteUInt(#a, 16)
+			net.WriteData(a)
+		net.Broadcast()
+		current_status = true
+		timer.Simple(20, function()
+			net.Start("nAdmin_votekick")
+				net.WriteUInt(2, 3)
+			net.Broadcast()
+			current_status = false
+			local c = table.Count(results)
+			if c == 0 then return end
+			local final = {}
+			for i = 1, #answers do
+				final[i] = 0
+			end
+			for _, vote in next, results do
+				final[vote] = (final[vote] or 0) + 1
+			end
+			local first = table.GetWinningKey(final)
+			PT(answers)
+			nAdmin.WarnAll("В голосовании победил ответ: " .. answers[first])
+			results = {}
+		end)
+		net.Receive("nAdmin_votekick", function(_, ply)
+			if current_status == false then return end
+			local int = net.ReadUInt(3)
+			if int == 1 then
+				if results[ply] then
+					return
+				end
+				local fl = net.ReadFloat()
+				results[ply] = fl
+				net.Start("nAdmin_votekick")
+					net.WriteUInt(3, 3)
+					net.WriteEntity(ply)
+					net.WriteFloat(fl)
+				net.Broadcast()
+			end
+		end)
 	end)
-	nAdmin.SetTAndDesc("vote", "moderator", "Запускает голование. arg1 - за что голосовать, arg2 <> arg6 - варианты ответов.")]]
+	nAdmin.SetTAndDesc("vote", "osobenniy2", "Запускает голование на кик игрока. arg1 - что обсуждаем, arg2, arg3, arg4, arg5.")
 end
 
 if CLIENT then
@@ -92,6 +156,12 @@ if CLIENT then
 			local count = #TB
 			local w, h = surface.GetTextSize(reason)
 
+			for k, v in next, TB do
+				local as = surface.GetTextSize(v)
+				if as > w then
+					w = as
+				end
+			end
 			surface.SetDrawColor(200, 200, 200)
 			surface.DrawRect(ScrW() / 2 - w / 2 - 2 - 10, ScrH() - lerp - count * 24, w + 24, 29 + count * 24)
 
@@ -129,7 +199,10 @@ if CLIENT then
 		local int =  net.ReadUInt(3)
 		if int == 1 then -- [[ START VOTE ]] --
 			local str = net.ReadString()
-			local t = net.ReadTable()
+			local int = net.ReadUInt(16)
+			local t = net.ReadData(int)
+			t = util.JSONToTable(util.Decompress(t))
+			PT(t)
 			cT = t
 			create_vote(str, t)
 			surface.PlaySound("buttons/button3.wav")

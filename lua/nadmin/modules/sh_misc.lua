@@ -115,4 +115,22 @@ if SERVER then
 		end
 	end)
 	nAdmin.SetTAndDesc("giveammo", "user", "Дать себе патроны. arg1 - количество патрон.")
+	local function days( time )
+		time = time / 60 / 60
+		return time
+	end
+	nAdmin.AddCommand("uptime", false, function(ply, _, args)
+		timer.Simple(0, function()
+			nAdmin.WarnAll("Сервер онлайн уже: " .. math.Round(days(SysTime())) .. " часов.")
+		end)
+	end)
+	nAdmin.AddCommand("leave", false, function(ply, _, args)
+		timer.Simple(.5, function()
+			if not args then
+				ply:Kick("Отключился")
+			else
+				ply:Kick("Отключился: " .. table.concat(args, " "))
+			end
+		end)
+	end)
 end

@@ -184,22 +184,19 @@ nAdmin.AddCommand("kick", true, function(ply, cmd, args)
 	if not check then
 		return
 	end
-	if curtime > CurTime() then
-		nAdmin.Warn(ply, "Подождите ещё " .. math.Round(curtime - CurTime()) .. " секунд.")
+	local pl = nAdmin.FindByNick(args[1])
+	if pl == nil then
+		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
 		return
 	end
-	curtime = CurTime() + 10
-	local pl = nAdmin.FindByNick(args[1])
 	local reason = args[2]
 	if reason then
-		nAdmin.WarnAll(ply:Name() .. " кикнул: " .. pl:Name() .. ", с причиной: " .. reason)
 		pl:Kick("Вас кикнул " .. ply:Name() .. "; с причиной: " .. reason)
 		return
 	end
-	nAdmin.WarnAll(ply:Name() .. " кикнул: " .. pl:Name())
 	pl:Kick("Вы были кикнуты админом: " .. ply:Name() .. ".")
 end)
-nAdmin.SetTAndDesc("kick", "moderator", "Кикает игрока. arg1 - ник игрока.")
+nAdmin.SetTAndDesc("kick", "moderator", "Кикает игрока. arg1 - ник игрока, arg2 - причина.")
 
 local vec = Vector(-15999, -15999, -15999)
 
@@ -238,7 +235,7 @@ nAdmin.AddCommand("jail", true, function(ply, cmd, args)
 		end
 	end)
 end)
-nAdmin.SetTAndDesc("jail", "builderreal", "Садит человека в клетку. arg1 - ник игрока, arg2 - количество секунд.")
+nAdmin.SetTAndDesc("jail", "builderreal", "Садит человека в гулаг. arg1 - ник игрока, arg2 - количество секунд.")
 
 nAdmin.AddCommand("unjail", true, function(ply, cmd, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "unjail")
@@ -356,7 +353,6 @@ nAdmin.AddCommand("goto", false, function(ply, cmd, args)
 		return
 	end
 	ply:SetPos(pl:EyePos() + Vector(pl:EyeAngles():Right()[1], 0, 0) * 150)
-	nAdmin.PrintAndWarn(ply:Name() .. " телепортировался к " .. pl:Name().. ".")
 end)
 nAdmin.SetTAndDesc("goto", "e2_coder", "Телепортироваться к игроку. arg1 - ник.")
 
@@ -371,7 +367,6 @@ nAdmin.AddCommand("bring", false, function(ply, cmd, args)
 		return
 	end
 	pl:SetPos(ply:EyePos() + Vector(ply:EyeAngles():Right()[1], 0, 0) * 150)
-	nAdmin.PrintAndWarn(ply:Name() .. " телепортировал к себе " .. pl:Name().. ".")
 end)
 nAdmin.SetTAndDesc("bring", "osobenniy2", "Телепортировать игрока к себе. arg1 - ник.")
 

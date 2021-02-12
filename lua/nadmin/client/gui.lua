@@ -34,26 +34,46 @@ function nAdmin.GUI()
 
 	local clist = vgui.Create('DListView', nGUI)
 	clist:Dock(LEFT)
+	clist:DockMargin(0, 20, 0, 0)
 	clist:SetSize(150, 0)
 	clist:SetMultiSelect(false)
 	clist:AddColumn("Команды")
+	local search = vgui.Create('DTextEntry', nGUI)
+	search:SetPos(5, 28)
+	search:SetSize(150, 20)
 	net.Start("nadmin_message")
 		net.WriteUInt(1, 1)
 	net.SendToServer()
+	local changed = ""
 	nGUI.Think = function()
 		local cCount = 0
 		local l = 0
-		for k in next, nAdmin.Commands do
-			if a[cCount] then
-				l = l + 1
-				if l > 10 then
-					nGUI.Think = function() end
+		local txt = search:GetText()
+		if changed ~= txt then
+			clist:Clear()
+			changed = txt
+			a = {}
+			cYes = {}
+		end
+		if txt == "" then
+			for k in next, nAdmin.Commands do
+				cCount = cCount + 1
+				a[cCount] = k
+			end
+			table.sort(a)
+		else
+			for k in next, nAdmin.Commands do
+				local wf = nAdmin.Commands[k].desc
+				if wf == nil then
+					wf = ""
+				end
+				if string.match(k, txt) or string.match(wf, txt) then
+					cCount = cCount + 1
+					a[cCount] = k
 				end
 			end
-			cCount = cCount + 1
-			a[cCount] = k
+			table.sort(a)
 		end
-		table.sort(a)
 	end
 	clist.Think = function()
 		for i = 1, #a do
@@ -71,12 +91,16 @@ function nAdmin.GUI()
 	local cm = ""
 	local entries = {}
 	local gT = ""
+	local butn
 
 	clist.OnRowSelected = function(self, rowi, row)
 		for k, v in ipairs(entries) do
 			if IsValid(v) then
 				v:Remove()
 			end
+		end
+		if IsValid(butn) then
+			butn:Remove()
 		end
 		entries = {}
 		if nAdmin.Commands[row:GetValue(1)] == nil then
@@ -95,7 +119,7 @@ function nAdmin.GUI()
 			des = ""
 		end
 		local cfind = 0
-		timer.Simple(.005, function()
+		timer.Simple(0, function()
 			local e = string.Explode(" ", des)
 			for k, v in next, e do
 				if v:find("arg") then
@@ -106,7 +130,32 @@ function nAdmin.GUI()
 					local name = e[k + 2]
 					local fint = name:find","
 					local m = name:sub(1, ((fint or 0) - 1) or #name)
-					val_enter:SetPlaceholderText(string.Trim(m, "."))
+					local s = string.Trim(m, ".")
+					if cm == "vote" then
+						goto skip
+					end
+					if s:find("ник") then
+						timer.Simple(0, function()
+							local bu = vgui.Create('DButton', nGUI)
+							local aye, bye = val_enter:GetPos()
+							bu:SetPos(aye + val_enter:GetWide(), bye + val_enter:GetTall() - 15)
+							bu:SetSize(15, 15)
+							bu:SetText("")
+							butn = bu
+							bu.DoClick = function()
+								local m = DermaMenu()
+								for k, v in ipairs(player.GetAll()) do
+									m:AddOption(v:Name(), function()
+										val_enter:SetText(v:Name())
+									end)
+								end
+								m:SetMaxHeight(500)
+								m:Open()
+							end
+						end)
+					end
+					val_enter:SetPlaceholderText(s)
+					::skip::
 					if ps and val_enter then
 						val_enter:SetPos(162, 35 + ps:GetTall() + cfind * 27)
 					end

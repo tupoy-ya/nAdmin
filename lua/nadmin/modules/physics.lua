@@ -76,3 +76,22 @@ nAdmin.AddCommand("fppl", true, function(ply, _, args)
 	nAdmin.WarnAll(ply:Name() .. " зафризил энтити " .. pl:Name() .. ".")
 end)
 nAdmin.SetTAndDesc("fppl", "builderreal", "Зафризить энтити какого-то игрока. arg1 - ник игрока.")
+
+nAdmin.AddCommand("fmp", true, function(ply, _, args)
+   local b = 0
+   for _, v in ipairs(ents.FindByClass("prop_physics")) do
+       if v:CPPIGetOwner() == ply then
+           local a = v:GetPhysicsObject()
+           if a:IsMotionEnabled() == true then
+               if a:IsValid() then
+                   a:EnableMotion(false)
+                   b = b + 1
+               end
+           end
+       end
+   end
+   timer.Simple(0, function()
+       nAdmin.Warn(ply, "Готово! Зафрижено: " .. b .. " пропов.")
+   end)
+end)
+nAdmin.SetTAndDesc("fmp", "user", "Зафризить свои энтити.")

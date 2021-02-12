@@ -25,10 +25,15 @@ if SERVER then
 		end
 	end)
 
-	function nAdmin.AutoComplete(cmd, stringargs)
-		stringargs = string.Trim(stringargs)
-		stringargs = string.lower(stringargs)
-		local e = string.Explode(" ", stringargs)
+	hook.Add("PlayerDisconnected", "nAdminnull", function(pl)
+		plCached[pl] = nil
+	end)
+
+	function nAdmin.AutoComplete(cmd, args)
+		args = string.Trim(args)
+		args = string.lower(args)
+		args = args:gsub("^%s*", "")
+		local e = string.Explode(" ", args)
 		local tbl = {}
 		local cmdFull = ""
 		local a2 = e[2]
