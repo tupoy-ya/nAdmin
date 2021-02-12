@@ -32,7 +32,6 @@ if SERVER then
 	function nAdmin.AutoComplete(cmd, args)
 		args = string.Trim(args)
 		args = string.lower(args)
-		args = args:gsub("^%s*", "")
 		local e = string.Explode(" ", args)
 		local tbl = {}
 		local cmdFull = ""
