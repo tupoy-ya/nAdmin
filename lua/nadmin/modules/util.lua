@@ -12,6 +12,8 @@ if singleplayer then
 	return
 end
 
+util.AddNetworkString("nAdmin_JailHUD")
+
 function nAdmin.UpdateBans()
 	local function write_bans()
 		file.Write("nadmin/bans.txt", util.TableToJSON(bans))
@@ -232,16 +234,19 @@ nAdmin.AddCommand("jail", true, function(ply, cmd, args)
 	end
 	nAdmin.PrintAndWarn(ply:Name() .. " засунул в гулаг " .. pl:Name() .. ".")
 	::skip::
-	pl.InJail = true
+	pl:SetNWBool("nAdmin_InJail", true)
 	pl:SetPos(vec)
 	timer.Create(tostring(pl) .. "nAdmin_ToJail", .05, 0, function()
-		if pl.InJail == true then
+		if pl:GetNWBool("nAdmin_InJail") == true then
 			pl:SetPos(vec)
 		else
 			pl:Spawn()
 			timer.Remove(tostring(pl) .. "nAdmin_ToJail")
 		end
 	end)
+	net.Start("nAdmin_JailHUD")
+		net.WriteFloat(arg2)
+	net.Send(pl)
 end)
 nAdmin.SetTAndDesc("jail", "builderreal", "Садит человека в гулаг. arg1 - ник игрока, arg2 - количество секунд.")
 
@@ -256,20 +261,20 @@ nAdmin.AddCommand("unjail", true, function(ply, cmd, args)
 		return
 	end
 	local arg2 = tonumber(args[2]) or 0
-	if not pl.InJail then
+	if not pl:GetNWBool("nAdmin_InJail") then
 		return
 	end
 	if timer.Exists(tostring(pl) .. "_nAdminJail") then
 		timer.Remove(tostring(pl) .. "_nAdminJail")
 	end
-	pl.InJail = false
+	pl:SetNWBool("nAdmin_InJail", false)
 	pl:Spawn()
 	nAdmin.PrintAndWarn(ply:Name() .. " выпустил из гулага " .. pl:Name() .. ".")
 end)
 nAdmin.SetTAndDesc("unjail", "builderreal", "Освобождает человека с гулага. arg1 - ник игрока.")
 
 hook.Add("PlayerSpawnObject", "restrictJail", function(ply)
-	if ply.InJail then
+	if ply:GetNWBool("nAdmin_InJail") then
 		return false
 	end
 end)

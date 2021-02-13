@@ -29,10 +29,10 @@ if SERVER then
 		plCached[pl] = nil
 	end)
 
-	function nAdmin.AutoComplete(cmd, args)
+	function nAdmin.AutoComplete(cmd, args) -- я вообще не ебу как ее переделать
 		args = string.Trim(args)
 		args = string.lower(args)
-		local e = string.Explode(" ", args)
+		local e = args:Split(" ")
 		local tbl = {}
 		local cmdFull = ""
 		local a2 = e[2]
@@ -41,15 +41,16 @@ if SERVER then
 			table.insert(s_, k)
 		end
 		table.sort(s_)
+		local e1 = e[1]
 		for i = 1, #s_ do
 			local v = s_[i]
-			if string.match(string.lower(v), e[1]) then
+			if string.match(string.lower(v), e1) then
 				v = cmd .. " " .. v
 				cmdFull = v
-				if string.sub(v, 3, #v) == e[1] then
+				if string.sub(v, 3, #v) == e1 then
 					goto skipp
 				end
-				if not a2 or v == e[1] then
+				if not a2 or v == e1 then
 					table.insert(tbl, v)
 				end
 			end
@@ -60,7 +61,13 @@ if SERVER then
 			for i = 1, #players do
 				local v = players[i]
 				local nick = v:Name()
-				if string.match(string.lower(nick), e[2]) then
+				local s = ""
+				if a2 ~= nil then
+					s = string.match(string.lower(nick), e[2])
+				else
+					s = true
+				end
+				if s then
 					nick = "\"" .. nick .. "\""
 					nick = cmdFull .. " " .. nick
 					table.insert(tbl, nick)
@@ -92,6 +99,9 @@ if SERVER then
 				return
 			end
 			::skipCheck::
+			if not IsValid(pl) then
+				pl = Entity(0)
+			end
 			command(pl, cmd, args)
 			for _, v in ipairs(player.GetHumans()) do
 				if v:IsAdmin() then
@@ -291,12 +301,15 @@ if CLIENT or SERVER then
 			AddCSLuaFile("nadmin/" .. v)
 			nAdmin.Print("[SHARED] Загружено: " .. v)
 		end
-		if SERVER then
-			-- [[ CLIENT ]] --
-			for k, v in ipairs(file.Find("nadmin/client/*", "LUA")) do
+		for k, v in ipairs(file.Find("nadmin/client/*", "LUA")) do
+			if CLIENT then
+				include("nadmin/client/" .. v)
+			else
 				AddCSLuaFile("nadmin/client/" .. v)
-				nAdmin.Print("[CLIENT] Загружено: " .. v)
 			end
+			nAdmin.Print("[CLIENT] Загружено: " .. v)
+		end
+		if SERVER then
 			-- [[ SERVER ]] --
 			for k, v in ipairs(file.Find("nadmin/server/*", "LUA")) do
 				include("nadmin/server/" .. v)

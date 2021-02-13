@@ -4,6 +4,7 @@ if IsValid(nGUI) then
 	nGUI:Remove()
 	gui.EnableScreenClicker(false)
 end
+nAdmin.FullCMDS = false
 function nAdmin.mGUI()
 	local a = {}
 	local cYes = {}
@@ -269,12 +270,13 @@ function nAdmin.mGUI()
 		SetClipboardText(runCommand:GetText())
 	end
 	hook.Add("nAdmin_SystimeUpdate", "", function(a, b)
+		if b:find(LocalPlayer():Name()) then
+			b = b .. "; " .. math.Round((SysTime() - a or SysTime()), 5)
+		end
 		logs:InsertColorChange(200, 200, 200, 255)
 		logs:AppendText("[" .. os.date("%H:%M:%S") .. "] " .. b .. "\n")
-		if not b:find(LocalPlayer():Name()) then return end
-		logs:InsertColorChange(30, 180, 30, 255)
-		logs:AppendText("Выполнено за: " .. math.Round((SysTime() - a or SysTime()), 5) .. "\n")
 	end)
+	nAdmin.FullCMDS = true
 end
 
 local function getKeyboardFocus(pnl)

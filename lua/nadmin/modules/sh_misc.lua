@@ -2,7 +2,10 @@ if CLIENT then
 	nAdmin.AddCommand("menu", function(...)
 		nAdmin.VisibleGUI = not nAdmin.VisibleGUI
 		if not IsValid(nGUI) then
-			nAdmin.mGUI()
+			xpcall(nAdmin.mGUI, function()
+				p("Меню недоступно. Перезагружаю файлы!")
+				nAdmin.UpdateFiles()
+			end)
 		elseif IsValid(nGUI) then
 			if nGUI:IsVisible() then
 				gui.EnableScreenClicker(false)
@@ -50,6 +53,23 @@ if CLIENT then
 			end
 		end
 		hook.Remove("OnPlayerChat","nAdminMute")
+	end)
+	nAdmin.AddCommand("help", function()
+		if not nAdmin.FullCMDS then
+			nAdmin.Print("Пожалуйста, подождите...")
+			net.Start("nadmin_message")
+				net.WriteUInt(1, 1)
+			net.SendToServer()
+			timer.Simple(1.5, function()
+				for k, v in SortedPairs(nAdmin.Commands) do
+					p("", "n " .. k .. " -", v.desc or "Нет описания", v.T or "Игрок")
+				end
+			end)
+		else
+			for k, v in SortedPairs(nAdmin.Commands) do
+				p("", "n " .. k .. " -", v.desc or "Нет описания", "Доступен с: " .. (v.T or "Игрок"))
+			end
+		end
 	end)
 	net.Receive("nAdmin_MFunctions", function()
 		local str = net.ReadString()
@@ -143,5 +163,8 @@ if SERVER then
 				ply:Kick("Отключился: " .. table.concat(args, " "))
 			end
 		end)
+	end)
+	nAdmin.AddCommand("help", false, function(ply, _, args)
+		ply:SendF("help")
 	end)
 end
