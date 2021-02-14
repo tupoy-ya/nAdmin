@@ -8,7 +8,7 @@ if CLIENT or SERVER then
 		["admin"] = {num = 4, n = "Админ", clr = Color(255, 144, 0)},
 		["moderator"] = {num = 5, n = "Модератор", clr = Color(100, 100, 214)},
 		["oleg"] = {num = 6, n = "Игрок", clr = Color(0, 255, 37)},
-		["osobenniy2"] = {num = 7, n = "Админ", clr = Color(100, 0, 237)},
+		["osobenniy2"] = {num = 7, n = "Хедбэнгер", clr = Color(100, 0, 237)},
 		["osobenniy"] = {num = 8, n = "Кальянщик", clr = Color(142, 0, 165)},
 		["builderreal"] = {num = 9, n = "Строитель", clr = Color(255, 255, 255)},
 		["e2_coder"] = {num = 9, n = "E2-кодер", clr = Color(255, 0, 0)},

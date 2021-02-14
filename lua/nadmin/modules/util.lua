@@ -45,7 +45,8 @@ function nAdmin.AddBan(ply_, minutes, reason, o, banid_)
 	::zcont::
 	if banid_ == true then
 		ply_ = ply_:Trim()
-		if not string.StartWith(ply_, "STEAM_0") then
+		ply_ = ply_:lower()
+		if not string.StartWith(ply_, "steam_0") then
 			nAdmin.Warn(o, "Неправильно введён аргумент!")
 			return
 		end
@@ -55,7 +56,7 @@ function nAdmin.AddBan(ply_, minutes, reason, o, banid_)
 			b = Global_Teams["user"].num
 			goto hui
 		end
-		b = Global_Teams[nGSteamIDs[ply_]].num
+		b = Global_Teams[nGSteamIDs[ply_]].num or 13
 		::hui::
 		if a > b then
 			nAdmin.Warn(o, "Вы не можете забанить данный SteamID, т.к. у него выше/равная привилегия.")
@@ -221,7 +222,7 @@ nAdmin.AddCommand("jail", true, function(ply, cmd, args)
 		return
 	end
 	local function pl_Null()
-		pl.InJail = false
+		pl:SetNWBool("nAdmin_InJail", false)
 	end
 	pl_Null()
 	local arg2 = tonumber(args[2]) or 0
@@ -400,10 +401,10 @@ nAdmin.AddCommand("mute", false, function(ply, cmd, args)
 	end
 	nAdmin.PrintAndWarn(ply:Name() .. " " .. (pl.Gagged and "запретил" or "разрешил") .. " писать в чат " .. pl:Name().. ".")
 end)
-nAdmin.SetTAndDesc("mute", "osobenniy2", "Запретить/разрешить игроку писать в чат. arg1 - ник.")
+nAdmin.SetTAndDesc("mute", "moderator", "Запретить/разрешить игроку писать в чат. arg1 - ник.")
 
 local function plSay(pl, txt)
-	if pl.Muted then return "" end
+	if pl.MuteMuted then return "" end
 end
 hook.Add("PlayerSay", "nAdmin_mute", plSay)
 
@@ -436,7 +437,7 @@ nAdmin.AddCommand("mgag", false, function(ply, cmd, args)
 	end
 	nAdmin.PrintAndWarn(ply:Name() .. " " .. (pl.Gagged and "запретил" or "разрешил") .. "  писать в чат и говорить в ГЧ " .. pl:Name().. ".")
 end)
-nAdmin.SetTAndDesc("mgag", "admin", "Запретить/разрешить игроку писать в чат и говорить в ГЧ. arg1 - ник.")
+nAdmin.SetTAndDesc("mgag", "moderator", "Запретить/разрешить игроку писать в чат и говорить в ГЧ. arg1 - ник.")
 
 nAdmin.AddCommand("banip", true, function(ply, cmd, args)
 	local check = nAdmin.ValidCheckCommand(args, 2, ply, "banip")

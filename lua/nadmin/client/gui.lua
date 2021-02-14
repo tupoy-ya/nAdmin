@@ -14,14 +14,13 @@ function nAdmin.mGUI()
 	nGUI:SetTitle("")
 	nGUI:SetVisible(true)
 	nGUI:MakePopup()
-	nGUI:SetKeyboardInputEnabled(false) -- гениально блять
+	nGUI:SetKeyboardInputEnabled(false)
 	gui.EnableScreenClicker(true)
 	nGUI.Paint = function(self, w, h)
 		draw.RoundedBox(5, 0, 0, w, h, Color(200, 200, 200))
 		draw.RoundedBox(4, 2, 2, w - 4, h - 4, Color(40, 40, 40))
 	end
 	nGUI.OnClose = function()
-		nAdmin.VisibleGUI = false
 		gui.EnableScreenClicker(false)
 	end
 	nGUI:SetDeleteOnClose(false)
@@ -57,13 +56,14 @@ function nAdmin.mGUI()
 			cYes = {}
 		end
 		if txt == "" then
-			for k in next, nAdmin.Commands do
+			for k, d in next, nAdmin.Commands do
+				if LocalPlayer():Team() > Global_Teams[d.T or "user"].num then continue end
 				cCount = cCount + 1
 				a[cCount] = k
 			end
-			table.sort(a)
 		else
-			for k in next, nAdmin.Commands do
+			for k, d in next, nAdmin.Commands do
+				if LocalPlayer():Team() > Global_Teams[d.T or "user"].num then continue end
 				local wf = nAdmin.Commands[k].desc
 				if wf == nil then
 					wf = ""
@@ -73,8 +73,8 @@ function nAdmin.mGUI()
 					a[cCount] = k
 				end
 			end
-			table.sort(a)
 		end
+		table.sort(a)
 	end
 	clist.Think = function()
 		for i = 1, #a do
@@ -231,7 +231,9 @@ function nAdmin.mGUI()
 		if allargs == args or not des:find("arg") then
 			but:SetDisabled(false)
 		else
-			but:SetDisabled(true)
+			if not des:find'необязательно' then
+				but:SetDisabled(true)
+			end
 		end
 		but:SetPos(315, ps:GetTall() + 45)
 	end

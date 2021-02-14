@@ -2,7 +2,7 @@ surface.CreateFont("nAdmin_JailHUD", {font = "Roboto", size = 24, antialias = tr
 
 net.Receive("nAdmin_JailHUD", function()
 	local a = net.ReadFloat()
-	local r = RealTime() + 300
+	local r = RealTime() + a
 	local b = 0
 
 	if a == 0 then
@@ -40,7 +40,7 @@ net.Receive("nAdmin_JailHUD", function()
 		surface.SetTextPos(ScrW() / 2 - w / 2, ScrH() / 2 - 125)
 		surface.DrawText("Вам осталось сидеть: " .. b .. " секунд.")
 
-		if isnumber(a) and a < 0 then
+		if isnumber(b) and b < 0 then
 			hook.Remove("HUDPaint", "nAdmin_JailHUD")
 		end
 	end)

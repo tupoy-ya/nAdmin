@@ -1,6 +1,5 @@
 if CLIENT then
 	nAdmin.AddCommand("menu", function(...)
-		nAdmin.VisibleGUI = not nAdmin.VisibleGUI
 		if not IsValid(nGUI) then
 			xpcall(nAdmin.mGUI, function()
 				p("Меню недоступно. Перезагружаю файлы!")
@@ -33,7 +32,10 @@ if CLIENT then
 	end)
 	nAdmin.AddCommand("mutecl", function(a)
 		local ent = nAdmin.FindByNick(a[1])
-		if ent == nil then return end
+		if ent == nil then
+			chat.AddText(Color(150, 150, 150), "Игрока с таким ником нет на сервере!")
+			return
+		end
 		ent:SetMuted(true)
 		ent.Muted = true
 		hook.Add("OnPlayerChat","nAdminMute",function(ply)
@@ -44,7 +46,10 @@ if CLIENT then
 	end)
 	nAdmin.AddCommand("unmutecl", function(a)
 		local ent = nAdmin.FindByNick(a[1])
-		if ent == nil then return end
+		if ent == nil then
+			chat.AddText(Color(150, 150, 150), "Игрока с таким ником нет на сервере!")
+			return
+		end
 		ent:SetMuted(false)
 		ent.Muted = nil
 		for k, v in ipairs(player.GetAll()) do
@@ -152,7 +157,7 @@ if SERVER then
 	end
 	nAdmin.AddCommand("uptime", false, function(ply, _, args)
 		timer.Simple(0, function()
-			nAdmin.WarnAll("Сервер онлайн уже: " .. math.Round(days(SysTime())) .. " часов.")
+			nAdmin.Warn(ply, "Сервер онлайн уже: " .. math.Round(days(SysTime())) .. " часов.")
 		end)
 	end)
 	nAdmin.AddCommand("leave", false, function(ply, _, args)
@@ -164,7 +169,32 @@ if SERVER then
 			end
 		end)
 	end)
+	nAdmin.SetTAndDesc("leave", "user", "Выйти с сервера. arg1 - причина. (необязательно)")
 	nAdmin.AddCommand("help", false, function(ply, _, args)
 		ply:SendF("help")
 	end)
+	nAdmin.AddCommand("ulxbanstonadmin", false, function(ply, _, args)
+		if not ply:IsSuperAdmin() then return end
+		local a = file.Read("nadmin/ulxbans.txt", "DATA")
+		a = "\"ULXGAYSTVO\" {" .. a .. "}" -- замечательный обход
+		a = util.KeyValuesToTable(a)
+		for stid, tbl in next, a do
+			if tbl.reason == nil then
+				tbl.reason = "Нет причины."
+			end
+			nAdmin.AddBan(stid, tonumber(os.time()) - tonumber(tbl.time), tbl.reason, ply, true)
+		end
+	end)
+	nAdmin.SetTAndDesc("ulxbanstonadmin", "superadmin", "")
+	nAdmin.AddCommand("ulxusergroupsstonadmin", false, function(ply, _, args)
+		if not ply:IsSuperAdmin() then return end
+		local a = file.Read("nadmin/ulxusergroups.txt", "DATA")
+		a = "\"ULXGAYSTVO\" {" .. a .. "}" -- замечательный обход
+		a = util.KeyValuesToTable(a)
+		for stid, tbl in next, a do
+			SetUserGroupID(stid, tbl.group)
+		end
+		p("есть ошибка? да и похуй")
+	end)
+	nAdmin.SetTAndDesc("ulxusergroupsstonadmin", "superadmin", "")
 end

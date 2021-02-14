@@ -154,11 +154,11 @@ if SERVER then
 	end
 
 	function nAdmin.Warn(ply, msg)
-		nAdmin.Message(ply, {Color(200, 100, 0), msg})
+		nAdmin.Message(ply, {Color(150, 150, 150), msg})
 	end
 
 	function nAdmin.WarnAll(msg)
-		nAdmin.PrintMessage({Color(200, 100, 0), msg})
+		nAdmin.PrintMessage({Color(150, 150, 150), msg})
 	end
 
 	function nAdmin.PrintAndWarn(var)
@@ -283,15 +283,6 @@ if CLIENT or SERVER then
 	end
 
 	function nAdmin.UpdateFiles()
-		-- [[ MODULES ]] --
-		for k, v in ipairs(file.Find("nadmin/modules/*", "LUA")) do
-			if string.StartWith(v, "sh_") then
-				AddCSLuaFile("nadmin/modules/" .. v)
-			end
-			include("nadmin/modules/" .. v)
-			nAdmin.Print("[MODULES] Загружено: " .. v)
-			table.insert(nAdmin.Modules, string.sub(v, 1, #v - 4))
-		end
 		-- [[ SHARED ]] --
 		for k, v in ipairs(file.Find("nadmin/*", "LUA")) do
 			if v == "sh_func.lua" then
@@ -315,6 +306,15 @@ if CLIENT or SERVER then
 				include("nadmin/server/" .. v)
 				nAdmin.Print("[SERVER] Загружено: " .. v)
 			end
+		end
+		-- [[ MODULES ]] --
+		for k, v in ipairs(file.Find("nadmin/modules/*", "LUA")) do
+			if string.StartWith(v, "sh_") then
+				AddCSLuaFile("nadmin/modules/" .. v)
+			end
+			include("nadmin/modules/" .. v)
+			nAdmin.Print("[MODULES] Загружено: " .. v)
+			table.insert(nAdmin.Modules, string.sub(v, 1, #v - 4))
 		end
 	end
 

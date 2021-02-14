@@ -12,21 +12,24 @@ hook.Add("PlayerCheckLimit", "limits", function(pl, limit, cur, dMax)
 	end
 end)
 
-local alllogs = {
-	"Prop",
-	"Ragdoll",
-	"SENT",
-	"Effect"
-}
+hook.Add("InitPostEntity", "nAdmin_loadlogs", function()
+	hook.Remove("InitPostEntity", "nAdmin_loadlogs")
+	local alllogs = {
+		"Prop",
+		"Ragdoll",
+		"SENT",
+		"Effect",
+		"Vehicle"
+	}
 
-for i = 1, #alllogs do
-	local _log = alllogs[i]
-	local tostring = tostring
-	hook.Add("PlayerSpawned" .. _log, "nAdminLog", function(a, b)
-		p(a:Name() .. " заспавнил: " .. tostring(b))
+	for i = 1, #alllogs do
+		local _log = alllogs[i]
+		hook.Add("PlayerSpawned" .. _log, "nAdminLog", function(a, b)
+			p(a:Name() .. " заспавнил: " .. tostring(b))
+		end)
+	end
+
+	hook.Add("CanTool", "nAdminLog", function(a, _, b)
+		p(a:Name() .. " использовал инструмент: " .. tostring(b))
 	end)
-end
-
-hook.Add("CanTool", "nAdminLog", function(a, _, b)
-	p(a:Name() .. " использовал инструмент: " .. tostring(b))
 end)

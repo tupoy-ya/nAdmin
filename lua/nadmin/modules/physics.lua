@@ -42,7 +42,7 @@ nAdmin.AddCommand("weldlag", false, function(ply, cmd, args)
 		end
 	end
 end)
-nAdmin.SetTAndDesc("weldlag", "admin", "Найти лагающие констрейны пропов.")
+nAdmin.SetTAndDesc("weldlag", "moderator", "Найти лагающие констрейны пропов.")
 
 nAdmin.AddCommand("fp", true, function(ply)
 	for _, ent in ipairs(ents.GetAll()) do

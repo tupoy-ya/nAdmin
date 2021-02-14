@@ -13,11 +13,22 @@ function meta:SetUserGroup(group)
 	timer.Simple(0, function()
 		self:SetTeam(_Global_Teams[group].num)
 	end)
-	if group ~= "user" and SteamIDs[self:SteamID()] == nil then
+	if (group ~= "user" and SteamIDs[self:SteamID()] == nil) or (SteamIDs[self:SteamID()] and SteamIDs[self:SteamID()].group ~= group) then
 		SteamIDs[self:SteamID()] = {}
 		SteamIDs[self:SteamID()].group = self:GetNWString("usergroup")
 		file.Write("nadmin/users.txt", util.TableToJSON(SteamIDs))
 	end
+end
+
+function SetUserGroupID(stid, group)
+	SteamIDs[stid] = {}
+	if _Global_Teams[group] == nil then
+		SteamIDs[stid].group = nil
+		goto skip
+	end
+	SteamIDs[stid].group = tostring(group:Trim())
+	::skip::
+	file.Write("nadmin/users.txt", util.TableToJSON(SteamIDs))
 end
 
 local function LoadUsers()
