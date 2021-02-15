@@ -8,6 +8,7 @@ nAdmin.FullCMDS = false
 function nAdmin.mGUI()
 	local a = {}
 	local cYes = {}
+	local usergroup = LocalPlayer():GetUserGroup()
 	nGUI = vgui.Create'DFrame'
 	nGUI:SetSize(500, 300)
 	nGUI:Center()
@@ -26,9 +27,9 @@ function nAdmin.mGUI()
 	nGUI:SetDeleteOnClose(false)
 
 	local title = vgui.Create('DLabel', nGUI)
-	title:SetSize(100, 25)
+	title:SetSize(125, 25)
 	title:SetPos(5, 4)
-	title:SetText("[nAdmin]")
+	title:SetText("[nAdmin] | BETA")
 	title:SetTextColor(Color(230, 230, 230))
 	title:SetFont("nAdmin_desc")
 
@@ -49,7 +50,8 @@ function nAdmin.mGUI()
 		local cCount = 0
 		local l = 0
 		local txt = search:GetText()
-		if changed ~= txt then
+		if changed ~= txt or usergroup ~= LocalPlayer():GetUserGroup() then
+			usergroup = LocalPlayer():GetUserGroup()
 			clist:Clear()
 			changed = txt
 			a = {}
@@ -251,7 +253,7 @@ function nAdmin.mGUI()
 		local a = SysTime()
 		local gTN = tonumber(gT)
 		local ch = gTN ~= nil and gTN or 1
-		if ply:Team() > ch then
+		if LocalPlayer():Team() > ch then
 			logs:InsertColorChange(215, 0, 0, 255)
 			logs:AppendText("Нет доступа!\n")
 			return

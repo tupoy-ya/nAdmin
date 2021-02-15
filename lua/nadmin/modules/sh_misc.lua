@@ -18,6 +18,9 @@ if CLIENT then
 			end
 		end
 	end)
+	nAdmin.AddCommand("fullupdate", function()
+		LocalPlayer():ConCommand("record 1;stop")
+	end)
 	nAdmin.AddCommand("g", function(...)
 		gui.OpenURL("https://www.google.com/search?&q=" .. table.concat({...}, "+"))
 	end)
@@ -111,7 +114,7 @@ if SERVER then
 		end
 	end
 	nAdmin.AddCommand("fullupdate", true, function(ply, cmd, args)
-		ply:ConCommand("record 1;stop")
+		ply:SendF("fullupdate", args)
 	end)
 	nAdmin.AddCommand("g", true, function(ply, cmd, args)
 		ply:SendF("g", args)
@@ -173,6 +176,7 @@ if SERVER then
 	nAdmin.AddCommand("help", false, function(ply, _, args)
 		ply:SendF("help")
 	end)
+	--[[
 	nAdmin.AddCommand("ulxbanstonadmin", false, function(ply, _, args)
 		if not ply:IsSuperAdmin() then return end
 		local a = file.Read("nadmin/ulxbans.txt", "DATA")
@@ -197,4 +201,5 @@ if SERVER then
 		p("есть ошибка? да и похуй")
 	end)
 	nAdmin.SetTAndDesc("ulxusergroupsstonadmin", "superadmin", "")
+	]]
 end

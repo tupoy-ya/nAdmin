@@ -65,13 +65,17 @@ function nAdmin.AddBan(ply_, minutes, reason, o, banid_)
 		ply_ = util.SteamIDTo64(ply_)
 		ply_Kick = ply_
 	end
+	local banM = tonumber(os.time()) + (minutes * 60)
+	if minutes == 0 then
+		banM = 0
+	end
 	if ply_Kick ~= false and not banid_ and ply_Kick:IsPlayer() then
 		local stid = ply_Kick:SteamID64()
-		bans[stid] = {time = tonumber(os.time()) + (minutes * 60), reason = reason}
+		bans[stid] = {time = banM, reason = reason}
 		ply_Kick:Kick("Вы забанены. Причина: " .. bans[stid].reason .. "; время: " .. string.NiceTime(bans[stid].time - tonumber(os.time())))
 		goto skipb
 	end
-	bans[ply_Kick] = {time = tonumber(os.time()) + (minutes * 60), reason = reason}
+	bans[ply_Kick] = {time = banM, reason = reason}
 	nAdmin.WarnAll(util.SteamIDFrom64(ply_Kick) .. " был заблокирован с причиной: " .. bans[ply_Kick].reason .. "; на: " .. string.NiceTime(bans[ply_Kick].time - tonumber(os.time())) .. "; админом: " .. o:Name())
 	::skipb::
 	nAdmin.UpdateBans()
@@ -131,6 +135,9 @@ nAdmin.AddCommand("ban", true, function(ply, cmd, args)
 	curtime = CurTime() + 10
 	local min_ = args[2]
 	local m2 = tonumber(string.sub(min_, 1, #min_ - 1))
+	if min_ == 0 then
+		goto skip
+	end
 	if string.EndsWith(min_, "m") then
 		m2 = m2
 	elseif string.EndsWith(min_, "h") then
@@ -143,6 +150,7 @@ nAdmin.AddCommand("ban", true, function(ply, cmd, args)
 		nAdmin.Warn(ply, "Введите корректное значение 2 аргумента. (Пример: 7m, 7h, 7d, 7w)")
 		return
 	end
+	::skip::
 	nAdmin.AddBan(args[1], m2, args[3], ply)
 end)
 nAdmin.SetTAndDesc("ban", "moderator", "Банит игрока. arg1 - ник, arg2 - время [7m, 7h, 7d, 7w], arg3 - причина.")
@@ -159,6 +167,9 @@ nAdmin.AddCommand("banid", true, function(ply, cmd, args)
 	curtime = CurTime() + 10
 	local min_ = args[2]
 	local m2 = tonumber(string.sub(min_, 1, #min_ - 1))
+	if min_ == 0 then
+		goto skip
+	end
 	if string.EndsWith(min_, "m") then
 		m2 = m2
 	elseif string.EndsWith(min_, "h") then
@@ -171,6 +182,7 @@ nAdmin.AddCommand("banid", true, function(ply, cmd, args)
 		nAdmin.Warn(ply, "Введите корректное значение 2 аргумента. (Пример: 7m, 7h, 7d, 7w)")
 		return
 	end
+	::skip::
 	nAdmin.AddBan(args[1], m2, args[3]:Trim(), ply, true)
 end)
 nAdmin.SetTAndDesc("banid", "admin", "Банит игрока по SteamID. arg1 - SteamID, arg2 - время [7m, 7h, 7d, 7w], arg3 - причина.")
@@ -290,7 +302,7 @@ nAdmin.AddCommand("noclip", true, function(ply, cmd, args)
 		nAdmin.Warn(ply, "Сейчас нельзя пользоваться Noclip'ом!")
 	end
 end)
-nAdmin.SetTAndDesc("noclip", "builderreal", "Включает/выключает Noclip.")
+nAdmin.SetTAndDesc("noclip", "noclip", "Включает/выключает Noclip. /noclip или n noclip.")
 
 nAdmin.AddCommand("spectate", true, function(ply, cmd, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "spectate")

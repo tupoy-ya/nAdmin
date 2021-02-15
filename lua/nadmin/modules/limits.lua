@@ -25,11 +25,11 @@ hook.Add("InitPostEntity", "nAdmin_loadlogs", function()
 	for i = 1, #alllogs do
 		local _log = alllogs[i]
 		hook.Add("PlayerSpawned" .. _log, "nAdminLog", function(a, b)
-			p(a:Name() .. " заспавнил: " .. tostring(b))
+			Msg(a:Name() .. " заспавнил: " .. tostring(b) .. "\n")
 		end)
 	end
 
 	hook.Add("CanTool", "nAdminLog", function(a, _, b)
-		p(a:Name() .. " использовал инструмент: " .. tostring(b))
+		Msg(a:Name() .. " использовал инструмент: " .. tostring(b) .. "\n")
 	end)
 end)

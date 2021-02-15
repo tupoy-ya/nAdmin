@@ -24,6 +24,19 @@ if SERVER then
 		return
 	end
 
+	require'mysqloo'
+
+	if not mysqloo then
+		nAdmin.Print("gmsv_mysqloo не найден!!!")
+		return
+	end
+
+	if not file.Exists("nadmin/dbcfg.txt", "DATA") then
+		file.Write("nadmin/dbcfg.txt", util.TableToJSON({["url"] = "", ["login"] = "", ["pass"] = "", ["dbName"] = "", ["port"] = 3306}))
+	end
+	local mysqlConnect = util.JSONToTable(file.Read("nAdmin/dbcfg.txt", "DATA"))
+	nAdminDB, nAdminDBFail = mysqloo.connect(mysqlConnect["url"], mysqlConnect["login"], mysqlConnect["pass"], mysqlConnect["dbName"], math.Round(mysqlConnect["port"]))
+
 	if nAdminDBFail then
 		nAdmin.Print("Не удалось подключиться к базе данных.")
 		return
@@ -31,13 +44,15 @@ if SERVER then
 
 	local meta = FindMetaTable'Player'
 
-	function meta:SetPTime(TIME)
+	function meta:SetPTime(TIME, setnwint)
 		local ACID = self:AccountID()
 		local Q = nAdminDB:query("REPLACE INTO nAdmin_time (infoid, time) VALUES (" .. SQLStr(ACID) .. ", " .. SQLStr(TIME) .. ")")
 		function Q:onError(err)
 			nAdmin.Print("Запрос выдал ошибку: " .. err)
 		end
 		Q:start()
+		if not setnwint then return end
+		self:SetNWInt("TotalTime", TIME)
 	end
 
 	function meta:GetPTime(func)
@@ -83,12 +98,12 @@ if SERVER then
     end)
 
     hook.Add("PlayerDisconnected", "PTime", function(ply)
-        ply:SetPTime(ply:GetTotalTime())
+        ply:SetPTime(ply:GetTotalTime(), false)
     end)
 
 	local function savePTime()
 		for _, ply in ipairs(player.GetAll()) do
-			ply:SetPTime(ply:GetTotalTime())
+			ply:SetPTime(math.Round(ply:GetTotalTime()), false)
 		end
 	end
 
@@ -98,8 +113,8 @@ if SERVER then
 		timer.Simple(.5, function()
 			local query = sql.QueryRow("SELECT totaltime FROM utime WHERE player = " .. ply:UniqueID() .. ";")
 			if query ~= nil then
-				ply:SetPTime(query)
-				sql.Query("DELETE FROM utime WHERE player = " .. ply:UniqueID() .. ";")
+				ply:SetPTime(query.totaltime)
+				--sql.Query("DELETE FROM utime WHERE player = " .. ply:UniqueID() .. ";")
 			end
 		end)
 	end)

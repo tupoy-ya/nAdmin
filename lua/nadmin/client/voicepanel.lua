@@ -1,4 +1,4 @@
-hook.Add("PostGamemodeLoaded", "vBox", function()
+hook.Add("StartCommand", "vBox", function()
 	surface.CreateFont("voiceBox", {font = "Roboto", size = 24, antialias = true, extended = true})
 
 	local GM = GAMEMODE
@@ -47,13 +47,14 @@ hook.Add("PostGamemodeLoaded", "vBox", function()
 		surface.SetFont'voiceBox'
 
 		local nick = self.ply:Name()
-		surface.SetTextColor(0, 0, 0)
-		surface.SetTextPos(a + 36 + 1, b + 3 + 1)
-		surface.DrawText(nick)
 
 		if string.len(self.ply:Name()) > 18 then
 			nick = string.sub(nick, 1, 18) .. "..."
 		end
+
+		surface.SetTextColor(0, 0, 0)
+		surface.SetTextPos(a + 36 + 1, b + 3 + 1)
+		surface.DrawText(nick)
 
 		surface.SetTextColor(255, 255, 255)
 		surface.SetTextPos(a + 36, b + 3)
@@ -63,6 +64,12 @@ hook.Add("PostGamemodeLoaded", "vBox", function()
 	function PANEL:Think()
 		if ( self.fadeAnim ) then
 			self.fadeAnim:Run()
+		end
+		local a = LocalPlayer():GetActiveWeapon()
+		if IsValid(a) and a:GetClass():find'camera' then
+			self:SetAlpha(0)
+		elseif not self.fadeAnim then
+			self:SetAlpha(255)
 		end
 	end
 
@@ -124,6 +131,6 @@ hook.Add("PostGamemodeLoaded", "vBox", function()
 
 	end
 
-	hook.Add( "InitPostEntity", "CreateVoiceVGUI", CreateVoiceVGUI )
-	hook.Remove("PostGamemodeLoaded", "vBox")
+	CreateVoiceVGUI()
+	hook.Remove("StartCommand", "vBox")
 end)

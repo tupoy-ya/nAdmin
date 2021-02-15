@@ -41,3 +41,9 @@ nAdmin.AddCommand("pvp", false, function(ply, cmd, args)
 	end)
 end)
 nAdmin.SetTAndDesc("pvp", "user", "Включить ПВП-режим.")
+
+hook.Add("PlayerNoClip", "nAdmin_buildmode", function(ply)
+	if ply.B then
+		return true
+	end
+end)

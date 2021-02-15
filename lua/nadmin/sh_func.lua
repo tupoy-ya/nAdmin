@@ -33,6 +33,7 @@ if SERVER then
 		args = string.Trim(args)
 		args = string.lower(args)
 		local e = args:Split(" ")
+		if e[3] then return end
 		local tbl = {}
 		local cmdFull = ""
 		local a2 = e[2]
@@ -98,8 +99,11 @@ if SERVER then
 			if not nAdmin.GetAccess(arg1, pl) then
 				return
 			end
-			::skipCheck::
-			if not IsValid(pl) then
+ 			::skipCheck::
+			if args[1] == "^" then
+				args[1] = pl:Name()
+			end
+			if not pl:IsValid() then
 				pl = Entity(0)
 			end
 			command(pl, cmd, args)
@@ -154,11 +158,11 @@ if SERVER then
 	end
 
 	function nAdmin.Warn(ply, msg)
-		nAdmin.Message(ply, {Color(150, 150, 150), msg})
+		nAdmin.Message(ply, {Color(180, 180, 180), msg})
 	end
 
 	function nAdmin.WarnAll(msg)
-		nAdmin.PrintMessage({Color(150, 150, 150), msg})
+		nAdmin.PrintMessage({Color(180, 180, 180), msg})
 	end
 
 	function nAdmin.PrintAndWarn(var)
@@ -192,6 +196,9 @@ if SERVER then
 
 	function nAdmin.GetAccess(cmd, pl)
 		if nAdmin.Commands[cmd].T == nil then
+			return true
+		end
+		if not pl:IsValid() then
 			return true
 		end
 		local TF = pl:Team() <= Global_Teams[nAdmin.Commands[cmd].T].num
@@ -256,13 +263,30 @@ if CLIENT or SERVER then
 		local ent
 		nick = nick or ""
 		nick = string.lower(nick)
-		for _, v in ipairs(player.GetAll()) do
+		local player_GetAll = player.GetAll()
+		local find_ = false
+		for _, v in ipairs(player_GetAll) do
+			if v:Name() == nick then
+				ent = v
+				find_ = true
+				break
+			end
+		end
+		if find_ then
+			goto Skip
+		end
+		for _, v in ipairs(player_GetAll) do
 			local name = v:Name()
 			name = string.lower(name)
+			if name == "^" or name == "*" then
+				ent = v
+				break
+			end
 			if string.match(name, nick) then
 				ent = v
 			end
 		end
+		::Skip::
 		return ent
 	end
 

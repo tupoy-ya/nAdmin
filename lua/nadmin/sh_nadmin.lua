@@ -3,16 +3,16 @@ if CLIENT or SERVER then
 
 	local G_Teams = {
 		["superadmin"] = {num = 1, n = "Создатель", clr = Color(200, 0, 0)},
-		["Spy"] = {num = 2, n = "Игрок", clr = Color(0, 255, 37)},
-		["vutka"] = {num = 3, n = "Игрок", clr = Color(0, 255, 37)},
-		["admin"] = {num = 4, n = "Админ", clr = Color(255, 144, 0)},
+		["admin"] = {num = 2, n = "Админ", clr = Color(255, 144, 0)},
+		["Spy"] = {num = 3, n = "Игрок", clr = Color(0, 255, 37)},
+		["vutka"] = {num = 4, n = "Игрок", clr = Color(0, 255, 37)},
 		["moderator"] = {num = 5, n = "Модератор", clr = Color(100, 100, 214)},
 		["oleg"] = {num = 6, n = "Игрок", clr = Color(0, 255, 37)},
-		["osobenniy2"] = {num = 7, n = "Хедбэнгер", clr = Color(100, 0, 237)},
+		["osobenniy2"] = {num = 7, n = "Хедбэнгер", clr = Color(229, 0, 237)},
 		["osobenniy"] = {num = 8, n = "Кальянщик", clr = Color(142, 0, 165)},
 		["builderreal"] = {num = 9, n = "Строитель", clr = Color(255, 255, 255)},
 		["e2_coder"] = {num = 9, n = "E2-кодер", clr = Color(255, 0, 0)},
-		["noclip"] = {num = 10, n = "Гоблин", clr = Color(144, 29, 255)},
+		["noclip"] = {num = 10, n = "Гоблин", clr = Color(250, 250, 0)},
 		["user"] = {num = 11, n = "Игрок", clr = Color(0, 255, 37)}
 	}
 
@@ -131,7 +131,7 @@ if CLIENT or SERVER then
 
 	function meta:IsAdmin()
 		if (self:IsSuperAdmin()) then return true end
-		if (self:IsUserGroup("admin")) then return true end
+		if (self:Team() <= 4) then return true end
 		return false
 	end
 

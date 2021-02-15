@@ -88,6 +88,9 @@ if SERVER then
 			nAdmin.Warn(ply, "Нельзя сделать больше 7 ответов")
 			return
 		end
+		if table.Count(args) < 3 then
+			return
+		end
 		next_Kick = CurTime() + 20
 		local results = {}
 		local dop = {}
@@ -141,7 +144,7 @@ if SERVER then
 			end
 		end)
 	end)
-	nAdmin.SetTAndDesc("vote", "osobenniy2", "Запускает голование на кик игрока. arg1 - что обсуждаем, arg2, arg3, arg4, arg5.")
+	nAdmin.SetTAndDesc("vote", "osobenniy2", "Запускает голование на кик игрока. arg1 - что обсуждаем, arg2, arg3, arg4, arg5 (необязательно).")
 end
 
 if CLIENT then
