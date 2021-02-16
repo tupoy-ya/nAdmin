@@ -110,12 +110,26 @@ if SERVER then
 	timer.Create("savePTime", 120, 0, savePTime)
 
 	hook.Add("PlayerInitialSpawn", "restoretime", function(ply)
-		timer.Simple(.5, function()
-			local query = sql.QueryRow("SELECT totaltime FROM utime WHERE player = " .. ply:UniqueID() .. ";")
-			if query ~= nil then
-				ply:SetPTime(query.totaltime)
-				--sql.Query("DELETE FROM utime WHERE player = " .. ply:UniqueID() .. ";")
+		timer.Simple(1, function()
+			--local query = sql.QueryRow("SELECT totaltime FROM utime WHERE player = " .. ply:UniqueID() .. ";")
+			local ACID = ply:AccountID()
+			local Q = nAdminDB:query("SELECT * FROM `ulxtime` WHERE `player` = " .. ply:UniqueID())
+			function Q:onError(err)
+				nAdmin.Print("Запрос выдал ошибку: " .. err)
 			end
+			function Q:onSuccess(data)
+				if data and data[1] then
+					ply:SetPTime(data[1].totaltime, true)
+					timer.Simple(3, function()
+						local a = nAdminDB:query("DELETE FROM `ulxtime` WHERE `player` = " .. ply:UniqueID() .. ";")
+						a:start()
+						function a:onSuccess()
+							p'yess'
+						end
+					end)
+				end
+			end
+			Q:start()
 		end)
 	end)
 end

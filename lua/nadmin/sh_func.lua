@@ -4,6 +4,7 @@ nAdmin.Modules = {}
 
 if SERVER then
 	local meta = FindMetaTable"Player"
+	local metaENT = FindMetaTable"Entity"
 	local table_concat = table.concat
 
 	local plCached = {}
@@ -29,11 +30,23 @@ if SERVER then
 		plCached[pl] = nil
 	end)
 
+	function metaENT:Team()
+		return 0
+	end
+
+	function metaENT:SteamID()
+		return "STEAM_0:1:1"
+	end
+
+	function metaENT:Name()
+		return "Консоль"
+	end
+
 	function nAdmin.AutoComplete(cmd, args) -- я вообще не ебу как ее переделать
 		args = string.Trim(args)
 		args = string.lower(args)
 		local e = args:Split(" ")
-		if e[3] then return end
+		--if e[3] then return end
 		local tbl = {}
 		local cmdFull = ""
 		local a2 = e[2]
@@ -121,6 +134,10 @@ if SERVER then
 	nAdmin.FirstAddCommand()
 
 	function nAdmin.Message(ply, msg)
+		if ply:SteamID() == "STEAM_0:1:1" then
+			nAdmin.Print(msg[2])
+			return
+		end
 		if not IsValid(ply) then
 			nAdmin.Print("nAdmin.Message - ошибка.")
 			debug.Trace()
@@ -143,7 +160,7 @@ if SERVER then
 
 	function nAdmin.PrintMessage(msg)
 		if not msg then
-			nAdmin.Print("nAdmin.Message - ошибка.")
+			nAdmin.Print("nAdmin.PrintMessage - ошибка.")
 			debug.Trace()
 			return
 		end

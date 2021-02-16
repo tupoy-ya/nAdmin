@@ -11,9 +11,9 @@ if CLIENT or SERVER then
 		["osobenniy2"] = {num = 7, n = "Хедбэнгер", clr = Color(229, 0, 237)},
 		["osobenniy"] = {num = 8, n = "Кальянщик", clr = Color(142, 0, 165)},
 		["builderreal"] = {num = 9, n = "Строитель", clr = Color(255, 255, 255)},
-		["e2_coder"] = {num = 9, n = "E2-кодер", clr = Color(255, 0, 0)},
-		["noclip"] = {num = 10, n = "Гоблин", clr = Color(250, 250, 0)},
-		["user"] = {num = 11, n = "Игрок", clr = Color(0, 255, 37)}
+		["e2_coder"] = {num = 10, n = "E2-кодер", clr = Color(255, 0, 0)},
+		["noclip"] = {num = 11, n = "Гоблин", clr = Color(250, 250, 0)},
+		["user"] = {num = 12, n = "Игрок", clr = Color(0, 255, 37)}
 	}
 
 	nAdmin.Limits = {

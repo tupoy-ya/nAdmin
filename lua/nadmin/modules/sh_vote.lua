@@ -32,7 +32,7 @@ if SERVER then
 			net.WriteData(a)
 		net.Broadcast()
 		current_status = true
-		timer.Simple(20, function()
+		timer.Create("nAdmin_Vote", 20, 1, function()
 			net.Start("nAdmin_votekick")
 				net.WriteUInt(2, 3)
 			net.Broadcast()
@@ -71,6 +71,7 @@ if SERVER then
 		end)
 	end)
 	nAdmin.SetTAndDesc("votekick", "user", "Запускает голование на кик игрока. arg1 - ник, arg2 - причина.")
+
 	nAdmin.AddCommand("vote", false, function(ply, cmd, args)
 		if current_status then
 			nAdmin.Warn(ply, "В данный момент уже идет какое-то голосование!")
@@ -109,7 +110,7 @@ if SERVER then
 			net.WriteData(a)
 		net.Broadcast()
 		current_status = true
-		timer.Simple(20, function()
+		timer.Create("nAdmin_Vote", 20, 1, function()
 			net.Start("nAdmin_votekick")
 				net.WriteUInt(2, 3)
 			net.Broadcast()
@@ -145,6 +146,21 @@ if SERVER then
 		end)
 	end)
 	nAdmin.SetTAndDesc("vote", "osobenniy2", "Запускает голование на кик игрока. arg1 - что обсуждаем, arg2, arg3, arg4, arg5 (необязательно).")
+	nAdmin.AddCommand("stopvote", false, function(ply, cmd, args)
+		if not current_status then
+			nAdmin.Warn(ply, "В данный момент нет никакого голосования!")
+			return
+		end
+		if timer.Exists("nAdmin_Vote") then
+			timer.Remove("nAdmin_Vote")
+		end
+		net.Start("nAdmin_votekick")
+			net.WriteUInt(2, 3)
+		net.Broadcast()
+		current_status = false
+		nAdmin.WarnAll(ply:Name() .. " отменил голосование.")
+	end)
+	nAdmin.SetTAndDesc("stopvote", "osobenniy2", "Отменить голосование.")
 end
 
 if CLIENT then
@@ -223,7 +239,7 @@ if CLIENT then
 			local ent = net.ReadEntity()
 			local fl = net.ReadFloat()
 			results[ent] = fl
-			notification.AddLegacy(ent:Name() .. " проголосовал за: " .. cT[fl], NOTIFY_GENERIC, 3)
+			notification.AddLegacy(((ent and ent:Name()) or "???") .. " проголосовал за: " .. ((cT and cT[fl]) or "???"), NOTIFY_GENERIC, 3)
 			surface.PlaySound("buttons/button9.wav")
 		end
 	end)

@@ -1,5 +1,5 @@
 if CLIENT then
-	nAdmin.AddCommand("menu", function(...)
+	nAdmin.AddCommand("menu", function()
 		if not IsValid(nGUI) then
 			xpcall(nAdmin.mGUI, function()
 				p("Меню недоступно. Перезагружаю файлы!")
@@ -113,6 +113,9 @@ if SERVER then
 			net.Send(self)
 		end
 	end
+	nAdmin.AddCommand("menu", true, function(ply, cmd, args)
+		ply:SendF("menu")
+	end)
 	nAdmin.AddCommand("fullupdate", true, function(ply, cmd, args)
 		ply:SendF("fullupdate", args)
 	end)
@@ -133,9 +136,6 @@ if SERVER then
 	end)
 	nAdmin.AddCommand("git", true, function(ply, cmd, args)
 		ply:SendF("git", args)
-	end)
-	nAdmin.AddCommand("menu", true, function(ply, cmd, args)
-		ply:SendF("menu")
 	end)
 	nAdmin.AddCommand("giveammo", false, function(ply, cmd, args)
 		local check = nAdmin.ValidCheckCommand(args, 1, ply, "giveammo")
