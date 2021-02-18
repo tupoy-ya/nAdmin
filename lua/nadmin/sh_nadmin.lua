@@ -4,8 +4,8 @@ if CLIENT or SERVER then
 	local G_Teams = {
 		["superadmin"] = {num = 1, n = "Создатель", clr = Color(200, 0, 0)},
 		["admin"] = {num = 2, n = "Админ", clr = Color(255, 144, 0)},
-		["Spy"] = {num = 3, n = "Игрок", clr = Color(0, 255, 37)},
-		["vutka"] = {num = 4, n = "Игрок", clr = Color(0, 255, 37)},
+		["Spy"] = {num = 3, n = "Админ", clr = Color(0, 255, 37)},
+		["vutka"] = {num = 4, n = "Админ", clr = Color(0, 255, 37)},
 		["moderator"] = {num = 5, n = "Модератор", clr = Color(100, 100, 214)},
 		["oleg"] = {num = 6, n = "Игрок", clr = Color(0, 255, 37)},
 		["osobenniy2"] = {num = 7, n = "Хедбэнгер", clr = Color(229, 0, 237)},

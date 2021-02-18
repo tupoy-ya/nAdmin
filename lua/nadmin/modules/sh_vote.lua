@@ -25,9 +25,16 @@ if SERVER then
 		local answers = {[1] = "Да.", [2] = "Нет."}
 		table.sort(answers, function(a, b) return #a < #b end)
 		local a = util.Compress(util.TableToJSON(answers))
+		local ass = {}
+		for k, v in next, args do
+			if k > 1 then
+				table.insert(ass, v)
+			end
+		end
+		local ass2 = table.concat(ass, " ")
 		net.Start("nAdmin_votekick")
 			net.WriteUInt(1, 3)
-			net.WriteString("Выгнать " .. pl:Name() .. "? (Причина: " .. args[2] .. ")")
+			net.WriteString("Выгнать " .. pl:Name() .. "? (Причина: " .. ass2 .. ")")
 			net.WriteUInt(#a, 16)
 			net.WriteData(a)
 		net.Broadcast()
@@ -49,7 +56,7 @@ if SERVER then
 			local first = table.GetWinningKey(final)
 			nAdmin.WarnAll("В голосовании победил ответ: " .. answers[first])
 			if first == 1 then
-				pl:Kick("Вас выгнали всеобщим голосованием.")
+				pl:Kick("Вас выгнали всеобщим голосованием. Причина: " .. ass2)
 			end
 			results = {}
 		end)
@@ -101,7 +108,6 @@ if SERVER then
 			answers[i] = args_copy[i + 1]
 		end
 		table.sort(answers, function(a, b) return #a < #b end)
-		PT(answers)
 		local a = util.Compress(util.TableToJSON(answers))
 		net.Start("nAdmin_votekick")
 			net.WriteUInt(1, 3)
@@ -171,7 +177,7 @@ if CLIENT then
 		local max_ = 0
 		local lerp = -50
 		local count = #TB
-		local w, h = utf8.len(reason) * 15
+		local w, h = utf8.len(reason) * 10
 
 		for i = 1, table.Count(TB) do
 			for k, v in next, TB do

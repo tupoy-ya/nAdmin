@@ -24,7 +24,7 @@ function nAdmin.UpdateBans()
 	coroutine.resume(co)
 end
 
-function nAdmin.AddBan(ply_, minutes, reason, o, banid_)
+function nAdmin.AddBan(ply_, minutes, reason, o, banid_) -- это уёбищный код, но так как я ленивая залупа я не хочу это переписывать
 	local ply_Kick = nAdmin.FindByNick(ply_)
 	local reason_warn = ""
 	if banid_ then
@@ -50,8 +50,13 @@ function nAdmin.AddBan(ply_, minutes, reason, o, banid_)
 			nAdmin.Warn(o, "Неправильно введён аргумент!")
 			return
 		end
-		local a = Global_Teams[nGSteamIDs[o:SteamID():lower()].group].num
-		local b = nGSteamIDs[ply_]
+		local a
+		local b
+		if o:SteamID() == "STEAM_0:0:0" then
+			goto conskip
+		end
+		a = Global_Teams[nGSteamIDs[o:SteamID():lower()].group].num
+		b = nGSteamIDs[ply_]
 		if b == nil then
 			b = Global_Teams["user"].num
 			goto hui
@@ -62,6 +67,7 @@ function nAdmin.AddBan(ply_, minutes, reason, o, banid_)
 			nAdmin.Warn(o, "Вы не можете забанить данный SteamID, т.к. у него выше/равная привилегия.")
 			return
 		end
+		::conskip::
 		ply_Kick = ply_:lower()
 	end
 	local banM = tonumber(os.time()) + (minutes * 60)
@@ -76,16 +82,15 @@ function nAdmin.AddBan(ply_, minutes, reason, o, banid_)
 	end
 	bans[ply_Kick] = {time = banM, reason = reason}
 	nAdmin.WarnAll(ply_Kick .. " был заблокирован с причиной: " .. bans[ply_Kick].reason .. "; на: " .. string.NiceTime(bans[ply_Kick].time - tonumber(os.time())) .. "; админом: " .. o:Name())
-	if player.GetBySteamID(ply_Kick) then
-		player.GetBySteamID(ply_Kick):Kick("Вы забанены. Причина: " .. bans[ply_Kick].reason .. "; время: " .. string.NiceTime(bans[ply_Kick].time - tonumber(os.time())))
-	end
+	game.KickID(ply_Kick:upper(), "Вы забанены. Причина: " .. bans[ply_Kick].reason .. "; время: " .. string.NiceTime(bans[ply_Kick].time - tonumber(os.time())))
 	::skipb::
 	nAdmin.UpdateBans()
 	nAdmin.unbanUpdate()
 end
 
+local util_SteamIDFrom64 = util.SteamIDFrom64
 hook.Add("CheckPassword", "ban_System", function(id)
-	local a = util.SteamIDFrom64(id):lower()
+	local a = util_SteamIDFrom64(id):lower()
 	if bans[a] then
 		local reas = (bans[a] and bans[a].reason) or ""
 		nAdmin.Print(a .. " попытался зайти на сервер, но у него блокировка по причине: " .. reas)
@@ -188,7 +193,7 @@ nAdmin.AddCommand("banid", true, function(ply, cmd, args)
 	::skip::
 	nAdmin.AddBan(args[1], m2, args[3]:Trim(), ply, true)
 end)
-nAdmin.SetTAndDesc("banid", "admin", "Банит игрока по SteamID. arg1 - SteamID, arg2 - время [7m, 7h, 7d, 7w], arg3 - причина.")
+nAdmin.SetTAndDesc("banid", "vutka", "Банит игрока по SteamID. arg1 - SteamID, arg2 - время [7m, 7h, 7d, 7w], arg3 - причина.")
 
 nAdmin.AddCommand("unban", true, function(ply, cmd, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "unban")
@@ -203,7 +208,7 @@ nAdmin.SetTAndDesc("unban", "moderator", "Разбанивает игрока. a
 nAdmin.AddCommand("bancount", true, function(ply, cmd, args)
 	nAdmin.Warn(ply, "В базе данных насчитывается около: " .. table.Count(bans) .. " банов.")
 end)
-nAdmin.SetTAndDesc("bancount", "admin", "Количество игроков в бане.")
+nAdmin.SetTAndDesc("bancount", "vutka", "Количество игроков в бане.")
 
 nAdmin.AddCommand("kick", true, function(ply, cmd, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "kick")
@@ -232,7 +237,7 @@ nAdmin.AddCommand("jail", true, function(ply, cmd, args)
 		return
 	end
 	local pl = nAdmin.FindByNick(args[1])
-	if pl == nil then
+	if pl == nil and ply ~= Entity(0) then
 		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
 		return
 	end
@@ -437,12 +442,12 @@ nAdmin.AddCommand("mute", false, function(ply, cmd, args)
 	else
 		pl.Muted = false
 	end
-	nAdmin.PrintAndWarn(ply:Name() .. " " .. (pl.Gagged and "запретил" or "разрешил") .. " писать в чат " .. pl:Name().. ".")
+	nAdmin.PrintAndWarn(ply:Name() .. " " .. (pl.Muted and "запретил" or "разрешил") .. " писать в чат " .. pl:Name().. ".")
 end)
 nAdmin.SetTAndDesc("mute", "moderator", "Запретить/разрешить игроку писать в чат. arg1 - ник.")
 
 local function plSay(pl, txt)
-	if pl.MuteMuted then return "" end
+	if pl.Muted then return "" end
 end
 hook.Add("PlayerSay", "nAdmin_mute", plSay)
 
@@ -473,7 +478,7 @@ nAdmin.AddCommand("mgag", false, function(ply, cmd, args)
 		pl.Muted = true
 		nAdmin.Print("Значения Gag и Mute различаются. Мучу и запрещаю игроку писать в чат!")
 	end
-	nAdmin.PrintAndWarn(ply:Name() .. " " .. (pl.Gagged and "запретил" or "разрешил") .. "  писать в чат и говорить в ГЧ " .. pl:Name().. ".")
+	nAdmin.PrintAndWarn(ply:Name() .. " " .. (pl.Gagged and "запретил" or "разрешил") .. " писать в чат и говорить в ГЧ " .. pl:Name().. ".")
 end)
 nAdmin.SetTAndDesc("mgag", "moderator", "Запретить/разрешить игроку писать в чат и говорить в ГЧ. arg1 - ник.")
 
@@ -505,7 +510,7 @@ nAdmin.AddCommand("banip", true, function(ply, cmd, args)
 	RunConsoleCommand("writeip")
 	nAdmin.Print(ply:Name() .. " забанил: " .. args[1]:Trim())
 end)
-nAdmin.SetTAndDesc("banip", "admin", "Банит IP адрес. arg1 - время, arg2 - IP.")
+nAdmin.SetTAndDesc("banip", "vutka", "Банит IP адрес. arg1 - время, arg2 - IP.")
 
 nAdmin.AddCommand("unbanip", true, function(ply, cmd, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "unbanip")
@@ -521,7 +526,7 @@ nAdmin.AddCommand("unbanip", true, function(ply, cmd, args)
 	RunConsoleCommand("writeip")
 	nAdmin.Print(ply:Name() .. " разбанивает: " .. args[1]:Trim())
 end)
-nAdmin.SetTAndDesc("unbanip", "admin", "Разбанивает IP адрес. arg1 - IP.")
+nAdmin.SetTAndDesc("unbanip", "vutka", "Разбанивает IP адрес. arg1 - IP.")
 
 nAdmin.AddCommand("freeze", true, function(ply, cmd, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "freeze")

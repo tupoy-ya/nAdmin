@@ -71,5 +71,20 @@ hook.Add("PlayerDisconnected", "nAdmin_ragdoll", function(ply)
 	end
 end)
 
-nAdmin.SetTAndDesc("ragdoll", "admin", "Делает игрока пешкой навального. arg1 - ник игрока.")
-nAdmin.SetTAndDesc("unragdoll", "admin", "Не делает игрока пешкой навального. arg1 - ник игрока.")
+nAdmin.SetTAndDesc("ragdoll", "vutka", "Делает игрока пешкой навального. arg1 - ник игрока.")
+nAdmin.SetTAndDesc("unragdoll", "vutka", "Не делает игрока пешкой навального. arg1 - ник игрока.")
+
+nAdmin.AddCommand("slay", true, function(ply, _, args)
+	local pl = nAdmin.FindByNick(args[1])
+	if pl == nil then
+		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
+		return
+	end
+	if not pl:Alive() then
+		nAdmin.Warn(ply, "Игрок мёртв.")
+		return
+	end
+	pl:Kill()
+	nAdmin.WarnAll(ply:Name() .. " убил " .. pl:Name())
+end)
+nAdmin.SetTAndDesc("slay", "vutka", "Убивает игрока. arg1 - ник игрока.")

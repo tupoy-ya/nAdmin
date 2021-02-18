@@ -59,5 +59,5 @@ if SERVER then
 			net.WriteString(table.concat(args, " "))
 		net.Broadcast()
 	end)
-	nAdmin.SetTAndDesc("psa", "admin", "Оповестить игроков о чём-либо. arg(...) - текст.")
+	nAdmin.SetTAndDesc("psa", "vutka", "Оповестить игроков о чём-либо. arg(...) - текст.")
 end

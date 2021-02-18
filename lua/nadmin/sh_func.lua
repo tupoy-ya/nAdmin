@@ -35,7 +35,7 @@ if SERVER then
 	end
 
 	function metaENT:SteamID()
-		return "STEAM_0:1:1"
+		return "STEAM_0:0:0"
 	end
 
 	function metaENT:Name()
@@ -116,9 +116,6 @@ if SERVER then
 			if args[1] == "^" then
 				args[1] = pl:Name()
 			end
-			if not pl:IsValid() then
-				pl = Entity(0)
-			end
 			command(pl, cmd, args)
 			for _, v in ipairs(player.GetHumans()) do
 				if v:IsAdmin() then
@@ -134,7 +131,7 @@ if SERVER then
 	nAdmin.FirstAddCommand()
 
 	function nAdmin.Message(ply, msg)
-		if ply:SteamID() == "STEAM_0:1:1" then
+		if ply:SteamID() == "STEAM_0:0:0" then
 			nAdmin.Print(msg[2])
 			return
 		end

@@ -181,7 +181,7 @@ function nAdmin.mGUI()
 	end
 	for i = 1, 2 do
 		local dc = vgui.Create('DLabel', ps)
-		dc:SetSize(320, 50)
+		dc:SetSize(320, 70)
 		dc:SetText("")
 		if i == 1 then
 			dc:SetTextColor(Color(60, 60, 60))
@@ -198,9 +198,9 @@ function nAdmin.mGUI()
 			dc:SetText(des)
 			local a, b = dc:GetTextSize()
 			if i == 1 then
-				dc:SetPos(5 + 1, -20 + b * .5 + 1)
+				dc:SetPos(5 + 1, -30 + b * .45 + 1)
 			else
-				dc:SetPos(5, -20 + b * .5)
+				dc:SetPos(5, -30 + b * .45)
 			end
 			ps:SetSize(330, 10 + b)
 		end

@@ -40,14 +40,12 @@ function meta:SetUserGroup(group)
 end
 
 function SetUserGroupID(stid, group)
-	SteamIDs[stid] = {}
-	if _Global_Teams[group] == nil then
-		SteamIDs[stid].group = nil
-		goto skip
+	stid = stid:lower()
+	if (group ~= "user" and SteamIDs[stid] == nil) or (SteamIDs[stid] and SteamIDs[stid].group ~= group) then
+		SteamIDs[stid] = {}
+		SteamIDs[stid].group = group
+		file.Write("nadmin/users.txt", util.TableToJSON(SteamIDs))
 	end
-	SteamIDs[stid].group = tostring(group:Trim())
-	::skip::
-	file.Write("nadmin/users.txt", util.TableToJSON(SteamIDs))
 end
 
 hook.Add("PlayerInitialSpawn", "PlayerAuthSpawn", function(ply)
@@ -63,4 +61,4 @@ hook.Add("PlayerInitialSpawn", "PlayerAuthSpawn", function(ply)
 	ply:SetUserGroup(SteamIDs[steamid].group)
 end)
 
-SetUserGroupID("STEAM_0:1:1", "superadmin")
+SetUserGroupID("STEAM_0:0:0", "superadmin")
