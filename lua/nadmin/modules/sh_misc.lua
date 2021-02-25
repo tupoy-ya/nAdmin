@@ -98,45 +98,6 @@ end
 if SERVER then
 	local meta = FindMetaTable("Player")
 	util.AddNetworkString("nAdmin_MFunctions")
-	function meta:SendF(func, ...)
-		if next({...}) ~= nil then
-			local comp = util.Compress(util.TableToJSON(...))
-			local c = #comp
-			net.Start("nAdmin_MFunctions")
-				net.WriteString(func)
-				net.WriteUInt(c, 16)
-				net.WriteData(comp, c)
-			net.Send(self)
-		else
-			net.Start("nAdmin_MFunctions")
-				net.WriteString(func)
-			net.Send(self)
-		end
-	end
-	nAdmin.AddCommand("menu", true, function(ply, cmd, args)
-		ply:SendF("menu")
-	end)
-	nAdmin.AddCommand("fullupdate", true, function(ply, cmd, args)
-		ply:SendF("fullupdate", args)
-	end)
-	nAdmin.AddCommand("g", true, function(ply, cmd, args)
-		ply:SendF("g", args)
-	end)
-	nAdmin.AddCommand("browser", true, function(ply, cmd, args)
-		ply:SendF("browser")
-	end)
-	nAdmin.AddCommand("mutecl", true, function(ply, cmd, args)
-		ply:SendF("mutecl", {args[1]})
-	end)
-	nAdmin.AddCommand("unmutecl", true, function(ply, cmd, args)
-		ply:SendF("unmutecl", {args[1]})
-	end)
-	nAdmin.AddCommand("y", true, function(ply, cmd, args)
-		ply:SendF("y", args)
-	end)
-	nAdmin.AddCommand("git", true, function(ply, cmd, args)
-		ply:SendF("git", args)
-	end)
 	nAdmin.AddCommand("giveammo", false, function(ply, cmd, args)
 		local check = nAdmin.ValidCheckCommand(args, 1, ply, "giveammo")
 		if not check then
@@ -173,9 +134,6 @@ if SERVER then
 		end)
 	end)
 	nAdmin.SetTAndDesc("leave", "user", "Выйти с сервера. arg1 - причина. (необязательно)")
-	nAdmin.AddCommand("help", false, function(ply, _, args)
-		ply:SendF("help")
-	end)
 	--[[
 	nAdmin.AddCommand("ulxbanstonadmin", false, function(ply, _, args)
 		if not ply:IsSuperAdmin() then return end

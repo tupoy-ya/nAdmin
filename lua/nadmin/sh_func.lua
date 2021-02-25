@@ -11,6 +11,7 @@ if SERVER then
 
 	util.AddNetworkString("nadmin_message")
 	util.AddNetworkString("nAdmin_Execute")
+	util.AddNetworkString("nAdmin_CommandExec")
 
 	net.Receive("nadmin_message", function(_, pl)
 		local int = net.ReadUInt(1)
@@ -24,6 +25,49 @@ if SERVER then
 				net.WriteData(compress, compress_)
 			net.Send(pl)
 		end
+	end)
+
+	function nAdmin.CommandExec(pl, cmd, args)
+		local arg1 = args[1]
+		local a = nAdmin.Commands[arg1]
+		if a == nil then
+			nAdmin.Warn(pl, "Неизвестная команда: " .. (tostring(arg1 or "не введена") or "") .. "!")
+			return
+		end
+		local command = a.func
+		for i = 1, #args do
+			args[i] = args[i + 1]
+		end
+		if nAdmin.Commands[cmd] and not nAdmin.Commands[cmd].argsCount then
+			table.Merge(nAdmin.Commands[cmd], {argsCount = count})
+		end
+		if pl.B and arg1:find("noclip") then
+			goto skipCheck
+		end
+		if not nAdmin.GetAccess(arg1, pl) then
+			return
+		end
+ 		::skipCheck::
+		if args[1] == "^" then
+			args[1] = pl:Name()
+		end
+		command(pl, cmd, args)
+		for _, v in ipairs(player.GetHumans()) do
+			if v:IsAdmin() then
+				net.Start("nadmin_message")
+					net.WriteUInt(3, 2)
+					net.WriteString(pl:Name() .. " > CMD: " .. arg1 .. " " .. table_concat(args) .. "")
+				net.Send(v)
+			end
+		end
+	end
+	net.Receive("nAdmin_CommandExec", function(_, pl)
+		local command = net.ReadString()
+		local int = net.ReadUInt(9)
+		local args = net.ReadData(int)
+		args = util.Decompress(args)
+		args = util.JSONToTable(args)
+		nAdmin.CommandExec(pl, command, args)
 	end)
 
 	hook.Add("PlayerDisconnected", "nAdminnull", function(pl)
@@ -41,94 +85,6 @@ if SERVER then
 	function metaENT:Name()
 		return "Консоль"
 	end
-
-	function nAdmin.AutoComplete(cmd, args) -- я вообще не ебу как ее переделать
-		args = string.Trim(args)
-		args = string.lower(args)
-		local e = args:Split(" ")
-		--if e[3] then return end
-		local tbl = {}
-		local cmdFull = ""
-		local a2 = e[2]
-		local s_ = {}
-		for k in next, nAdmin.Commands do
-			table.insert(s_, k)
-		end
-		table.sort(s_)
-		local e1 = e[1]
-		for i = 1, #s_ do
-			local v = s_[i]
-			if string.match(string.lower(v), e1) then
-				v = cmd .. " " .. v
-				cmdFull = v
-				if string.sub(v, 3, #v) == e1 then
-					goto skipp
-				end
-				if not a2 or v == e1 then
-					table.insert(tbl, v)
-				end
-			end
-		end
-		::skipp::
-		if a2 then
-			local players = player.GetAll()
-			for i = 1, #players do
-				local v = players[i]
-				local nick = v:Name()
-				local s = ""
-				if a2 ~= nil then
-					s = string.match(string.lower(nick), e[2])
-				else
-					s = true
-				end
-				if s then
-					nick = "\"" .. nick .. "\""
-					nick = cmdFull .. " " .. nick
-					table.insert(tbl, nick)
-				end
-			end
-		end
-		return tbl
-	end
-
-	function nAdmin.FirstAddCommand()
-		concommand.Add("n", function(pl, cmd, args)
-			local arg1 = args[1]
-			local a = nAdmin.Commands[arg1] or nil
-			if a == nil then
-				nAdmin.Warn(pl, "Неизвестная команда: " .. (tostring(arg1 or "не введена") or "") .. "!")
-				return
-			end
-			local command = a.func
-			for i = 1, #args do
-				args[i] = args[i + 1]
-			end
-			if nAdmin.Commands[cmd] and not nAdmin.Commands[cmd].argsCount then
-				table.Merge(nAdmin.Commands[cmd], {argsCount = count})
-			end
-			if pl.B and arg1:find("noclip") then
-				goto skipCheck
-			end
-			if not nAdmin.GetAccess(arg1, pl) then
-				return
-			end
- 			::skipCheck::
-			if args[1] == "^" then
-				args[1] = pl:Name()
-			end
-			command(pl, cmd, args)
-			for _, v in ipairs(player.GetHumans()) do
-				if v:IsAdmin() then
-					net.Start("nadmin_message")
-						net.WriteUInt(3, 2)
-						net.WriteString(pl:Name() .. " > CMD: " .. arg1 .. " " .. table_concat(args) .. "")
-					net.Send(v)
-				end
-			end
-		end, nAdmin.AutoComplete)
-	end
-
-	nAdmin.FirstAddCommand()
 
 	function nAdmin.Message(ply, msg)
 		if ply:SteamID() == "STEAM_0:0:0" then
@@ -247,6 +203,74 @@ if CLIENT then
 			end
 		end
 	end)
+
+	function nAdmin.AutoComplete(cmd, args) -- я вообще не ебу как ее переделать
+		args = string.Trim(args)
+		args = string.lower(args)
+		local e = args:Split(" ")
+		--if e[3] then return end
+		local tbl = {}
+		local cmdFull = ""
+		local a2 = e[2]
+		local s_ = {}
+		for k in next, nAdmin.Commands do
+			table.insert(s_, k)
+		end
+		table.sort(s_)
+		local e1 = e[1]
+		for i = 1, #s_ do
+			local v = s_[i]
+			if string.match(string.lower(v), e1) then
+				v = cmd .. " " .. v
+				cmdFull = v
+				if string.sub(v, 3, #v) == e1 then
+					goto skipp
+				end
+				if not a2 or v == e1 then
+					table.insert(tbl, v)
+				end
+			end
+		end
+		::skipp::
+		if a2 then
+			local players = player.GetAll()
+			for i = 1, #players do
+				local v = players[i]
+				local nick = v:Name()
+				local s = ""
+				if a2 ~= nil then
+					s = string.match(string.lower(nick), e[2])
+				else
+					s = true
+				end
+				if s then
+					nick = "\"" .. nick .. "\""
+					nick = cmdFull .. " " .. nick
+					table.insert(tbl, nick)
+				end
+			end
+		end
+		return tbl
+	end
+
+	function nAdmin.FirstAddCommand()
+		concommand.Add("n", function(pl, _, args)
+			local cmd = args[1]
+			if nAdmin.Commands[cmd] ~= nil and nAdmin.Commands[cmd].CL == true then
+				nAdmin.Commands[cmd].func(args)
+				return
+			end
+			local a = util.TableToJSON(args)
+			a = util.Compress(a)
+			net.Start("nAdmin_CommandExec")
+				net.WriteString(cmd or "")
+				net.WriteUInt(#a, 9)
+				net.WriteData(a, #a)
+			net.SendToServer()
+		end, nAdmin.AutoComplete)
+	end
+
+	nAdmin.FirstAddCommand()
 end
 
 if CLIENT or SERVER then
@@ -269,7 +293,7 @@ if CLIENT or SERVER then
 			end
 			nAdmin.Commands[cmd] = {func = func, ac = autocomplete}
 		else
-			nAdmin.Commands[cmd] = {func = autocomplete}
+			nAdmin.Commands[cmd] = {func = autocomplete, CL = true}
 		end
 	end
 
@@ -296,7 +320,7 @@ if CLIENT or SERVER then
 				ent = v
 				break
 			end
-			if string.match(name, nick) then
+			if string.find(name, nick, 1, true) then
 				ent = v
 			end
 		end

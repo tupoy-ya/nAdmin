@@ -1,7 +1,7 @@
 hook.Add("EntityTakeDamage", "nAdmin_buildmode", function(target, dmg)
 	local attacker = dmg:GetAttacker()
 	if attacker.B or target.B then
-		dmg:SetDamage(0)
+		return true
 	end
 end)
 
@@ -45,5 +45,11 @@ nAdmin.SetTAndDesc("pvp", "user", "Включить ПВП-режим.")
 hook.Add("PlayerNoClip", "nAdmin_buildmode", function(ply)
 	if ply.B then
 		return true
+	end
+end)
+
+hook.Add("PlayerSpawn", "nAdmin_buildmode", function(ply)
+	if ply:GetNWBool("inBuild") then
+		ply:GodEnable()
 	end
 end)

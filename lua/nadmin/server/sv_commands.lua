@@ -11,7 +11,7 @@ function nAdmin.PlayerSay(pl, txt)
 		if nAdmin.Commands[expl_f] == nil then
 			return
 		end
-		concommand.Run(pl, "n", expl)
+		nAdmin.CommandExec(pl, command, expl)
 	end
 end
 

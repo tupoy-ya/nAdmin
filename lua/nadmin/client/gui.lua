@@ -105,7 +105,6 @@ function nAdmin.mGUI()
 		if IsValid(butn) then
 			butn:Remove()
 		end
-		entries = {}
 		if nAdmin.Commands[row:GetValue(1)] == nil then
 			nAdmin.Print("Ошибка при обновлении списка команд. Обновляю таблицу...")
 			net.Start("nadmin_message")
@@ -122,6 +121,7 @@ function nAdmin.mGUI()
 			des = ""
 		end
 		local cfind = 0
+		entries = {}
 		timer.Simple(0, function()
 			local e = string.Explode(" ", des)
 			for k, v in next, e do
