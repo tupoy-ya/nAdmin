@@ -8,8 +8,7 @@ if CLIENT then
 			file.Write("cbox_cache/msg.mp3", a)
 		end)
 	end
-	net.Receive("nAdmin_PSA", function()
-		local txt = net.ReadString()
+	function nAdmin.PSA(txt)
 		local lerp = -100
 		local realtime = RealTime()
 		local a
@@ -49,12 +48,16 @@ if CLIENT then
 				s:Play()
 			end
 		end)
+	end
+	net.Receive("nAdmin_PSA", function()
+		local txt = net.ReadString()
+		nAdmin.PSA(txt)
 	end)
 end
 
 if SERVER then
 	util.AddNetworkString("nAdmin_PSA")
-	nAdmin.AddCommand("psa", false, function(ply, _, args)
+	nAdmin.AddCommand("psa", false, function(ply, args)
 		net.Start("nAdmin_PSA")
 			net.WriteString(table.concat(args, " "))
 		net.Broadcast()

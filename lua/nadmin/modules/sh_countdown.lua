@@ -51,7 +51,7 @@ end
 
 if SERVER then
     util.AddNetworkString("nAdmin_countdown")
-    nAdmin.AddCommand("countdown", false, function(ply, _, args)
+    nAdmin.AddCommand("countdown", false, function(ply, args)
 		local check = nAdmin.ValidCheckCommand(args, 1, ply, "countdown")
 		if not check then
 			return

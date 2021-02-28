@@ -27,7 +27,7 @@ if SERVER then
 	require'mysqloo'
 
 	if not mysqloo then
-		nAdmin.Print("gmsv_mysqloo не найден!!!")
+		nAdmin.Print("gmsv_mysqloo не найден!!! Без него не будет работать модуль playtime!!!")
 		return
 	end
 
@@ -38,7 +38,7 @@ if SERVER then
 	nAdminDB, nAdminDBFail = mysqloo.connect(mysqlConnect["url"], mysqlConnect["login"], mysqlConnect["pass"], mysqlConnect["dbName"], math.Round(mysqlConnect["port"]))
 
 	if nAdminDBFail then
-		nAdmin.Print("Не удалось подключиться к базе данных.")
+		nAdmin.Print("Не удалось подключиться к базе данных: ", nAdminDBFail)
 		return
 	end
 

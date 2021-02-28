@@ -1,14 +1,21 @@
 surface.CreateFont("nAdmin_desc", {font = "Roboto", size = 18, antialias = true, extended = true})
 surface.CreateFont("logs", {font = "Roboto Bold", size = 12, antialias = true, extended = true})
+
 if IsValid(nGUI) then
 	nGUI:Remove()
 	gui.EnableScreenClicker(false)
 end
-nAdmin.FullCMDS = false
+
 function nAdmin.mGUI()
+	net.Start("nAdmin_message")
+		net.WriteUInt(1, 2)
+	net.SendToServer()
+
 	local a = {}
 	local cYes = {}
 	local usergroup = LocalPlayer():GetUserGroup()
+	local clr = Color(200, 200, 200)
+	local clr2 = Color(40, 40, 40)
 	nGUI = vgui.Create'DFrame'
 	nGUI:SetSize(500, 300)
 	nGUI:Center()
@@ -18,8 +25,8 @@ function nAdmin.mGUI()
 	nGUI:SetKeyboardInputEnabled(false)
 	gui.EnableScreenClicker(true)
 	nGUI.Paint = function(self, w, h)
-		draw.RoundedBox(5, 0, 0, w, h, Color(200, 200, 200))
-		draw.RoundedBox(4, 2, 2, w - 4, h - 4, Color(40, 40, 40))
+		draw.RoundedBox(5, 0, 0, w, h, clr)
+		draw.RoundedBox(4, 2, 2, w - 4, h - 4, clr2)
 	end
 	nGUI.OnClose = function()
 		gui.EnableScreenClicker(false)
@@ -42,9 +49,6 @@ function nAdmin.mGUI()
 	local search = vgui.Create('DTextEntry', nGUI)
 	search:SetPos(5, 28)
 	search:SetSize(150, 20)
-	net.Start("nadmin_message")
-		net.WriteUInt(1, 1)
-	net.SendToServer()
 	local changed = ""
 	nGUI.Think = function()
 		local cCount = 0
@@ -57,15 +61,12 @@ function nAdmin.mGUI()
 			a = {}
 			cYes = {}
 		end
-		if txt == "" then
-			for k, d in next, nAdmin.Commands do
-				if LocalPlayer():Team() > Global_Teams[d.T or "user"].num then continue end
+		for k, d in next, nAdmin.Commands do
+			if LocalPlayer():Team() > Global_Teams[d.T or "user"].num then continue end
+			if txt == nil then
 				cCount = cCount + 1
 				a[cCount] = k
-			end
-		else
-			for k, d in next, nAdmin.Commands do
-				if LocalPlayer():Team() > Global_Teams[d.T or "user"].num then continue end
+			else
 				local wf = nAdmin.Commands[k].desc
 				if wf == nil then
 					wf = ""
@@ -106,10 +107,7 @@ function nAdmin.mGUI()
 			butn:Remove()
 		end
 		if nAdmin.Commands[row:GetValue(1)] == nil then
-			nAdmin.Print("Ошибка при обновлении списка команд. Обновляю таблицу...")
-			net.Start("nadmin_message")
-				net.WriteUInt(1, 1)
-			net.SendToServer()
+			nAdmin.Print("Ошибка при обновлении списка команд!")
 			return
 		end
 		local t = nAdmin.Commands[row:GetValue(1)].T or ""
@@ -280,7 +278,6 @@ function nAdmin.mGUI()
 		logs:InsertColorChange(200, 200, 200, 255)
 		logs:AppendText("[" .. os.date("%H:%M:%S") .. "] " .. b .. "\n")
 	end)
-	nAdmin.FullCMDS = true
 end
 
 local function getKeyboardFocus(pnl)

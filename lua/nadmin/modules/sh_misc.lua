@@ -98,7 +98,7 @@ end
 if SERVER then
 	local meta = FindMetaTable("Player")
 	util.AddNetworkString("nAdmin_MFunctions")
-	nAdmin.AddCommand("giveammo", false, function(ply, cmd, args)
+	nAdmin.AddCommand("giveammo", false, function(ply, args)
 		local check = nAdmin.ValidCheckCommand(args, 1, ply, "giveammo")
 		if not check then
 			return
@@ -119,12 +119,12 @@ if SERVER then
 		time = time / 60 / 60
 		return time
 	end
-	nAdmin.AddCommand("uptime", false, function(ply, _, args)
+	nAdmin.AddCommand("uptime", false, function(ply, args)
 		timer.Simple(0, function()
 			nAdmin.Warn(ply, "Сервер онлайн уже: " .. math.Round(days(SysTime())) .. " часов.")
 		end)
 	end)
-	nAdmin.AddCommand("leave", false, function(ply, _, args)
+	nAdmin.AddCommand("leave", false, function(ply, args)
 		timer.Simple(.5, function()
 			if not args then
 				ply:Kick("Отключился")
@@ -159,5 +159,5 @@ if SERVER then
 		p("есть ошибка? да и похуй")
 	end)
 	nAdmin.SetTAndDesc("ulxusergroupsstonadmin", "superadmin", "")
-	]]
+	]]--
 end

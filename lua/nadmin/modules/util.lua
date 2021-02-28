@@ -8,7 +8,7 @@ nAdmin.BanList = bans
 
 local singleplayer = game.SinglePlayer()
 if singleplayer then
-	nAdmin.Print("Модуль util отключен, но был загружен. Причина: сервер запущен в одиночной игре.")
+	nAdmin.Print("Модуль util отключен. Причина: сервер запущен в одиночной игре.")
 	return
 end
 
@@ -145,7 +145,7 @@ end)
 
 local curtime = CurTime()
 
-nAdmin.AddCommand("ban", true, function(ply, cmd, args)
+nAdmin.AddCommand("ban", true, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 3, ply, "ban")
 	if not check then
 		return
@@ -178,7 +178,7 @@ nAdmin.AddCommand("ban", true, function(ply, cmd, args)
 end)
 nAdmin.SetTAndDesc("ban", "moderator", "Банит игрока. arg1 - ник, arg2 - время [7m, 7h, 7d, 7w], arg3 - причина.")
 
-nAdmin.AddCommand("banid", true, function(ply, cmd, args)
+nAdmin.AddCommand("banid", true, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 3, ply, "banid")
 	if not check then
 		return
@@ -211,7 +211,7 @@ nAdmin.AddCommand("banid", true, function(ply, cmd, args)
 end)
 nAdmin.SetTAndDesc("banid", "vutka", "Банит игрока по SteamID. arg1 - SteamID, arg2 - время [7m, 7h, 7d, 7w], arg3 - причина.")
 
-nAdmin.AddCommand("unban", true, function(ply, cmd, args)
+nAdmin.AddCommand("unban", true, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "unban")
 	if not check then
 		return
@@ -221,12 +221,12 @@ nAdmin.AddCommand("unban", true, function(ply, cmd, args)
 end)
 nAdmin.SetTAndDesc("unban", "moderator", "Разбанивает игрока. arg1 - SteamID игрока.")
 
-nAdmin.AddCommand("bancount", true, function(ply, cmd, args)
+nAdmin.AddCommand("bancount", true, function(ply, args)
 	nAdmin.Warn(ply, "В базе данных насчитывается около: " .. table.Count(bans) .. " банов.")
 end)
 nAdmin.SetTAndDesc("bancount", "vutka", "Количество игроков в бане.")
 
-nAdmin.AddCommand("kick", true, function(ply, cmd, args)
+nAdmin.AddCommand("kick", true, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "kick")
 	if not check then
 		return
@@ -247,7 +247,7 @@ nAdmin.SetTAndDesc("kick", "moderator", "Кикает игрока. arg1 - ни�
 
 local vec = Vector(-15999, -15999, -15999)
 
-nAdmin.AddCommand("jail", true, function(ply, cmd, args)
+nAdmin.AddCommand("jail", true, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "jail")
 	if not check then
 		return
@@ -294,7 +294,7 @@ nAdmin.AddCommand("jail", true, function(ply, cmd, args)
 end)
 nAdmin.SetTAndDesc("jail", "builderreal", "Садит человека в гулаг. arg1 - ник игрока, arg2 - количество секунд.")
 
-nAdmin.AddCommand("unjail", true, function(ply, cmd, args)
+nAdmin.AddCommand("unjail", true, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "unjail")
 	if not check then
 		return
@@ -323,19 +323,7 @@ hook.Add("PlayerSpawnObject", "restrictJail", function(ply)
 	end
 end)
 
-nAdmin.AddCommand("noclip", true, function(ply, cmd, args)
-	local pl = ply
-	if pl:GetMoveType() == MOVETYPE_WALK then
-		pl:SetMoveType( MOVETYPE_NOCLIP )
-	elseif pl:GetMoveType() == MOVETYPE_NOCLIP then
-		pl:SetMoveType( MOVETYPE_WALK )
-	else
-		nAdmin.Warn(ply, "Сейчас нельзя пользоваться Noclip'ом!")
-	end
-end)
-nAdmin.SetTAndDesc("noclip", "noclip", "Включает/выключает Noclip. /noclip или n noclip.")
-
-nAdmin.AddCommand("spectate", true, function(ply, cmd, args)
+nAdmin.AddCommand("spectate", true, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "spectate")
 	if not check then
 		return
@@ -373,7 +361,7 @@ nAdmin.AddCommand("spectate", true, function(ply, cmd, args)
 end)
 nAdmin.SetTAndDesc("spectate", "moderator", "Включает режим наблюдения за игроком. arg1 - ник игрока.")
 
-nAdmin.AddCommand("gag", false, function(ply, cmd, args)
+nAdmin.AddCommand("gag", false, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "gag")
 	if not check then
 		return
@@ -399,7 +387,7 @@ local function GagUngag(_, a)
 end
 hook.Add("PlayerCanHearPlayersVoice", "nAdmin_gag", GagUngag)
 
-nAdmin.AddCommand("goto", false, function(ply, cmd, args)
+nAdmin.AddCommand("goto", false, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "goto")
 	if not check then
 		return
@@ -415,7 +403,7 @@ nAdmin.AddCommand("goto", false, function(ply, cmd, args)
 end)
 nAdmin.SetTAndDesc("goto", "noclip", "Телепортироваться к игроку. arg1 - ник.")
 
-nAdmin.AddCommand("return", false, function(ply, cmd, args)
+nAdmin.AddCommand("return", false, function(ply, args)
 	local pl = nAdmin.FindByNick(args[1])
 	if pl == nil then
 		pl = ply
@@ -428,7 +416,7 @@ nAdmin.AddCommand("return", false, function(ply, cmd, args)
 end)
 nAdmin.SetTAndDesc("return", "builderreal", "Телепортироваться к игроку. arg1 - ник (необязательно).")
 
-nAdmin.AddCommand("bring", false, function(ply, cmd, args)
+nAdmin.AddCommand("bring", false, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "bring")
 	if not check then
 		return
@@ -443,7 +431,7 @@ nAdmin.AddCommand("bring", false, function(ply, cmd, args)
 end)
 nAdmin.SetTAndDesc("bring", "builderreal", "Телепортировать игрока к себе. arg1 - ник.")
 
-nAdmin.AddCommand("mute", false, function(ply, cmd, args)
+nAdmin.AddCommand("mute", false, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "mute")
 	if not check then
 		return
@@ -467,7 +455,7 @@ local function plSay(pl, txt)
 end
 hook.Add("PlayerSay", "nAdmin_mute", plSay)
 
-nAdmin.AddCommand("mgag", false, function(ply, cmd, args)
+nAdmin.AddCommand("mgag", false, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "mgag")
 	if not check then
 		return
@@ -498,7 +486,7 @@ nAdmin.AddCommand("mgag", false, function(ply, cmd, args)
 end)
 nAdmin.SetTAndDesc("mgag", "moderator", "Запретить/разрешить игроку писать в чат и говорить в ГЧ. arg1 - ник.")
 
-nAdmin.AddCommand("banip", true, function(ply, cmd, args)
+nAdmin.AddCommand("banip", true, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 2, ply, "banip")
 	if not check then
 		return
@@ -528,7 +516,7 @@ nAdmin.AddCommand("banip", true, function(ply, cmd, args)
 end)
 nAdmin.SetTAndDesc("banip", "vutka", "Банит IP адрес. arg1 - время, arg2 - IP.")
 
-nAdmin.AddCommand("unbanip", true, function(ply, cmd, args)
+nAdmin.AddCommand("unbanip", true, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "unbanip")
 	if not check then
 		return
@@ -544,7 +532,7 @@ nAdmin.AddCommand("unbanip", true, function(ply, cmd, args)
 end)
 nAdmin.SetTAndDesc("unbanip", "vutka", "Разбанивает IP адрес. arg1 - IP.")
 
-nAdmin.AddCommand("freeze", true, function(ply, cmd, args)
+nAdmin.AddCommand("freeze", true, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "freeze")
 	if not check then
 		return
@@ -563,7 +551,7 @@ nAdmin.AddCommand("freeze", true, function(ply, cmd, args)
 end)
 nAdmin.SetTAndDesc("freeze", "e2_coder", "Зафризить/разфризить игрока. arg1 - ник игрока.")
 
-nAdmin.AddCommand("unfreeze", true, function(ply, cmd, args)
+nAdmin.AddCommand("unfreeze", true, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "unfreeze")
 	if not check then
 		return

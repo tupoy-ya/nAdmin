@@ -10,21 +10,28 @@ if SERVER then
 	local plCached = {}
 
 	util.AddNetworkString("nadmin_message")
-	util.AddNetworkString("nAdmin_Execute")
 	util.AddNetworkString("nAdmin_CommandExec")
+
+	local function sendCMDTable(pl)
+		local compress = util.Compress(util.TableToJSON(nAdmin.Commands))
+		local compress_ = #compress
+		net.Start("nadmin_message")
+			net.WriteUInt(2, 2)
+			net.WriteUInt(compress_, 16)
+			net.WriteData(compress, compress_)
+		net.Send(pl)
+	end
 
 	net.Receive("nadmin_message", function(_, pl)
 		local int = net.ReadUInt(1)
 		if int == 1 then
 			if plCached[pl] then return end
-			local compress = util.Compress(util.TableToJSON(nAdmin.Commands))
-			local compress_ = #compress
-			net.Start("nadmin_message")
-				net.WriteUInt(2, 2)
-				net.WriteUInt(compress_, 16)
-				net.WriteData(compress, compress_)
-			net.Send(pl)
+			sendCMDTable(pl)
 		end
+	end)
+
+	hook.Add("PlayerFullLoad", "nAdmin_TCommands", function(ply)
+		sendCMDTable(ply)
 	end)
 
 	function nAdmin.CommandExec(pl, cmd, args)
@@ -34,24 +41,19 @@ if SERVER then
 			nAdmin.Warn(pl, "Неизвестная команда: " .. (tostring(arg1 or "не введена") or "") .. "!")
 			return
 		end
-		local command = a.func
 		for i = 1, #args do
 			args[i] = args[i + 1]
 		end
 		if nAdmin.Commands[cmd] and not nAdmin.Commands[cmd].argsCount then
 			table.Merge(nAdmin.Commands[cmd], {argsCount = count})
 		end
-		if pl.B and arg1:find("noclip") then
-			goto skipCheck
-		end
 		if not nAdmin.GetAccess(arg1, pl) then
 			return
 		end
- 		::skipCheck::
-		if args[1] == "^" then
+		if arg1 == "^" then
 			args[1] = pl:Name()
 		end
-		command(pl, cmd, args)
+		a.func(pl, args)
 		for _, v in ipairs(player.GetHumans()) do
 			if v:IsAdmin() then
 				net.Start("nadmin_message")
@@ -61,12 +63,11 @@ if SERVER then
 			end
 		end
 	end
+
 	net.Receive("nAdmin_CommandExec", function(_, pl)
 		local command = net.ReadString()
-		local int = net.ReadUInt(9)
-		local args = net.ReadData(int)
-		args = util.Decompress(args)
-		args = util.JSONToTable(args)
+		local args = net.ReadString()
+		args = args:Split(" ")
 		nAdmin.CommandExec(pl, command, args)
 	end)
 
@@ -91,16 +92,6 @@ if SERVER then
 			nAdmin.Print(msg[2])
 			return
 		end
-		if not IsValid(ply) then
-			nAdmin.Print("nAdmin.Message - ошибка.")
-			debug.Trace()
-			return
-		end
-		if not msg then
-			nAdmin.Print("nAdmin.Message - ошибка.")
-			debug.Trace()
-			return
-		end
 		msg = util.TableToJSON(msg)
 		local compress = util.Compress(msg)
 		local compress_ = #compress
@@ -112,11 +103,6 @@ if SERVER then
 	end
 
 	function nAdmin.PrintMessage(msg)
-		if not msg then
-			nAdmin.Print("nAdmin.PrintMessage - ошибка.")
-			debug.Trace()
-			return
-		end
 		msg = util.TableToJSON(msg)
 		local compress = util.Compress(msg)
 		local compress_ = #compress
@@ -142,10 +128,6 @@ if SERVER then
 
 	function nAdmin.ValidCheckCommand(args, count, ply, cmd)
 		local has = true
-		if not isnumber(count) then
-			nAdmin.Print("ValidCheckCommand > count должен быть числом.")
-			return
-		end
 		for i = 1, count do
 			if not args[i] then
 				local argg = ""
@@ -168,7 +150,7 @@ if SERVER then
 		if nAdmin.Commands[cmd].T == nil then
 			return true
 		end
-		if not pl:IsValid() then
+		if not pl:SteamID() == "STEAM_0:0:0" then
 			return true
 		end
 		local TF = pl:Team() <= Global_Teams[nAdmin.Commands[cmd].T].num
@@ -208,7 +190,6 @@ if CLIENT then
 		args = string.Trim(args)
 		args = string.lower(args)
 		local e = args:Split(" ")
-		--if e[3] then return end
 		local tbl = {}
 		local cmdFull = ""
 		local a2 = e[2]
@@ -220,7 +201,7 @@ if CLIENT then
 		local e1 = e[1]
 		for i = 1, #s_ do
 			local v = s_[i]
-			if string.match(string.lower(v), e1) then
+			if string.find(string.lower(v), e1, 1, true) then
 				v = cmd .. " " .. v
 				cmdFull = v
 				if string.sub(v, 3, #v) == e1 then
@@ -232,14 +213,14 @@ if CLIENT then
 			end
 		end
 		::skipp::
-		if a2 then
+		if a2 and nAdmin.Commands[e1] ~= nil then
 			local players = player.GetAll()
 			for i = 1, #players do
 				local v = players[i]
 				local nick = v:Name()
 				local s = ""
 				if a2 ~= nil then
-					s = string.match(string.lower(nick), e[2])
+					s = string.find(string.lower(nick), e[2], 1, true)
 				else
 					s = true
 				end
@@ -253,24 +234,18 @@ if CLIENT then
 		return tbl
 	end
 
-	function nAdmin.FirstAddCommand()
-		concommand.Add("n", function(pl, _, args)
-			local cmd = args[1]
-			if nAdmin.Commands[cmd] ~= nil and nAdmin.Commands[cmd].CL == true then
-				nAdmin.Commands[cmd].func(args)
-				return
-			end
-			local a = util.TableToJSON(args)
-			a = util.Compress(a)
-			net.Start("nAdmin_CommandExec")
-				net.WriteString(cmd or "")
-				net.WriteUInt(#a, 9)
-				net.WriteData(a, #a)
-			net.SendToServer()
-		end, nAdmin.AutoComplete)
-	end
-
-	nAdmin.FirstAddCommand()
+	concommand.Add("n", function(pl, _, args)
+		local cmd = args[1]
+		if nAdmin.Commands[cmd] ~= nil and nAdmin.Commands[cmd].CL == true then
+			nAdmin.Commands[cmd].func(args)
+			return
+		end
+		local a = table.concat(args, " ")
+		net.Start("nAdmin_CommandExec")
+			net.WriteString(cmd or "")
+			net.WriteString(a)
+		net.SendToServer()
+	end, nAdmin.AutoComplete)
 end
 
 if CLIENT or SERVER then

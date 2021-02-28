@@ -1,4 +1,4 @@
-nAdmin.AddCommand("ragdoll", true, function(ply, _, args)
+nAdmin.AddCommand("ragdoll", true, function(ply, args)
 	local pl = nAdmin.FindByNick(args[1])
 	if pl == nil then
 		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
@@ -30,7 +30,7 @@ nAdmin.AddCommand("ragdoll", true, function(ply, _, args)
 	pl.rag = ragdoll
 end)
 
-nAdmin.AddCommand("unragdoll", true, function(ply, _, args)
+nAdmin.AddCommand("unragdoll", true, function(ply, args)
 	local pl = nAdmin.FindByNick(args[1])
 	if pl == nil then
 		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
@@ -74,7 +74,7 @@ end)
 nAdmin.SetTAndDesc("ragdoll", "vutka", "Делает игрока пешкой навального. arg1 - ник игрока.")
 nAdmin.SetTAndDesc("unragdoll", "vutka", "Не делает игрока пешкой навального. arg1 - ник игрока.")
 
-nAdmin.AddCommand("slay", true, function(ply, _, args)
+nAdmin.AddCommand("slay", true, function(ply, args)
 	local pl = nAdmin.FindByNick(args[1])
 	if pl == nil then
 		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")

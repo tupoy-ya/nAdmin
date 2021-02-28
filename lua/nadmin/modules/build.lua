@@ -5,7 +5,7 @@ hook.Add("EntityTakeDamage", "nAdmin_buildmode", function(target, dmg)
 	end
 end)
 
-nAdmin.AddCommand("build", false, function(ply, cmd, args)
+nAdmin.AddCommand("build", false, function(ply, args)
 	if ply.NoB then return end
 	local inB = ply:GetNWBool("inBuild")
 	if inB then return end
@@ -23,7 +23,7 @@ nAdmin.AddCommand("build", false, function(ply, cmd, args)
 end)
 nAdmin.SetTAndDesc("build", "user", "Включить режим строительства.")
 
-nAdmin.AddCommand("pvp", false, function(ply, cmd, args)
+nAdmin.AddCommand("pvp", false, function(ply, args)
 	if ply.NoB then return end
 	local inB = ply:GetNWBool("inBuild")
 	if not inB then return end
@@ -53,3 +53,15 @@ hook.Add("PlayerSpawn", "nAdmin_buildmode", function(ply)
 		ply:GodEnable()
 	end
 end)
+
+nAdmin.AddCommand("noclip", true, function(ply, args)
+	local pl = ply
+	if pl:GetMoveType() == MOVETYPE_WALK then
+		pl:SetMoveType( MOVETYPE_NOCLIP )
+	elseif pl:GetMoveType() == MOVETYPE_NOCLIP then
+		pl:SetMoveType( MOVETYPE_WALK )
+	else
+		nAdmin.Warn(ply, "Сейчас нельзя пользоваться Noclip'ом!")
+	end
+end)
+nAdmin.SetTAndDesc("noclip", "noclip", "Включает/выключает Noclip. /noclip или n noclip.")

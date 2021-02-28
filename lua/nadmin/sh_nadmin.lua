@@ -18,12 +18,12 @@ if CLIENT or SERVER then
 
 	nAdmin.Limits = {
 		["superadmin"] = {
-			["props"] = 999,
-			["sents"] = 999,
-			["npcs"] = 999,
-			["vehicles"] = 999,
-			["ragdolls"] = 999,
-			["effects"] = 999,
+			["props"] = math.huge,
+			["sents"] = math.huge,
+			["npcs"] = math.huge,
+			["vehicles"] = math.huge,
+			["ragdolls"] = math.huge,
+			["effects"] = math.huge,
 		},
 		["Spy"] = {
 			["props"] = 999,
@@ -149,6 +149,7 @@ if SERVER then
 			end
 		end
 	end)
+
 	hook.Add("PhysgunDrop", "nAdminPhysgunDropPlayer", function(pl, ent)
 		if ent:IsPlayer() then
 			if pl:Team() < ent:Team() and pl:Team() <= 5 then

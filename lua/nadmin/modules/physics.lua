@@ -1,6 +1,6 @@
 -- https://github.com/PAC3-Server/notagain/blob/master/lua/notagain/aowl/commands/physics.lua
 
-nAdmin.AddCommand("weldlag", false, function(ply, cmd, args)
+nAdmin.AddCommand("weldlag", false, function(ply, args)
 	local t = {}
 	for _, v in ipairs(ents.GetAll()) do
 		local count = v:GetPhysicsObjectCount()
@@ -60,7 +60,7 @@ nAdmin.AddCommand("fp", true, function(ply)
 end)
 nAdmin.SetTAndDesc("fp", "builderreal", "Зафризить все энтити.")
 
-nAdmin.AddCommand("fppl", true, function(ply, _, args)
+nAdmin.AddCommand("fppl", true, function(ply, args)
 	local pl = nAdmin.FindByNick(args[1])
 	if pl == nil then
 		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
@@ -79,7 +79,7 @@ nAdmin.AddCommand("fppl", true, function(ply, _, args)
 end)
 nAdmin.SetTAndDesc("fppl", "builderreal", "Зафризить энтити какого-то игрока. arg1 - ник игрока.")
 
-nAdmin.AddCommand("fmp", true, function(ply, _, args)
+nAdmin.AddCommand("fmp", true, function(ply, args)
    local b = 0
    for _, v in ipairs(ents.FindByClass("prop_physics")) do
        if v:CPPIGetOwner() == ply then

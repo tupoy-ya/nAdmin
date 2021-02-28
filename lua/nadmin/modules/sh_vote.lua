@@ -2,7 +2,7 @@ if SERVER then
 	util.AddNetworkString("nAdmin_votekick")
 	local current_status = false
 	local next_Kick = CurTime()
-	nAdmin.AddCommand("votekick", false, function(ply, cmd, args)
+	nAdmin.AddCommand("votekick", false, function(ply, args)
 		if current_status then
 			nAdmin.Warn(ply, "В данный момент уже идет какое-то голосование!")
 			return
@@ -56,7 +56,7 @@ if SERVER then
 			local first = table.GetWinningKey(final)
 			nAdmin.WarnAll("В голосовании победил ответ: " .. answers[first])
 			if first == 1 then
-				pl:Kick("Вас выгнали всеобщим голосованием. Причина: " .. ass2)
+				pl:Kick("Вас выгнали всеобщим голосованием. Причина: " .. ass2 .. "; голосование создал: " .. ply:Name())
 			end
 			results = {}
 		end)
@@ -79,7 +79,7 @@ if SERVER then
 	end)
 	nAdmin.SetTAndDesc("votekick", "user", "Запускает голование на кик игрока. arg1 - ник, arg2 - причина.")
 
-	nAdmin.AddCommand("vote", false, function(ply, cmd, args)
+	nAdmin.AddCommand("vote", false, function(ply, args)
 		if current_status then
 			nAdmin.Warn(ply, "В данный момент уже идет какое-то голосование!")
 			return
@@ -153,7 +153,7 @@ if SERVER then
 	end)
 	nAdmin.SetTAndDesc("vote", "osobenniy2", "Запускает голование на кик игрока. arg1 - что обсуждаем, arg2, arg3, arg4. (необязательно).")
 
-	nAdmin.AddCommand("votecleanmap", false, function(ply, cmd, args)
+	nAdmin.AddCommand("votecleanmap", false, function(ply, args)
 		if current_status then
 			nAdmin.Warn(ply, "В данный момент уже идет какое-то голосование!")
 			return
@@ -203,7 +203,7 @@ if SERVER then
 			local first = table.GetWinningKey(final)
 			nAdmin.WarnAll("В голосовании победил ответ: " .. answers[first])
 			if first == 1 then
-				nAdmin.Print'daaaaaaaaaaaaaaaaaaaaaaaaa'
+				PrintMessage(3, "не работает мне лень это пока что делать")
 			end
 			results = {}
 		end)
@@ -226,7 +226,7 @@ if SERVER then
 	end)
 	nAdmin.SetTAndDesc("votekick", "user", "Запускает голование на кик игрока. arg1 - ник, arg2 - причина.")
 
-	nAdmin.AddCommand("stopvote", false, function(ply, cmd, args)
+	nAdmin.AddCommand("stopvote", false, function(ply, args)
 		if not current_status then
 			nAdmin.Warn(ply, "В данный момент нет никакого голосования!")
 			return
@@ -251,20 +251,19 @@ if CLIENT then
 		local max_ = 0
 		local lerp = -50
 		local count = #TB
-		local w, h = utf8.len(reason) * 10
-
-		for i = 1, table.Count(TB) do
-			for k, v in next, TB do
-				local as = utf8.len(v) * 15
-				if as > w then
-					w = as
-				end
-			end
-		end
 
 		hook.Add("DrawOverlay", "VoteShow", function()
 			lerp = Lerp(FrameTime() * 6, lerp, 30)
 			surface.SetFont("nAdmin_votekick_Font")
+
+			local w, h = surface.GetTextSize(reason)
+			for i = 1, count do
+				local v = TB[i]
+				local as = surface.GetTextSize(i .. ". " .. v)
+				if as > w then
+					w = as
+				end
+			end
 
 			surface.SetDrawColor(200, 200, 200)
 			surface.DrawRect(ScrW() / 2 - w / 2 - 2 - 10, ScrH() - lerp - count * 24, w + 24, 29 + count * 24)
