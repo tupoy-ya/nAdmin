@@ -47,9 +47,13 @@ if SERVER then
 		if nAdmin.Commands[cmd] and not nAdmin.Commands[cmd].argsCount then
 			table.Merge(nAdmin.Commands[cmd], {argsCount = count})
 		end
+		if pl.B and arg1:find("noclip") then
+			goto skipCheck
+		end
 		if not nAdmin.GetAccess(arg1, pl) then
 			return
 		end
+		::skipCheck::
 		if arg1 == "^" then
 			args[1] = pl:Name()
 		end
