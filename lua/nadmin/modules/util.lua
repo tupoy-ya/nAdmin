@@ -86,13 +86,15 @@ function nAdmin.AddBan(ply_, minutes, reason, o, banid_) -- это уёбищн�
 		local stid = ply_Kick:SteamID():lower()
 		bans[stid] = {time = banM, reason = reason}
 		if discord then
-			discord.send({embeds = {[1] = {author = {name = ply_Kick:GetName() .. " (" .. ply_Kick:SteamID() .. ")", url = "http://steamcommunity.com/profiles/".. ply_Kick:SteamID64() .."/",}, title = "Опа! А вот и бан.", color = 10038562, description = "Был забанен по причине: " .. bans[stid].reason .. ", на: " .. str .. ", админом: " .. who_banned}}})
+			discord.send({embeds = {[1] = {author = {name = ply_Kick:Name() .. " (" .. ply_Kick:SteamID() .. ")", url = "http://steamcommunity.com/profiles/".. ply_Kick:SteamID64() .."/",}, title = "Опа! А вот и бан.", color = 10038562, description = "Был забанен по причине: " .. bans[stid].reason .. ", на: " .. str .. ", админом: " .. who_banned}}})
 		end
+		local msg = ply_Kick:Name() .. " был заблокирован с причиной: " .. bans[ply_Kick].reason .. "; на: " .. str .. "; админом: " .. o:Name()
+		nAdmin.PrintAndWarn(msg)
 		ply_Kick:Kick("Вы забанены. Причина: " .. bans[stid].reason .. "; время: " .. str)
 		goto skipb
 	end
 	bans[ply_Kick] = {time = banM, reason = reason}
-	nAdmin.WarnAll(ply_Kick .. " был заблокирован с причиной: " .. bans[ply_Kick].reason .. "; на: " .. str .. "; админом: " .. o:Name())
+	nAdmin.PrintAndWarn(util.SteamIDTo64(ply_Kick) .. " был заблокирован с причиной: " .. bans[ply_Kick].reason .. "; на: " .. str .. "; админом: " .. o:Name())
 	game.KickID(ply_Kick:upper(), "Вы забанены. Причина: " .. bans[ply_Kick].reason .. "; время: " .. str)
 	if discord then
 		discord.send({embeds = {[1] = {author = {name = ply_Kick:upper(), url = "http://steamcommunity.com/profiles/".. util.SteamIDTo64(ply_Kick:upper()) .."/",}, title = "Опа! А вот и бан.", color = 10038562, description = "Был забанен по причине: " .. bans[ply_Kick].reason .. ", на: " .. str .. ", админом: " .. who_banned}}})
@@ -569,3 +571,22 @@ nAdmin.AddCommand("unfreeze", true, function(ply, args)
 	nAdmin.WarnAll(ply:Name() .. " разфризил " .. pl:Name())
 end)
 nAdmin.SetTAndDesc("unfreeze", "e2_coder", "Зафризить/разфризить игрока. arg1 - ник игрока.")
+
+nAdmin.AddCommand("ip", true, function(ply, args)
+	local check = nAdmin.ValidCheckCommand(args, 1, ply, "ip")
+	if not check then
+		return
+	end
+	local pl = nAdmin.FindByNick(args[1])
+	if pl == nil then
+		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
+		return
+	end
+	local ip = pl:IPAddress()
+	if ip == "loopback" then
+		ip = "0.0.0.0:27015"
+	end
+	ip = ip:sub(1, ip:find(":") - 1)
+	nAdmin.Warn(ply, "IP адрес " .. pl:Name() .. ": " .. ip)
+end)
+nAdmin.SetTAndDesc("ip", "admin", "Узнать имя игрока. arg1 - ник игрока.")

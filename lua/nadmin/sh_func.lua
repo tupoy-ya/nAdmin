@@ -2,10 +2,27 @@ nAdmin = {}
 nAdmin.Commands = {}
 nAdmin.Modules = {}
 
+local table_concat = table.concat
+local util = util
+local net = net
+local net_Start = net.Start
+local net_WriteUInt = net.WriteUInt
+local net_WriteData = net.WriteData
+local net_ReadString = net.ReadString
+local net_ReadData = net.ReadData
+local net_ReadUInt = net.ReadUInt
+local net_Send = net.Send
+local net_SendToServer = net.SendToServer
+local util = util
+local util_Compress = util.Compress
+local util_Decompress = util.Decompress
+local util_TableToJSON = util.TableToJSON
+local util_JSONToTable = util.JSONToTable
+local ipairs = ipairs
+
 if SERVER then
 	local meta = FindMetaTable"Player"
 	local metaENT = FindMetaTable"Entity"
-	local table_concat = table.concat
 
 	local plCached = {}
 
@@ -13,25 +30,27 @@ if SERVER then
 	util.AddNetworkString("nAdmin_CommandExec")
 
 	local function sendCMDTable(pl)
-		local compress = util.Compress(util.TableToJSON(nAdmin.Commands))
+		local compress = util_Compress(util_TableToJSON(nAdmin.Commands))
 		local compress_ = #compress
-		net.Start("nadmin_message")
-			net.WriteUInt(2, 2)
-			net.WriteUInt(compress_, 16)
-			net.WriteData(compress, compress_)
-		net.Send(pl)
+		net_Start("nadmin_message")
+			net_WriteUInt(2, 2)
+			net_WriteUInt(compress_, 16)
+			net_WriteData(compress, compress_)
+		net_Send(pl)
 	end
 
 	net.Receive("nadmin_message", function(_, pl)
-		local int = net.ReadUInt(1)
+		local int = net_ReadUInt(1)
 		if int == 1 then
 			if plCached[pl] then return end
 			sendCMDTable(pl)
 		end
 	end)
 
-	hook.Add("PlayerFullLoad", "nAdmin_TCommands", function(ply)
-		sendCMDTable(ply)
+	hook.Add("PlayerInitialSpawn", "nAdmin_TCommands", function(ply)
+		timer.Simple(5, function()
+			sendCMDTable(ply)
+		end)
 	end)
 
 	function nAdmin.CommandExec(pl, cmd, args)
@@ -60,18 +79,20 @@ if SERVER then
 		a.func(pl, args)
 		for _, v in ipairs(player.GetHumans()) do
 			if v:IsAdmin() then
-				net.Start("nadmin_message")
-					net.WriteUInt(3, 2)
+				net_Start("nadmin_message")
+					net_WriteUInt(3, 2)
 					net.WriteString(pl:Name() .. " > CMD: " .. arg1 .. " " .. table_concat(args) .. "")
-				net.Send(v)
+				net_Send(v)
 			end
 		end
 	end
 
 	net.Receive("nAdmin_CommandExec", function(_, pl)
-		local command = net.ReadString()
-		local args = net.ReadString()
-		args = args:Split(" ")
+		local command = net_ReadString()
+		local int = net_ReadUInt(8)
+		local args = net_ReadData(int)
+		args = util_Decompress(args)
+		args = util_JSONToTable(args)
 		nAdmin.CommandExec(pl, command, args)
 	end)
 
@@ -96,24 +117,24 @@ if SERVER then
 			nAdmin.Print(msg[2])
 			return
 		end
-		msg = util.TableToJSON(msg)
-		local compress = util.Compress(msg)
+		msg = util_TableToJSON(msg)
+		local compress = util_Compress(msg)
 		local compress_ = #compress
-		net.Start("nadmin_message")
-			net.WriteUInt(1, 2)
-			net.WriteUInt(compress_, 16)
-			net.WriteData(compress, compress_)
-		net.Send(ply)
+		net_Start("nadmin_message")
+			net_WriteUInt(1, 2)
+			net_WriteUInt(compress_, 16)
+			net_WriteData(compress, compress_)
+		net_Send(ply)
 	end
 
 	function nAdmin.PrintMessage(msg)
-		msg = util.TableToJSON(msg)
-		local compress = util.Compress(msg)
+		msg = util_TableToJSON(msg)
+		local compress = util_Compress(msg)
 		local compress_ = #compress
-		net.Start("nadmin_message")
-			net.WriteUInt(1, 2)
-			net.WriteUInt(compress_, 16)
-			net.WriteData(compress, compress_)
+		net_Start("nadmin_message")
+			net_WriteUInt(1, 2)
+			net_WriteUInt(compress_, 16)
+			net_WriteData(compress, compress_)
 		net.Broadcast()
 	end
 
@@ -167,19 +188,19 @@ end
 
 if CLIENT then
 	net.Receive("nadmin_message", function()
-		local mode = net.ReadUInt(2)
+		local mode = net_ReadUInt(2)
 		if mode == 3 then
-			local a = net.ReadString()
+			local a = net_ReadString()
 			nAdmin.LastSystime = SysTime()
 			if IsValid(nGUI) then
 				hook.Run("nAdmin_SystimeUpdate", nAdmin.LastSystime, a)
 			end
 			return
 		end
-		local int = net.ReadUInt(16)
-		local data = net.ReadData(int)
-		local decompress = util.Decompress(data)
-		decompress = util.JSONToTable(decompress or "{}")
+		local int = net_ReadUInt(16)
+		local data = net_ReadData(int)
+		local decompress = util_Decompress(data)
+		decompress = util_JSONToTable(decompress or "{}")
 		if mode == 1 then
 			chat.AddText(unpack(decompress))
 		elseif mode == 2 then
@@ -238,17 +259,25 @@ if CLIENT then
 		return tbl
 	end
 
-	concommand.Add("n", function(pl, _, args)
+	function nAdmin.NetCmdExec(pl, args)
 		local cmd = args[1]
 		if nAdmin.Commands[cmd] ~= nil and nAdmin.Commands[cmd].CL == true then
+			for i = 1, #args do
+				args[i] = args[i + 1]
+			end
 			nAdmin.Commands[cmd].func(args)
 			return
 		end
-		local a = table.concat(args, " ")
-		net.Start("nAdmin_CommandExec")
+		local a = util_TableToJSON(args)
+		a = util_Compress(a)
+		net_Start("nAdmin_CommandExec")
 			net.WriteString(cmd or "")
-			net.WriteString(a)
-		net.SendToServer()
+			net_WriteUInt(#a, 8)
+			net_WriteData(a, #a)
+		net_SendToServer()
+	end
+	concommand.Add("n", function(pl, _, args)
+		nAdmin.NetCmdExec(pl, args)
 	end, nAdmin.AutoComplete)
 end
 
@@ -324,6 +353,8 @@ if CLIENT or SERVER then
 	end
 
 	function nAdmin.UpdateFiles()
+		nAdmin.Print("Загрузка файлов...")
+		local os_time = SysTime()
 		-- [[ SHARED ]] --
 		for k, v in ipairs(file.Find("nadmin/*", "LUA")) do
 			if v == "sh_func.lua" then
@@ -331,7 +362,6 @@ if CLIENT or SERVER then
 			end
 			include("nadmin/" .. v)
 			AddCSLuaFile("nadmin/" .. v)
-			nAdmin.Print("[SHARED] Загружено: " .. v)
 		end
 		for k, v in ipairs(file.Find("nadmin/client/*", "LUA")) do
 			if CLIENT then
@@ -339,13 +369,11 @@ if CLIENT or SERVER then
 			else
 				AddCSLuaFile("nadmin/client/" .. v)
 			end
-			nAdmin.Print("[CLIENT] Загружено: " .. v)
 		end
 		if SERVER then
 			-- [[ SERVER ]] --
 			for k, v in ipairs(file.Find("nadmin/server/*", "LUA")) do
 				include("nadmin/server/" .. v)
-				nAdmin.Print("[SERVER] Загружено: " .. v)
 			end
 		end
 		-- [[ MODULES ]] --
@@ -354,9 +382,9 @@ if CLIENT or SERVER then
 				AddCSLuaFile("nadmin/modules/" .. v)
 			end
 			include("nadmin/modules/" .. v)
-			nAdmin.Print("[MODULES] Загружено: " .. v)
 			table.insert(nAdmin.Modules, string.sub(v, 1, #v - 4))
 		end
+		nAdmin.Print("Файлы были загружены за: " .. SysTime() - os_time .. ".")
 	end
 
 	nAdmin.UpdateFiles()

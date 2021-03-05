@@ -55,6 +55,9 @@ if SERVER then
 			end
 			local first = table.GetWinningKey(final)
 			nAdmin.WarnAll("В голосовании победил ответ: " .. answers[first])
+			if not IsValid(pl) then
+				nAdmin.WarnAll("Игрок, которого пытались выгнать, вышел с сервера.")
+			end
 			if first == 1 then
 				pl:Kick("Вас выгнали всеобщим голосованием. Причина: " .. ass2 .. "; голосование создал: " .. ply:Name())
 			end
@@ -317,8 +320,9 @@ if CLIENT then
 		if int == 3 then -- [[ + VOTE ]] --
 			local ent = net.ReadEntity()
 			local fl = net.ReadFloat()
-			results[ent] = fl
-			notification.AddLegacy(((ent and ent:Name()) or "???") .. " проголосовал за: " .. ((cT and cT[fl]) or "???"), NOTIFY_GENERIC, 3)
+			results[ent] = fl -- потом сделай
+			if not IsValid(ent) then return end
+			notification.AddLegacy(((ent:IsPlayer() and ent:Name()) or "???") .. " проголосовал за: " .. ((cT and cT[fl]) or "???"), NOTIFY_GENERIC, 3)
 			surface.PlaySound("buttons/button9.wav")
 		end
 	end)
