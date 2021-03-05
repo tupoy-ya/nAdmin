@@ -88,13 +88,13 @@ function nAdmin.AddBan(ply_, minutes, reason, o, banid_) -- это уёбищн�
 		if discord then
 			discord.send({embeds = {[1] = {author = {name = ply_Kick:Name() .. " (" .. ply_Kick:SteamID() .. ")", url = "http://steamcommunity.com/profiles/".. ply_Kick:SteamID64() .."/",}, title = "Опа! А вот и бан.", color = 10038562, description = "Был забанен по причине: " .. bans[stid].reason .. ", на: " .. str .. ", админом: " .. who_banned}}})
 		end
-		local msg = ply_Kick:Name() .. " был заблокирован с причиной: " .. bans[ply_Kick].reason .. "; на: " .. str .. "; админом: " .. o:Name()
+		local msg = ply_Kick:Name() .. " был заблокирован с причиной: " .. bans[stid].reason .. "; на: " .. str .. "; забанил: " .. who_banned
 		nAdmin.PrintAndWarn(msg)
 		ply_Kick:Kick("Вы забанены. Причина: " .. bans[stid].reason .. "; время: " .. str)
 		goto skipb
 	end
 	bans[ply_Kick] = {time = banM, reason = reason}
-	nAdmin.PrintAndWarn(util.SteamIDTo64(ply_Kick) .. " был заблокирован с причиной: " .. bans[ply_Kick].reason .. "; на: " .. str .. "; админом: " .. o:Name())
+	nAdmin.PrintAndWarn(util.SteamIDTo64(ply_Kick) .. " был заблокирован с причиной: " .. bans[ply_Kick].reason .. "; на: " .. str .. "; забанил: " .. who_banned)
 	game.KickID(ply_Kick:upper(), "Вы забанены. Причина: " .. bans[ply_Kick].reason .. "; время: " .. str)
 	if discord then
 		discord.send({embeds = {[1] = {author = {name = ply_Kick:upper(), url = "http://steamcommunity.com/profiles/".. util.SteamIDTo64(ply_Kick:upper()) .."/",}, title = "Опа! А вот и бан.", color = 10038562, description = "Был забанен по причине: " .. bans[ply_Kick].reason .. ", на: " .. str .. ", админом: " .. who_banned}}})
