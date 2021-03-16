@@ -231,7 +231,7 @@ if SERVER then
 			end
 		end)
 	end)
-	nAdmin.SetTAndDesc("votekick", "user", "Запускает голование на кик игрока. arg1 - ник, arg2 - причина.")
+	nAdmin.SetTAndDesc("votecleanmap", "e2_coder", "Запускает голование на очистку карты.")
 
 	nAdmin.AddCommand("stopvote", false, function(ply, args)
 		if not current_status then
