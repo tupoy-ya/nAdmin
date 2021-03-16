@@ -5,7 +5,7 @@ if CLIENT then
 				p("Меню недоступно. Перезагружаю файлы!")
 				nAdmin.UpdateFiles()
 			end)
-		elseif IsValid(nGUI) then
+		else
 			if nGUI:IsVisible() then
 				gui.EnableScreenClicker(false)
 				nGUI:AlphaTo(0, .1, 0, function()
@@ -22,7 +22,6 @@ if CLIENT then
 		LocalPlayer():ConCommand("record 1;stop")
 	end)
 	nAdmin.AddCommand("g", function(a)
-		PT(a)
 		gui.OpenURL("https://www.google.com/search?&q=" .. table.concat(a, "+"))
 	end)
 	nAdmin.AddCommand("y", function(a)
@@ -64,29 +63,10 @@ if CLIENT then
 		hook.Remove("OnPlayerChat","nAdminMute")
 	end)
 	nAdmin.AddCommand("help", function()
-		if not nAdmin.FullCMDS then
-			nAdmin.Print("Пожалуйста, подождите...")
-			net.Start("nadmin_message")
-				net.WriteUInt(1, 1)
-			net.SendToServer()
-			timer.Simple(1.5, function()
-				for k, v in SortedPairs(nAdmin.Commands) do
-					p("", "n " .. k .. " -", v.desc or "Нет описания", v.T or "Игрок")
-				end
-			end)
-		else
-			for k, v in SortedPairs(nAdmin.Commands) do
-				p("", "n " .. k .. " -", v.desc or "Нет описания", "Доступен с: " .. (v.T or "Игрок"))
-			end
+		nAdmin.Warn(_, "Смотрите консоль.")
+		for k, v in SortedPairs(nAdmin.Commands) do
+			p("", "n " .. k .. " -", v.desc or "Нет описания", "Доступен с: " .. (v.T or "Игрок"))
 		end
-	end)
-	net.Receive("nAdmin_MFunctions", function()
-		local str = net.ReadString()
-		local a = net.ReadUInt(16)
-		local t = net.ReadData(a)
-		t = util.Decompress(t)
-		t = util.JSONToTable(t or "{}")
-		nAdmin.Commands[str].func(unpack(t or {}))
 	end)
 	nAdmin.SetTAndDesc("g", "user", "Поиск чего-нибудь в Google. arg1 - что-то искать.")
 	nAdmin.SetTAndDesc("git", "user", "Поиск чего-нибудь в GitHub. arg1 - что-то искать.")
@@ -98,7 +78,6 @@ end
 
 if SERVER then
 	local meta = FindMetaTable("Player")
-	util.AddNetworkString("nAdmin_MFunctions")
 	nAdmin.AddCommand("giveammo", false, function(ply, args)
 		local check = nAdmin.ValidCheckCommand(args, 1, ply, "giveammo")
 		if not check then
@@ -106,7 +85,8 @@ if SERVER then
 		end
 		if not IsValid(ply:GetActiveWeapon()) then return end
 		local a = ply:GetActiveWeapon():GetPrimaryAmmoType()
-		local c = (args[1] or 0)
+		local num = tonumber(args[1])
+		local c = (num ~= nil and num or 0)
 		if a ~= -1 then
 			ply:GiveAmmo(math.Clamp(c, 0, 9999), a)
 		end
@@ -135,6 +115,13 @@ if SERVER then
 		end)
 	end)
 	nAdmin.SetTAndDesc("leave", "user", "Выйти с сервера. arg1 - причина. (необязательно)")
+	nAdmin.AddCommand("me", false, function(ply, args)
+		for _, pl in ipairs(player.GetAll()) do
+			if pl:GetPos():DistToSqr(ply:GetPos()) > 300000 then continue end
+			pl:ChatPrint("* " .. ply:Name() .. " " .. table.concat(args, " "))
+		end
+	end)
+	nAdmin.SetTAndDesc("me", "user", "Что-то \"сделать\". arg1 - текст.")
 	--[[
 	nAdmin.AddCommand("ulxbanstonadmin", false, function(ply, _, args)
 		if not ply:IsSuperAdmin() then return end

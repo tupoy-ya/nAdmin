@@ -24,9 +24,10 @@ if SERVER then
 		return
 	end
 
-	require'mysqloo'
-
-	if not mysqloo then
+	local a, b = pcall(function() require'mysqloo' end)
+	if a then
+		require'mysqloo'
+	else
 		nAdmin.Print("gmsv_mysqloo не найден!!! Без него не будет работать модуль playtime!!!")
 		return
 	end
@@ -138,5 +139,4 @@ if SERVER then
 			Q:start()
 		end)
 	end)
-	hook.Remove("PlayerInitialSpawn", "restoretime")
 end

@@ -9,7 +9,10 @@ nAdmin.AddCommand("build", false, function(ply, args)
 	if ply.NoB then return end
 	local inB = ply:GetNWBool("inBuild")
 	if inB then return end
-	if ply:InVehicle() then return end
+	if ply:InVehicle() then
+		nAdmin.Warn(ply, "Вы в машине!")
+		return
+	end
 	nAdmin.Warn(ply, "Входим в режим строительства...")
 	ply.NoB = true
 	timer.Simple(3, function()
@@ -27,7 +30,10 @@ nAdmin.AddCommand("pvp", false, function(ply, args)
 	if ply.NoB then return end
 	local inB = ply:GetNWBool("inBuild")
 	if not inB then return end
-	if ply:InVehicle() then return end
+	if ply:InVehicle() then
+		nAdmin.Warn(ply, "Вы в машине!")
+		return
+	end
 	nAdmin.Warn(ply, "Входим в режим ПВП...")
 	ply.NoB = true
 	timer.Simple(3, function()

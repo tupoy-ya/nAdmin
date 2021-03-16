@@ -40,6 +40,7 @@ nAdmin.AddCommand("unragdoll", true, function(ply, args)
 		pl.rag:Remove()
 		pl.rag = nil
 	end
+	pl:SetObserverMode(0)
 	pl:UnSpectate()
 	pl:Spawn()
 	if pl.ragOldPos then
@@ -58,7 +59,7 @@ end)
 hook.Add("PlayerSpawn", "nAdmin_ragdoll", function(ply)
 	timer.Simple(.1, function()
 		if ply and ply.rag then
-			ply:Spectate(OBS_MODE_CHASE)
+			ply:SetObserverMode(OBS_MODE_CHASE)
 			ply:SpectateEntity(ply.rag)
 			ply:StripWeapons()
 		end

@@ -20,7 +20,7 @@ if SERVER then
 			nAdmin.Warn(ply, "Подождите ещё: " .. math.Round(next_Kick - CurTime()) .. " секунд!")
 			return
 		end
-		next_Kick = CurTime() + 30
+		next_Kick = CurTime() + 60
 		local results = {}
 		local answers = {[1] = "Да.", [2] = "Нет."}
 		table.sort(answers, function(a, b) return #a < #b end)
@@ -102,7 +102,7 @@ if SERVER then
 		if table.Count(args) < 3 then
 			return
 		end
-		next_Kick = CurTime() + 30
+		next_Kick = CurTime() + 60
 		local results = {}
 		local dop = {}
 		local answers = {}
@@ -156,6 +156,7 @@ if SERVER then
 	end)
 	nAdmin.SetTAndDesc("vote", "osobenniy2", "Запускает голование на кик игрока. arg1 - что обсуждаем, arg2, arg3, arg4. (необязательно).")
 
+	local nextCleanMap = 0
 	nAdmin.AddCommand("votecleanmap", false, function(ply, args)
 		if current_status then
 			nAdmin.Warn(ply, "В данный момент уже идет какое-то голосование!")
@@ -166,11 +167,11 @@ if SERVER then
 			nAdmin.Warn(ply, "Игрока с таким именем нет на сервере!")
 			return
 		end
-		if next_Kick > CurTime() then
-			nAdmin.Warn(ply, "Подождите ещё: " .. math.Round(next_Kick - CurTime()) .. " секунд!")
+		if nextCleanMap > CurTime() then
+			nAdmin.Warn(ply, "Подождите ещё: " .. math.Round(nextCleanMap - CurTime()) .. " секунд!")
 			return
 		end
-		next_Kick = CurTime() + 30
+		nextCleanMap = CurTime() + 1800
 		local results = {}
 		local answers = {[1] = "Да.", [2] = "Нет."}
 		table.sort(answers, function(a, b) return #a < #b end)
@@ -206,7 +207,10 @@ if SERVER then
 			local first = table.GetWinningKey(final)
 			nAdmin.WarnAll("В голосовании победил ответ: " .. answers[first])
 			if first == 1 then
-				PrintMessage(3, "не работает мне лень это пока что делать")
+				PrintMessage(3, "Через 5 минут произойдет очистка пропов!")
+				nAdmin.Countdown(300, function()
+					RunConsoleCommand("gmod_admin_cleanup")
+				end)
 			end
 			results = {}
 		end)

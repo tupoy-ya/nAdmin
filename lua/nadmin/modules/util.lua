@@ -280,7 +280,7 @@ nAdmin.AddCommand("jail", true, function(ply, args)
 	timer.Create(as .. "nAdmin_ToJail", .05, 0, function()
 		if not pl:IsValid() then
 			timer.Remove(as .. "nAdmin_ToJail")
-			--nAdmin.WarnAll(plName .. " вышел из игры во время нахождения в гулаге!")
+			nAdmin.WarnAll(plName .. " вышел из игры во время нахождения в гулаге!")
 			return
 		end
 		if pl:GetNWBool("nAdmin_InJail") == true then

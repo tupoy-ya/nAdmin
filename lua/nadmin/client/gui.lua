@@ -71,7 +71,7 @@ function nAdmin.mGUI()
 				if wf == nil then
 					wf = ""
 				end
-				if string.match(k, txt) or string.match(wf, txt) then
+				if string.find(k, txt, 1, true) or string.find(wf, txt, 1, true) then
 					cCount = cCount + 1
 					a[cCount] = k
 				end
@@ -170,7 +170,7 @@ function nAdmin.mGUI()
 	argsInf:SetTextColor(color_white)
 	argsInf:SetFont("nAdmin_desc")
 	argsInf.Think = function()
-		if table.IsEmpty(entries) then
+		if #entries == 0 then
 			argsInf:SetText("")
 		else
 			argsInf:SetText("Ввод аргументов:")
@@ -206,7 +206,7 @@ function nAdmin.mGUI()
 	local runCommand = vgui.Create('DTextEntry', nGUI)
 	runCommand:Dock(BOTTOM)
 	runCommand.Think = function()
-		if table.IsEmpty(entries) then
+		if #entries == 0 then
 			runCommand:SetText("n " .. cm)
 			return
 		end

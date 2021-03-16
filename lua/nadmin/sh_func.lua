@@ -13,6 +13,7 @@ local net_ReadData = net.ReadData
 local net_ReadUInt = net.ReadUInt
 local net_Send = net.Send
 local net_SendToServer = net.SendToServer
+local net_Broadcast = net.Broadcast
 local util = util
 local util_Compress = util.Compress
 local util_Decompress = util.Decompress
@@ -63,9 +64,6 @@ if SERVER then
 		for i = 1, #args do
 			args[i] = args[i + 1]
 		end
-		if nAdmin.Commands[cmd] and not nAdmin.Commands[cmd].argsCount then
-			table.Merge(nAdmin.Commands[cmd], {argsCount = count})
-		end
 		if pl.B and arg1:find("noclip") then
 			goto skipCheck
 		end
@@ -73,7 +71,7 @@ if SERVER then
 			return
 		end
 		::skipCheck::
-		if arg1 == "^" then
+		if args[1] == "^" then
 			args[1] = pl:Name()
 		end
 		a.func(pl, args)
@@ -101,22 +99,21 @@ if SERVER then
 	end)
 
 	function metaENT:Team()
+		if self ~= Entity(0) then return end
 		return 0
 	end
 
 	function metaENT:SteamID()
+		if self ~= Entity(0) then return end
 		return "STEAM_0:0:0"
 	end
 
 	function metaENT:Name()
+		if self ~= Entity(0) then return end
 		return "Консоль"
 	end
 
-	function nAdmin.Message(ply, msg)
-		if ply:SteamID() == "STEAM_0:0:0" then
-			nAdmin.Print(msg[2])
-			return
-		end
+	function nAdmin.msg(msg, ply)
 		msg = util_TableToJSON(msg)
 		local compress = util_Compress(msg)
 		local compress_ = #compress
@@ -124,22 +121,15 @@ if SERVER then
 			net_WriteUInt(1, 2)
 			net_WriteUInt(compress_, 16)
 			net_WriteData(compress, compress_)
-		net_Send(ply)
+		if not ply then
+			net_Broadcast()
+		else
+			net_Send(ply)
+		end
 	end
 
 	function nAdmin.PrintMessage(msg)
-		msg = util_TableToJSON(msg)
-		local compress = util_Compress(msg)
-		local compress_ = #compress
-		net_Start("nadmin_message")
-			net_WriteUInt(1, 2)
-			net_WriteUInt(compress_, 16)
-			net_WriteData(compress, compress_)
-		net.Broadcast()
-	end
-
-	function nAdmin.Warn(ply, msg)
-		nAdmin.Message(ply, {Color(180, 180, 180), msg})
+		nAdmin.msg(msg)
 	end
 
 	function nAdmin.WarnAll(msg)
@@ -276,116 +266,126 @@ if CLIENT then
 			net_WriteData(a, #a)
 		net_SendToServer()
 	end
+
 	concommand.Add("n", function(pl, _, args)
 		nAdmin.NetCmdExec(pl, args)
 	end, nAdmin.AutoComplete)
 end
 
-if CLIENT or SERVER then
-	function PT(...)
-		return PrintTable(...)
-	end
+function PT(...)
+	return PrintTable(...)
+end
 
-	function p(...)
-		return print(...)
-	end
+function p(...)
+	return print(...)
+end
 
-	function nAdmin.Print(...)
-		Msg"[nAdmin] "p(...)
-	end
+function nAdmin.Print(...)
+	Msg"[nAdmin] "p(...)
+end
 
-	function nAdmin.AddCommand(cmd, autocomplete, func)
-		if SERVER then
-			if autocomplete == true then
-				autocomplete = nAdmin.AutoComplete
-			end
-			nAdmin.Commands[cmd] = {func = func, ac = autocomplete}
-		else
-			nAdmin.Commands[cmd] = {func = autocomplete, CL = true}
-		end
-	end
-
-	function nAdmin.FindByNick(nick)
-		local ent
-		nick = nick or ""
-		nick = string.lower(nick)
-		local player_GetAll = player.GetAll()
-		local find_ = false
-		for _, v in ipairs(player_GetAll) do
-			if v:Name() == nick then
-				ent = v
-				find_ = true
-				break
-			end
-		end
-		if find_ then
-			goto Skip
-		end
-		for _, v in ipairs(player_GetAll) do
-			local name = v:Name()
-			name = string.lower(name)
-			if name == "^" or name == "*" then
-				ent = v
-				break
-			end
-			if string.find(name, nick, 1, true) then
-				ent = v
-			end
-		end
-		::Skip::
-		return ent
-	end
-
-	local str = getmetatable("")
-	function isstring(var)
-		return getmetatable(var) == str
-	end
-
-	function nAdmin.SetTAndDesc(cmd, T, desc)
-		local tCmds = nAdmin.Commands[cmd]
-		if tCmds == nil then
-			debug.Trace()
-		end
-		if tCmds.T or tCmds.desc then
+function nAdmin.Message(ply, msg)
+	if SERVER then
+		if ply:SteamID() == "STEAM_0:0:0" then
+			nAdmin.Print(msg[2])
 			return
 		end
-		table.Merge(nAdmin.Commands[cmd], {T = T, desc = desc})
+		nAdmin.msg(msg, ply)
+	else
+		chat.AddText(unpack(msg))
 	end
-
-	function nAdmin.UpdateFiles()
-		nAdmin.Print("Загрузка файлов...")
-		local os_time = SysTime()
-		-- [[ SHARED ]] --
-		for k, v in ipairs(file.Find("nadmin/*", "LUA")) do
-			if v == "sh_func.lua" then
-				continue
-			end
-			include("nadmin/" .. v)
-			AddCSLuaFile("nadmin/" .. v)
-		end
-		for k, v in ipairs(file.Find("nadmin/client/*", "LUA")) do
-			if CLIENT then
-				include("nadmin/client/" .. v)
-			else
-				AddCSLuaFile("nadmin/client/" .. v)
-			end
-		end
-		if SERVER then
-			-- [[ SERVER ]] --
-			for k, v in ipairs(file.Find("nadmin/server/*", "LUA")) do
-				include("nadmin/server/" .. v)
-			end
-		end
-		-- [[ MODULES ]] --
-		for k, v in ipairs(file.Find("nadmin/modules/*", "LUA")) do
-			if string.StartWith(v, "sh_") then
-				AddCSLuaFile("nadmin/modules/" .. v)
-			end
-			include("nadmin/modules/" .. v)
-			table.insert(nAdmin.Modules, string.sub(v, 1, #v - 4))
-		end
-		nAdmin.Print("Файлы были загружены за: " .. SysTime() - os_time .. ".")
-	end
-
-	nAdmin.UpdateFiles()
 end
+
+function nAdmin.Warn(ply, msg)
+	nAdmin.Message(ply, {Color(180, 180, 180), msg})
+end
+
+function nAdmin.AddCommand(cmd, autocomplete, func)
+	if SERVER then
+		if autocomplete == true then
+			autocomplete = nAdmin.AutoComplete
+		end
+		nAdmin.Commands[cmd] = {func = func, ac = autocomplete}
+	else
+		nAdmin.Commands[cmd] = {func = autocomplete, CL = true}
+	end
+end
+
+function nAdmin.FindByNick(nick)
+	local ent
+	nick = nick or ""
+	nick = string.lower(nick)
+	local player_GetAll = player.GetAll()
+	local find_ = false
+	for _, v in ipairs(player_GetAll) do
+		if v:Name() == nick then
+			ent = v
+			find_ = true
+			break
+		end
+	end
+	if find_ then
+		goto Skip
+	end
+	for _, v in ipairs(player_GetAll) do
+		local name = v:Name()
+		name = string.lower(name)
+		if name == "^" or name == "*" then
+			ent = v
+			break
+		end
+		if string.find(name, nick, 1, true) then
+			ent = v
+		end
+	end
+	::Skip::
+	return ent
+end
+
+function nAdmin.SetTAndDesc(cmd, T, desc)
+	local tCmds = nAdmin.Commands[cmd]
+	if tCmds == nil then
+		debug.Trace()
+	end
+	if tCmds.T or tCmds.desc then
+		return
+	end
+	table.Merge(nAdmin.Commands[cmd], {T = T, desc = desc})
+end
+
+function nAdmin.UpdateFiles()
+	nAdmin.Print("Загрузка файлов...")
+	local os_time = SysTime()
+	-- [[ SHARED ]] --
+	for k, v in ipairs(file.Find("nadmin/*", "LUA")) do
+		if v == "sh_func.lua" then
+			continue
+		end
+		include("nadmin/" .. v)
+		AddCSLuaFile("nadmin/" .. v)
+	end
+	for k, v in ipairs(file.Find("nadmin/client/*", "LUA")) do
+		if CLIENT then
+			include("nadmin/client/" .. v)
+		else
+			AddCSLuaFile("nadmin/client/" .. v)
+		end
+	end
+	if SERVER then
+		-- [[ SERVER ]] --
+		for k, v in ipairs(file.Find("nadmin/server/*", "LUA")) do
+			include("nadmin/server/" .. v)
+		end
+	end
+	-- [[ MODULES ]] --
+	for k, v in ipairs(file.Find("nadmin/modules/*", "LUA")) do
+		if string.StartWith(v, "sh_") then
+			AddCSLuaFile("nadmin/modules/" .. v)
+		end
+		include("nadmin/modules/" .. v)
+		table.insert(nAdmin.Modules, string.sub(v, 1, #v - 4))
+	end
+	nAdmin.Print("Файлы были загружены за: " .. SysTime() - os_time .. ".")
+end
+
+nAdmin.UpdateFiles()
