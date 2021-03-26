@@ -122,9 +122,7 @@ if SERVER then
 		end
 	end)
 	nAdmin.SetTAndDesc("me", "user", "Что-то \"сделать\". arg1 - текст.")
-	--[[
 	nAdmin.AddCommand("ulxbanstonadmin", false, function(ply, _, args)
-		if not ply:IsSuperAdmin() then return end
 		local a = file.Read("nadmin/ulxbans.txt", "DATA")
 		a = "\"ULXGAYSTVO\" {" .. a .. "}" -- замечательный обход
 		a = util.KeyValuesToTable(a)
@@ -132,10 +130,11 @@ if SERVER then
 			if tbl.reason == nil then
 				tbl.reason = "Нет причины."
 			end
-			nAdmin.AddBan(stid, tonumber(os.time()) - tonumber(tbl.time), tbl.reason, ply, true)
+			nAdmin.AddBan(stid, tonumber(os.time()) - tonumber(tbl.time), tbl.reason, ply, true, true)
 		end
 	end)
-	nAdmin.SetTAndDesc("ulxbanstonadmin", "superadmin", "")
+	nAdmin.SetTAndDesc("ulxbanstonadmin", "superadmin", "Перенести файл банов ULX в nAdmin")
+		--[[
 	nAdmin.AddCommand("ulxusergroupsstonadmin", false, function(ply, _, args)
 		if not ply:IsSuperAdmin() then return end
 		local a = file.Read("nadmin/ulxusergroups.txt", "DATA")

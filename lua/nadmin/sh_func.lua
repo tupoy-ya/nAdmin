@@ -356,6 +356,8 @@ end
 function nAdmin.UpdateFiles()
 	nAdmin.Print("Загрузка файлов...")
 	local os_time = SysTime()
+	-- [[ SQL ]] --
+	include("nadmin/server/sv_sql.lua")
 	-- [[ SHARED ]] --
 	for k, v in ipairs(file.Find("nadmin/*", "LUA")) do
 		if v == "sh_func.lua" then

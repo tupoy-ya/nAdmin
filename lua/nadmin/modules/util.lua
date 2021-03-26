@@ -2,29 +2,53 @@ if not file.Exists("nadmin/bans.txt", "DATA") then
 	nAdmin.Print("Файл \"nadmin/bans.txt\" не существует. Создаю...")
 	file.Write("nadmin/bans.txt", "{}")
 end
-local bans = util.JSONToTable(file.Read("nadmin/bans.txt", "DATA") or "{}")
+local bans = {} -- util.JSONToTable(file.Read("nadmin/bans.txt", "DATA") or "{}") or {}
 local next = next
 nAdmin.BanList = bans
 
 local singleplayer = game.SinglePlayer()
 if singleplayer then
-	nAdmin.Print("Модуль util отключен. Причина: сервер запущен в одиночной игре.")
+	nAdmin.Print("Модуль util отключен! Сервер запущен в одиночной игре.")
 	return
 end
 
 util.AddNetworkString("nAdmin_JailHUD")
 
-function nAdmin.UpdateBans()
-	local function write_bans()
-		file.Write("nadmin/bans.txt", util.TableToJSON(bans))
-		coroutine.yield()
+function nAdmin.BanInSQL(steamid, time, reason, banned_by)
+	local Q = nAdminDB:query("REPLACE INTO nAdmin_bans (ind, plyban, reason, time, banned_by) VALUES (" .. table.Count(bans) .. ", " .. SQLStr(steamid) .. ", " .. SQLStr(reason) .. ", " .. SQLStr(time) .. ", " .. SQLStr(banned_by) .. ")")
+	function Q:onError(err)
+		nAdmin.Print("Запрос выдал ошибку: " .. err)
 	end
-	local a = SysTime()
-	local co = coroutine.create(write_bans)
-	coroutine.resume(co)
+	Q:start()
 end
 
-function nAdmin.AddBan(ply_, minutes, reason, o, banid_) -- это уёбищный код, но так как я ленивая залупа я не хочу это переписывать
+function nAdmin.TbansFromSQL()
+	local Q = nAdminDB:query("SELECT * FROM nAdmin_bans")
+	function Q:onError(err)
+		nAdmin.Print("Запрос выдал ошибку: " .. err)
+	end
+	Q:start()
+	function Q:onSuccess(data)
+		if data then
+			for k, v in next, data do
+				bans[v.plyban] = {time = v.time, reason = v.reason, banned_by = v.banned_by}
+			end
+			if timer.Exists("nAdmin_bdReload") then
+				timer.Remove("nAdmin_bdReload")
+			end
+			timer.Create("nAdmin_bdReload", 2, 1, function()
+				nAdmin.BanList = bans
+			end)
+		end
+	end
+end
+nAdmin.TbansFromSQL()
+
+function nAdmin.ValidSteamID(sid)
+	return sid:upper():Trim():match("^STEAM_0:%d:%d+$")
+end
+
+function nAdmin.AddBan(ply_, minutes, reas, o, banid_, nospam) -- это уёбищный код, но так как я ленивая залупа я не хочу это переписывать
 	local ply_Kick = nAdmin.FindByNick(ply_)
 	local reason_warn = ""
 	if banid_ then
@@ -44,12 +68,11 @@ function nAdmin.AddBan(ply_, minutes, reason, o, banid_) -- это уёбищн�
 	end
 	::zcont::
 	if banid_ == true then
-		ply_ = ply_:Trim()
-		ply_ = ply_:lower()
-		if not string.StartWith(ply_, "steam_0") then
-			nAdmin.Warn(o, "Неправильно введён аргумент!")
+		if not nAdmin.ValidSteamID(ply_) then
+			nAdmin.Warn(o, "Неправильно введён SteamID!")
 			return
 		end
+		ply_ = util.SteamIDTo64(ply_)
 		local a
 		local b
 		if o:SteamID() == "STEAM_0:0:0" then
@@ -68,7 +91,7 @@ function nAdmin.AddBan(ply_, minutes, reason, o, banid_) -- это уёбищн�
 			return
 		end
 		::conskip::
-		ply_Kick = ply_:lower()
+		ply_Kick = ply_
 	end
 	local banM = os.time() + (tonumber(minutes) * 60)
 	if tonumber(minutes) == 0 then
@@ -83,41 +106,48 @@ function nAdmin.AddBan(ply_, minutes, reason, o, banid_) -- это уёбищн�
 		str = string.NiceTime(time)
 	end
 	if ply_Kick ~= false and not banid_ and ply_Kick:IsPlayer() then
-		local stid = ply_Kick:SteamID():lower()
-		bans[stid] = {time = banM, reason = reason}
+		local stid = ply_Kick:SteamID64():lower()
+		bans[stid] = {time = banM, reason = reas}
+		nAdmin.BanInSQL(stid, banM, reas, who_banned)
 		if discord then
 			discord.send({embeds = {[1] = {author = {name = ply_Kick:Name() .. " (" .. ply_Kick:SteamID() .. ")", url = "http://steamcommunity.com/profiles/".. ply_Kick:SteamID64() .."/",}, title = "Опа! А вот и бан.", color = 10038562, description = "Был забанен по причине: " .. bans[stid].reason .. ", на: " .. str .. ", админом: " .. who_banned}}})
 		end
-		local msg = ply_Kick:Name() .. " был заблокирован с причиной: " .. bans[stid].reason .. "; на: " .. str .. "; забанил: " .. who_banned
-		nAdmin.PrintAndWarn(msg)
+		if not nospam then
+			local msg = ply_Kick:Name() .. " был заблокирован с причиной: " .. bans[stid].reason .. "; на: " .. str .. "; забанил: " .. who_banned
+			nAdmin.PrintAndWarn(msg)
+		end
 		ply_Kick:Kick("Вы забанены. Причина: " .. bans[stid].reason .. "; время: " .. str)
 		goto skipb
 	end
-	bans[ply_Kick] = {time = banM, reason = reason}
-	nAdmin.PrintAndWarn(util.SteamIDTo64(ply_Kick) .. " был заблокирован с причиной: " .. bans[ply_Kick].reason .. "; на: " .. str .. "; забанил: " .. who_banned)
-	game.KickID(ply_Kick:upper(), "Вы забанены. Причина: " .. bans[ply_Kick].reason .. "; время: " .. str)
+	bans[ply_Kick] = {time = banM, reason = reas}
+	nAdmin.BanInSQL(ply_Kick, banM, reas, who_banned)
+	if not nospam then
+		nAdmin.PrintAndWarn(ply_Kick .. " был заблокирован с причиной: " .. bans[ply_Kick].reason .. "; на: " .. str .. "; забанил: " .. who_banned)
+	end
+	game.KickID(util.SteamIDFrom64(ply_Kick), "Вы забанены. Причина: " .. bans[ply_Kick].reason .. "; время: " .. str)
 	if discord then
-		discord.send({embeds = {[1] = {author = {name = ply_Kick:upper(), url = "http://steamcommunity.com/profiles/".. util.SteamIDTo64(ply_Kick:upper()) .."/",}, title = "Опа! А вот и бан.", color = 10038562, description = "Был забанен по причине: " .. bans[ply_Kick].reason .. ", на: " .. str .. ", админом: " .. who_banned}}})
+		discord.send({embeds = {[1] = {author = {name = util.SteamIDFrom64(ply_Kick), url = "http://steamcommunity.com/profiles/".. ply_Kick .."/",}, title = "Опа! А вот и бан.", color = 10038562, description = "Был забанен по причине: " .. bans[ply_Kick].reason .. ", на: " .. str .. ", админом: " .. who_banned}}})
 	end
 	::skipb::
-	nAdmin.UpdateBans()
 	nAdmin.unbanUpdate()
 end
 
-local util_SteamIDFrom64 = util.SteamIDFrom64
 hook.Add("CheckPassword", "ban_System", function(id)
-	local a = util_SteamIDFrom64(id):lower()
-	if bans[a] then
-		local reas = bans[a].reason or ""
-		nAdmin.Print(a .. " попытался зайти на сервер, но у него блокировка по причине: " .. reas)
+	if bans[id] then
+		local reas = bans[id].reason or ""
+		nAdmin.Print(id .. " попытался зайти на сервер, но у него блокировка по причине: " .. reas)
 		return false,
-		"Вы забанены на [RU] Уютный Сандбокс. Причина: " .. reas .. "; время до разбана: " .. string.NiceTime(bans[a].time - os.time())
+		"Вы забанены на [RU] Уютный Сандбокс. Причина: " .. reas .. "; время до разбана: " .. string.NiceTime(bans[id].time - os.time())
 	end
 end)
 
 function nAdmin.unban(id)
+	local Q = nAdminDB:query("DELETE FROM nAdmin_bans WHERE plyban = " .. id)
+	function Q:onError(err)
+		nAdmin.Print("Запрос выдал ошибку: " .. err)
+	end
+	Q:start()      
 	bans[id] = nil
-	nAdmin.UpdateBans()
 end
 
 function nAdmin.unbanUpdate()
@@ -400,7 +430,6 @@ nAdmin.AddCommand("goto", false, function(ply, args)
 		return
 	end
 	ply.OldPositionTP = ply:GetPos()
-	p(ply.OldPositionTP)
 	ply:SetPos(pl:EyePos() + Vector(pl:EyeAngles():Right()[1], 0, 0) * 150)
 end)
 nAdmin.SetTAndDesc("goto", "noclip", "Телепортироваться к игроку. arg1 - ник.")
