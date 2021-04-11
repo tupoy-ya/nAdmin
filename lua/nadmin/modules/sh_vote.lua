@@ -34,7 +34,7 @@ if SERVER then
 		local ass2 = table.concat(ass, " ")
 		net.Start("nAdmin_votekick")
 			net.WriteUInt(1, 3)
-			net.WriteString("Выгнать " .. pl:Name() .. "? (Причина: " .. ass2 .. ")")
+			net.WriteString("Выгнать " .. pl:Name() .. "? (Причина: " .. ass2 .. "; создал: " .. ply:Name() .. ")")
 			net.WriteUInt(#a, 16)
 			net.WriteData(a)
 		net.Broadcast()
@@ -266,7 +266,7 @@ if CLIENT then
 			local w, h = surface.GetTextSize(reason)
 			for i = 1, count do
 				local v = TB[i]
-				local as = surface.GetTextSize(i .. ". " .. v)
+				local as = surface.GetTextSize(i .. ". " .. v .. " (" .. (results[i] or 0) .. ")")
 				if as > w then
 					w = as
 				end
@@ -284,7 +284,7 @@ if CLIENT then
 			for i = 1, count do
 				surface.SetTextColor(255, 255, 255)
 				surface.SetTextPos(ScrW() / 2 - w / 2, ScrH() - lerp - count * 24 + i * 24) 
-				surface.DrawText(i .. ". " .. TB[i])
+				surface.DrawText(i .. ". " .. TB[i] .. " (" .. (results[i] or 0) .. ")")
 			end
 		end)
 
@@ -324,8 +324,8 @@ if CLIENT then
 		if int == 3 then -- [[ + VOTE ]] --
 			local ent = net.ReadEntity()
 			local fl = net.ReadFloat()
-			results[ent] = fl -- потом сделай
 			if not IsValid(ent) then return end
+			results[fl] = (results[fl] or 0) + 1
 			notification.AddLegacy(((ent:IsPlayer() and ent:Name()) or "???") .. " проголосовал за: " .. ((cT and cT[fl]) or "???"), NOTIFY_GENERIC, 3)
 			surface.PlaySound("buttons/button9.wav")
 		end

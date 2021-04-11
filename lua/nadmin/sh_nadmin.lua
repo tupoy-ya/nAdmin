@@ -3,16 +3,16 @@ local meta = FindMetaTable("Player")
 local G_Teams = {
 	["superadmin"] = {num = 1, n = "Создатель", clr = Color(200, 0, 0)},
 	["admin"] = {num = 2, n = "Админ", clr = Color(255, 144, 0)},
-	["Spy"] = {num = 3, n = "Админ", clr = Color(0, 255, 37)},
-	["vutka"] = {num = 4, n = "Админ", clr = Color(0, 255, 37)},
-	["moderator"] = {num = 5, n = "Модератор", clr = Color(100, 100, 214)},
-	["oleg"] = {num = 6, n = "Игрок", clr = Color(0, 255, 37)},
-	["osobenniy2"] = {num = 7, n = "Хедбэнгер", clr = Color(229, 0, 237)},
-	["osobenniy"] = {num = 8, n = "Кальянщик", clr = Color(142, 0, 165)},
-	["builderreal"] = {num = 9, n = "Строитель", clr = Color(255, 255, 255)},
-	["e2_coder"] = {num = 10, n = "E2-кодер", clr = Color(255, 0, 0)},
-	["noclip"] = {num = 11, n = "Гоблин", clr = Color(250, 250, 0)},
-	["user"] = {num = 12, n = "Игрок", clr = Color(0, 255, 37)}
+	--["Spy"] = {num = 3, n = "Админ", clr = Color(0, 255, 37)},
+	--["vutka"] = {num = 4, n = "Админ", clr = Color(0, 255, 37)},
+	["moderator"] = {num = 3, n = "Модератор", clr = Color(100, 100, 214)},
+	--["oleg"] = {num = 6, n = "Модератор", clr = Color(0, 255, 37)},
+	["osobenniy2"] = {num = 4, n = "Хедбэнгер", clr = Color(229, 0, 237)},
+	["osobenniy"] = {num = 5, n = "Кальянщик", clr = Color(142, 0, 165)},
+	["builderreal"] = {num = 6, n = "Строитель", clr = Color(255, 255, 255)},
+	["e2_coder"] = {num = 7, n = "E2-кодер", clr = Color(255, 0, 0)},
+	["noclip"] = {num = 8, n = "Гоблин", clr = Color(250, 250, 0)},
+	["user"] = {num = 9, n = "Игрок", clr = Color(0, 255, 37)}
 }
 
 nAdmin.Limits = {
@@ -130,7 +130,7 @@ end
 
 function meta:IsAdmin()
 	if (self:IsSuperAdmin()) then return true end
-	if (self:Team() <= 4) then return true end
+	if (self:Team() <= 2) then return true end
 	return false
 end
 
@@ -141,7 +141,7 @@ end
 if SERVER then
 	hook.Add("PhysgunPickup", "nAdminPhysgunPickupPlayer", function(pl, ent)
 		if ent:IsPlayer() then
-			if pl:Team() < ent:Team() and pl:Team() <= 5 then
+			if pl:Team() < ent:Team() and pl:Team() <= 3 then
 				ent:SetMoveType(MOVETYPE_NONE)
 				return true
 			end
@@ -150,7 +150,7 @@ if SERVER then
 
 	hook.Add("PhysgunDrop", "nAdminPhysgunDropPlayer", function(pl, ent)
 		if ent:IsPlayer() then
-			if pl:Team() < ent:Team() and pl:Team() <= 5 then
+			if pl:Team() < ent:Team() and pl:Team() <= 3 then
 				if pl:KeyPressed(IN_ATTACK2) then return end
 				ent:SetMoveType(MOVETYPE_WALK)
 			end

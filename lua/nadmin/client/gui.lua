@@ -1,3 +1,5 @@
+nAdmin.FULLCMDS = false
+
 surface.CreateFont("nAdmin_desc", {font = "Roboto", size = 18, antialias = true, extended = true})
 surface.CreateFont("logs", {font = "Roboto Bold", size = 12, antialias = true, extended = true})
 
@@ -7,9 +9,12 @@ if IsValid(nGUI) then
 end
 
 function nAdmin.mGUI()
-	net.Start("nAdmin_message")
-		net.WriteUInt(1, 2)
-	net.SendToServer()
+	if not nAdmin.FULLCMDS then
+		net.Start("nAdmin_message")
+			net.WriteUInt(1, 2)
+		net.SendToServer()
+		nAdmin.FULLCMDS = true
+	end
 
 	local a = {}
 	local cYes = {}
@@ -152,6 +157,17 @@ function nAdmin.mGUI()
 								end
 								m:SetMaxHeight(500)
 								m:Open()
+								local plcount = player.GetCount()
+								m.Think = function(self)
+									if plcount ~= player.GetCount() then
+										CloseDermaMenus()
+									end
+								end
+							end
+							bu.Think = function(self)
+								if not IsValid(val_enter) then
+									self:Remove()
+								end
 							end
 						end)
 					end

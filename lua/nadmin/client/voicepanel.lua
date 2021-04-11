@@ -48,8 +48,8 @@ hook.Add("StartCommand", "vBox", function()
 
 		local nick = self.ply:Name()
 
-		if string.len(self.ply:Name()) > 18 then
-			nick = string.sub(nick, 1, 18) .. "..."
+		if utf8.len(self.ply:Name()) > 18 then
+			nick = utf8.sub(nick, 1, 18) .. "..."
 		end
 
 		surface.SetTextColor(0, 0, 0)

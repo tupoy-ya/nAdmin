@@ -58,9 +58,11 @@ end
 if SERVER then
 	util.AddNetworkString("nAdmin_PSA")
 	nAdmin.AddCommand("psa", false, function(ply, args)
+		local cock = table.concat(args, " ")
 		net.Start("nAdmin_PSA")
-			net.WriteString(table.concat(args, " "))
+			net.WriteString(cock)
 		net.Broadcast()
+		nAdmin.WarnAll(ply:Name() .. " > " .. cock)
 	end)
-	nAdmin.SetTAndDesc("psa", "vutka", "Оповестить игроков о чём-либо. arg(...) - текст.")
+	nAdmin.SetTAndDesc("psa", "admin", "Оповестить игроков о чём-либо. arg(...) - текст.")
 end

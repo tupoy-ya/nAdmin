@@ -63,6 +63,20 @@ if CLIENT then
 		hook.Remove("OnPlayerChat","nAdminMute")
 	end)
 	nAdmin.AddCommand("help", function()
+		if not nAdmin.FULLCMDS then
+			net.Start("nAdmin_message")
+				net.WriteUInt(1, 2)
+			net.SendToServer()
+			nAdmin.FULLCMDS = true
+			nAdmin.Warn(_, "Пожалуйста, подождите...")
+			timer.Simple(3, function()
+				nAdmin.Warn(_, "Смотрите консоль.")
+				for k, v in SortedPairs(nAdmin.Commands) do
+					p("", "n " .. k .. " -", v.desc or "Нет описания", "Доступен с: " .. (v.T or "Игрок"))
+				end
+			end)
+			return
+		end
 		nAdmin.Warn(_, "Смотрите консоль.")
 		for k, v in SortedPairs(nAdmin.Commands) do
 			p("", "n " .. k .. " -", v.desc or "Нет описания", "Доступен с: " .. (v.T or "Игрок"))

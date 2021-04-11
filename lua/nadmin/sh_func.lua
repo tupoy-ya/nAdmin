@@ -23,7 +23,6 @@ local ipairs = ipairs
 
 if SERVER then
 	local meta = FindMetaTable"Player"
-	local metaENT = FindMetaTable"Entity"
 
 	local plCached = {}
 
@@ -38,6 +37,10 @@ if SERVER then
 			net_WriteUInt(compress_, 16)
 			net_WriteData(compress, compress_)
 		net_Send(pl)
+	end
+
+	for k, v in ipairs(player.GetAll()) do
+		sendCMDTable(v)
 	end
 
 	net.Receive("nadmin_message", function(_, pl)
@@ -97,23 +100,35 @@ if SERVER then
 	hook.Add("PlayerDisconnected", "nAdminnull", function(pl)
 		plCached[pl] = nil
 	end)
-
-	function metaENT:Team()
-		if self ~= Entity(0) then return end
-		return 0
-	end
-
-	function metaENT:SteamID()
-		if self ~= Entity(0) then return end
-		return "STEAM_0:0:0"
-	end
-
-	function metaENT:Name()
-		if self ~= Entity(0) then return end
-		return "Консоль"
-	end
-
+	hook.Add("Think", "nAdminInitWorld", function()
+		local metaENT = FindMetaTable"Entity"
+		function metaENT:Team()
+			if self == Entity(0) or not IsValid(self) then
+				return 0
+			end
+		end
+		function metaENT:SteamID()
+			if self == Entity(0) or not IsValid(self) then
+				return "STEAM_0:0:0"
+			end
+		end
+		function metaENT:Name()
+			if self == Entity(0) or not IsValid(self) then
+				return "Консоль"
+			end
+		end
+		hook.Remove("Think", "nAdminInitWorld")
+	end)
 	function nAdmin.msg(msg, ply)
+		if not ply then
+			local a = ""
+			for k, v in next, msg do
+				if isstring(v) then
+					a = a .. v
+				end
+			end
+			nAdmin.Print(a)
+		end
 		msg = util_TableToJSON(msg)
 		local compress = util_Compress(msg)
 		local compress_ = #compress
@@ -134,11 +149,6 @@ if SERVER then
 
 	function nAdmin.WarnAll(msg)
 		nAdmin.PrintMessage({Color(180, 180, 180), msg})
-	end
-
-	function nAdmin.PrintAndWarn(var)
-		nAdmin.Print(var)
-		nAdmin.WarnAll(var)
 	end
 
 	function nAdmin.ValidCheckCommand(args, count, ply, cmd)
@@ -165,7 +175,7 @@ if SERVER then
 		if nAdmin.Commands[cmd].T == nil then
 			return true
 		end
-		if not pl:SteamID() == "STEAM_0:0:0" then
+		if pl:SteamID() == "STEAM_0:0:0" then
 			return true
 		end
 		local TF = pl:Team() <= Global_Teams[nAdmin.Commands[cmd].T].num
@@ -174,6 +184,13 @@ if SERVER then
 		end
 		return TF
 	end
+
+	local wrld = Entity(0)
+	concommand.Add("n", function(pl, _, args)
+		if not IsValid(pl) then
+			nAdmin.CommandExec(wrld, args[1], args)
+		end
+	end)
 end
 
 if CLIENT then
@@ -198,6 +215,7 @@ if CLIENT then
 				if nAdmin.Commands[k] then continue end
 				nAdmin.Commands[k] = v
 			end
+			nAdmin.FULLCMDS = true
 		end
 	end)
 
@@ -315,6 +333,7 @@ function nAdmin.FindByNick(nick)
 	local ent
 	nick = nick or ""
 	nick = string.lower(nick)
+	nick = nick:Trim()
 	local player_GetAll = player.GetAll()
 	local find_ = false
 	for _, v in ipairs(player_GetAll) do
@@ -357,7 +376,9 @@ function nAdmin.UpdateFiles()
 	nAdmin.Print("Загрузка файлов...")
 	local os_time = SysTime()
 	-- [[ SQL ]] --
-	include("nadmin/server/sv_sql.lua")
+	if SERVER then
+		include("nadmin/server/sv_sql.lua")
+	end
 	-- [[ SHARED ]] --
 	for k, v in ipairs(file.Find("nadmin/*", "LUA")) do
 		if v == "sh_func.lua" then

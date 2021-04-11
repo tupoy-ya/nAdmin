@@ -68,12 +68,12 @@ end)
 
 hook.Add("PlayerDisconnected", "nAdmin_ragdoll", function(ply)
 	if ply.rag then
-		ply.rag:Remove()
+		SafeRemoveEntity(ply.rag)
 	end
 end)
 
-nAdmin.SetTAndDesc("ragdoll", "vutka", "Делает игрока пешкой навального. arg1 - ник игрока.")
-nAdmin.SetTAndDesc("unragdoll", "vutka", "Не делает игрока пешкой навального. arg1 - ник игрока.")
+nAdmin.SetTAndDesc("ragdoll", "admin", "Делает игрока пешкой навального. arg1 - ник игрока.")
+nAdmin.SetTAndDesc("unragdoll", "admin", "Не делает игрока пешкой навального. arg1 - ник игрока.")
 
 nAdmin.AddCommand("slay", true, function(ply, args)
 	local pl = nAdmin.FindByNick(args[1])
@@ -88,4 +88,4 @@ nAdmin.AddCommand("slay", true, function(ply, args)
 	pl:Kill()
 	nAdmin.WarnAll(ply:Name() .. " убил " .. pl:Name())
 end)
-nAdmin.SetTAndDesc("slay", "vutka", "Убивает игрока. arg1 - ник игрока.")
+nAdmin.SetTAndDesc("slay", "admin", "Убивает игрока. arg1 - ник игрока.")

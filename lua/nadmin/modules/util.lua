@@ -1,7 +1,3 @@
-if not file.Exists("nadmin/bans.txt", "DATA") then
-	nAdmin.Print("Файл \"nadmin/bans.txt\" не существует. Создаю...")
-	file.Write("nadmin/bans.txt", "{}")
-end
 local bans = {} -- util.JSONToTable(file.Read("nadmin/bans.txt", "DATA") or "{}") or {}
 local next = next
 nAdmin.BanList = bans
@@ -15,8 +11,8 @@ end
 util.AddNetworkString("nAdmin_JailHUD")
 
 function nAdmin.BanInSQL(steamid, time, reason, banned_by)
-	local Q = nAdminDB:query("REPLACE INTO nAdmin_bans (ind, plyban, reason, time, banned_by) VALUES (" .. table.Count(bans) .. ", " .. SQLStr(steamid) .. ", " .. SQLStr(reason) .. ", " .. SQLStr(time) .. ", " .. SQLStr(banned_by) .. ")")
-	function Q:onError(err)
+	local Q = nAdminDB:query("REPLACE INTO nAdmin_bans (ind, plyban, reason, time, banned_by) VALUES (" .. os.time() .. ", " .. SQLStr(steamid) .. ", " .. SQLStr(reason) .. ", " .. SQLStr(time) .. ", " .. SQLStr(banned_by) .. ")")
+	function Q:onError(_, err)
 		nAdmin.Print("Запрос выдал ошибку: " .. err)
 	end
 	Q:start()
@@ -84,7 +80,7 @@ function nAdmin.AddBan(ply_, minutes, reas, o, banid_, nospam) -- это уёб�
 			b = Global_Teams["user"].num
 			goto hui
 		end
-		b = (Global_Teams[nGSteamIDs[ply_]] and Global_Teams[nGSteamIDs[ply_]].num) or 12
+		b = (Global_Teams[nGSteamIDs[ply_]] and Global_Teams[nGSteamIDs[ply_]].num) or table.Count(Global_Teams)
 		::hui::
 		if a > b then
 			nAdmin.Warn(o, "Вы не можете забанить данный SteamID, т.к. у него выше/равная привилегия.")
@@ -114,7 +110,7 @@ function nAdmin.AddBan(ply_, minutes, reas, o, banid_, nospam) -- это уёб�
 		end
 		if not nospam then
 			local msg = ply_Kick:Name() .. " был заблокирован с причиной: " .. bans[stid].reason .. "; на: " .. str .. "; забанил: " .. who_banned
-			nAdmin.PrintAndWarn(msg)
+			nAdmin.WarnAll(msg)
 		end
 		ply_Kick:Kick("Вы забанены. Причина: " .. bans[stid].reason .. "; время: " .. str)
 		goto skipb
@@ -122,7 +118,7 @@ function nAdmin.AddBan(ply_, minutes, reas, o, banid_, nospam) -- это уёб�
 	bans[ply_Kick] = {time = banM, reason = reas}
 	nAdmin.BanInSQL(ply_Kick, banM, reas, who_banned)
 	if not nospam then
-		nAdmin.PrintAndWarn(ply_Kick .. " был заблокирован с причиной: " .. bans[ply_Kick].reason .. "; на: " .. str .. "; забанил: " .. who_banned)
+		nAdmin.WarnAll(ply_Kick .. " был заблокирован с причиной: " .. bans[ply_Kick].reason .. "; на: " .. str .. "; забанил: " .. who_banned)
 	end
 	game.KickID(util.SteamIDFrom64(ply_Kick), "Вы забанены. Причина: " .. bans[ply_Kick].reason .. "; время: " .. str)
 	if discord then
@@ -136,18 +132,24 @@ hook.Add("CheckPassword", "ban_System", function(id)
 	if bans[id] then
 		local reas = bans[id].reason or ""
 		nAdmin.Print(id .. " попытался зайти на сервер, но у него блокировка по причине: " .. reas)
-		return false,
-		"Вы забанены на [RU] Уютный Сандбокс. Причина: " .. reas .. "; время до разбана: " .. string.NiceTime(bans[id].time - os.time())
+		if bans[id].time ~= 0 then
+			return false,
+			"Вы забанены на [RU] Уютный Сандбокс. Причина: " .. reas .. "; время до разбана: " .. string.NiceTime(bans[id].time - os.time())
+		else
+			return false,
+			"Вы забанены на [RU] Уютный Сандбокс. Причина: " .. reas .. "; время до разбана: Никогда"
+		end
 	end
 end)
 
 function nAdmin.unban(id)
-	local Q = nAdminDB:query("DELETE FROM nAdmin_bans WHERE plyban = " .. id)
+	local Q = nAdminDB:query("DELETE FROM nAdmin_bans WHERE plyban = " .. SQLStr(id))
 	function Q:onError(err)
 		nAdmin.Print("Запрос выдал ошибку: " .. err)
 	end
 	Q:start()      
 	bans[id] = nil
+	nAdmin.Print(id .. " > был удалён из списка банов.")
 end
 
 function nAdmin.unbanUpdate()
@@ -241,22 +243,23 @@ nAdmin.AddCommand("banid", true, function(ply, args)
 	::skip::
 	nAdmin.AddBan(args[1], m2, args[3]:Trim(), ply, true)
 end)
-nAdmin.SetTAndDesc("banid", "vutka", "Банит игрока по SteamID. arg1 - SteamID, arg2 - время [7m, 7h, 7d, 7w], arg3 - причина.")
+nAdmin.SetTAndDesc("banid", "admin", "Банит игрока по SteamID. arg1 - SteamID, arg2 - время [7m, 7h, 7d, 7w], arg3 - причина.")
 
 nAdmin.AddCommand("unban", true, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "unban")
 	if not check then
 		return
 	end
-	nAdmin.unban(args[1]:Trim())
-	nAdmin.WarnAll(ply:Name().. " разблокировал: " .. tostring(args[1]))
+	local stid = util.SteamIDTo64(args[1]:Trim())
+	nAdmin.unban(stid)
+	nAdmin.WarnAll(ply:Name().. " разблокировал: " .. stid)
 end)
 nAdmin.SetTAndDesc("unban", "moderator", "Разбанивает игрока. arg1 - SteamID игрока.")
 
 nAdmin.AddCommand("bancount", true, function(ply, args)
 	nAdmin.Warn(ply, "В базе данных насчитывается около: " .. table.Count(bans) .. " банов.")
 end)
-nAdmin.SetTAndDesc("bancount", "vutka", "Количество игроков в бане.")
+nAdmin.SetTAndDesc("bancount", "admin", "Количество игроков в бане.")
 
 nAdmin.AddCommand("kick", true, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "kick")
@@ -295,13 +298,13 @@ nAdmin.AddCommand("jail", true, function(ply, args)
 	pl_Null()
 	local arg2 = tonumber(args[2]) or 0
 	if arg2 ~= 0 then
-		nAdmin.PrintAndWarn(ply:Name() .. " засунул в гулаг " .. pl:Name() .. " на " .. arg2 .. " секунд.")
+		nAdmin.WarnAll(ply:Name() .. " засунул в гулаг " .. pl:Name() .. " на " .. arg2 .. " секунд.")
 		timer.Create(tostring(pl) .. "_nAdminJail", arg2, 1, function()
 			pl_Null()
 		end)
 		goto skip
 	end
-	nAdmin.PrintAndWarn(ply:Name() .. " засунул в гулаг " .. pl:Name() .. ".")
+	nAdmin.WarnAll(ply:Name() .. " засунул в гулаг " .. pl:Name() .. ".")
 	::skip::
 	pl:SetNWBool("nAdmin_InJail", true)
 	pl:SetPos(vec)
@@ -345,7 +348,7 @@ nAdmin.AddCommand("unjail", true, function(ply, args)
 	end
 	pl:SetNWBool("nAdmin_InJail", false)
 	pl:Spawn()
-	nAdmin.PrintAndWarn(ply:Name() .. " выпустил из гулага " .. pl:Name() .. ".")
+	nAdmin.WarnAll(ply:Name() .. " выпустил из гулага " .. pl:Name() .. ".")
 end)
 nAdmin.SetTAndDesc("unjail", "builderreal", "Освобождает человека с гулага. arg1 - ник игрока.")
 
@@ -408,7 +411,7 @@ nAdmin.AddCommand("gag", false, function(ply, args)
 	else
 		pl.Gagged = false
 	end
-	nAdmin.PrintAndWarn(ply:Name() .. " " .. (pl.Gagged and "запретил" or "разрешил") .. " говорить в ГЧ " .. pl:Name().. ".")
+	nAdmin.WarnAll(ply:Name() .. " " .. (pl.Gagged and "запретил" or "разрешил") .. " говорить в ГЧ " .. pl:Name().. ".")
 end)
 nAdmin.SetTAndDesc("gag", "moderator", "Запретить/разрешить игроку говорить. arg1 - ник.")
 
@@ -477,7 +480,7 @@ nAdmin.AddCommand("mute", false, function(ply, args)
 	else
 		pl.Muted = false
 	end
-	nAdmin.PrintAndWarn(ply:Name() .. " " .. (pl.Muted and "запретил" or "разрешил") .. " писать в чат " .. pl:Name().. ".")
+	nAdmin.WarnAll(ply:Name() .. " " .. (pl.Muted and "запретил" or "разрешил") .. " писать в чат " .. pl:Name().. ".")
 end)
 nAdmin.SetTAndDesc("mute", "moderator", "Запретить/разрешить игроку писать в чат. arg1 - ник.")
 
@@ -513,7 +516,7 @@ nAdmin.AddCommand("mgag", false, function(ply, args)
 		pl.Muted = true
 		nAdmin.Print("Значения Gag и Mute различаются. Мучу и запрещаю игроку писать в чат!")
 	end
-	nAdmin.PrintAndWarn(ply:Name() .. " " .. (pl.Gagged and "запретил" or "разрешил") .. " писать в чат и говорить в ГЧ " .. pl:Name().. ".")
+	nAdmin.WarnAll(ply:Name() .. " " .. (pl.Gagged and "запретил" or "разрешил") .. " писать в чат и говорить в ГЧ " .. pl:Name().. ".")
 end)
 nAdmin.SetTAndDesc("mgag", "moderator", "Запретить/разрешить игроку писать в чат и говорить в ГЧ. arg1 - ник.")
 
@@ -545,7 +548,7 @@ nAdmin.AddCommand("banip", true, function(ply, args)
 	RunConsoleCommand("writeip")
 	nAdmin.Print(ply:Name() .. " забанил: " .. args[1]:Trim())
 end)
-nAdmin.SetTAndDesc("banip", "vutka", "Банит IP адрес. arg1 - время, arg2 - IP.")
+nAdmin.SetTAndDesc("banip", "admin", "Банит IP адрес. arg1 - IP, arg2 - время.")
 
 nAdmin.AddCommand("unbanip", true, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "unbanip")
@@ -561,7 +564,7 @@ nAdmin.AddCommand("unbanip", true, function(ply, args)
 	RunConsoleCommand("writeip")
 	nAdmin.Print(ply:Name() .. " разбанивает: " .. args[1]:Trim())
 end)
-nAdmin.SetTAndDesc("unbanip", "vutka", "Разбанивает IP адрес. arg1 - IP.")
+nAdmin.SetTAndDesc("unbanip", "admin", "Разбанивает IP адрес. arg1 - IP.")
 
 nAdmin.AddCommand("freeze", true, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "freeze")

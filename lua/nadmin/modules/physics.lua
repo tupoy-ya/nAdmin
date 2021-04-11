@@ -52,7 +52,7 @@ nAdmin.AddCommand("fp", true, function(ply)
 			local phys = ent:GetPhysicsObject()
 			if phys:IsValid() then
 				phys:EnableMotion(false)
-				phys:Wake()
+				--phys:Wake()
 			end
 		end
 	end
@@ -77,7 +77,7 @@ nAdmin.AddCommand("fppl", true, function(ply, args)
 	end
 	nAdmin.WarnAll(ply:Name() .. " зафризил энтити " .. pl:Name() .. ".")
 end)
-nAdmin.SetTAndDesc("fppl", "builderreal", "Зафризить энтити какого-то игрока. arg1 - ник игрока.")
+nAdmin.SetTAndDesc("fppl", "noclip", "Зафризить энтити какого-то игрока. arg1 - ник игрока.")
 
 nAdmin.AddCommand("fmp", true, function(ply, args)
    local b = 0
