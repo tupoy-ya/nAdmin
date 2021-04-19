@@ -13,11 +13,13 @@ function nAdmin.OnPlayerChat(pl, txt)
 		local expl = string.Explode(" ", string.Right(txt, #txt - 1))
 		local expl_f = expl[1]
 		if not nAdmin.FULLCMDS then
-			net.Start("nAdmin_message")
-				net.WriteUInt(1, 2)
-			net.SendToServer()
-			--nAdmin.FULLCMDS = true
-			nAdmin.Warn(_, "Пожалуйста, введите команду ещё раз.")
+			if not nAdmin.Commands[expl_f] then
+				net.Start("nAdmin_message")
+					net.WriteUInt(1, 2)
+				net.SendToServer()
+				--nAdmin.FULLCMDS = true
+				nAdmin.Warn(_, "Пожалуйста, введите команду ещё раз.")
+			end
 		end
 		if nAdmin.Commands[expl_f] == nil then
 			return

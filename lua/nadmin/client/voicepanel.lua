@@ -1,4 +1,5 @@
 hook.Add("StartCommand", "vBox", function()
+	if IsValid(g_VoicePanelList) then g_VoicePanelList:Remove() end
 	surface.CreateFont("voiceBox", {font = "Roboto", size = 24, antialias = true, extended = true})
 
 	local GM = GAMEMODE

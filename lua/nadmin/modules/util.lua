@@ -15,6 +15,9 @@ function nAdmin.BanInSQL(steamid, time, reason, banned_by)
 	function Q:onError(_, err)
 		nAdmin.Print("Запрос выдал ошибку: " .. err)
 	end
+	function Q:onAborted(q)
+		nAdmin.Print("Запрос был отклонён: " .. q)
+	end
 	Q:start()
 end
 
@@ -173,7 +176,7 @@ end
 hook.Add("InitPostEntity", "nAdmin_unbanUpdate", function()
 	hook.Remove("InitPostEntity", "nAdmin_unbanUpdate")
 	nAdmin.unbanUpdate()
-	nAdmin.UpdateBans()
+	--nAdmin.UpdateBans()
 	nAdmin.Print("В базе данных насчитывается около: " .. table.Count(bans) .. " банов.")
 end)
 
@@ -253,6 +256,9 @@ nAdmin.AddCommand("unban", true, function(ply, args)
 	local stid = util.SteamIDTo64(args[1]:Trim())
 	nAdmin.unban(stid)
 	nAdmin.WarnAll(ply:Name().. " разблокировал: " .. stid)
+	if discord then
+		discord.send({embeds = {[1] = {author = {name = util.SteamIDFrom64(stid), url = "http://steamcommunity.com/profiles/".. stid .."/",}, title = "Аккаунт был разбанен.", color = 2123412, description = "Разблокировал: " .. ply:Name() .. "; время: " .. os.date("%H:%M:%S - %d/%m/%Y" , os.time())}}})
+	end
 end)
 nAdmin.SetTAndDesc("unban", "moderator", "Разбанивает игрока. arg1 - SteamID игрока.")
 
@@ -353,7 +359,7 @@ end)
 nAdmin.SetTAndDesc("unjail", "builderreal", "Освобождает человека с гулага. arg1 - ник игрока.")
 
 hook.Add("PlayerSpawnObject", "restrictJail", function(ply)
-	if ply:GetNWBool("nAdmin_InJail") then
+	if ply:GetNWBool("nAdmin_InJail") or ply.Freezed then
 		return false
 	end
 end)

@@ -2,6 +2,23 @@ if SERVER then
 	util.AddNetworkString("nAdmin_votekick")
 	local current_status = false
 	local next_Kick = CurTime()
+	local results = {}
+	net.Receive("nAdmin_votekick", function(_, ply)
+		if current_status == false then return end
+		local int = net.ReadUInt(3)
+		if int == 1 then
+			if results[ply] then
+				return
+			end
+			local fl = net.ReadFloat()
+			results[ply] = fl
+			net.Start("nAdmin_votekick")
+				net.WriteUInt(3, 3)
+				net.WriteEntity(ply)
+				net.WriteFloat(fl)
+			net.Broadcast()
+		end
+	end)
 	nAdmin.AddCommand("votekick", false, function(ply, args)
 		if current_status then
 			nAdmin.Warn(ply, "В данный момент уже идет какое-то голосование!")
@@ -20,8 +37,8 @@ if SERVER then
 			nAdmin.Warn(ply, "Подождите ещё: " .. math.Round(next_Kick - CurTime()) .. " секунд!")
 			return
 		end
+		results = {}
 		next_Kick = CurTime() + 60
-		local results = {}
 		local answers = {[1] = "Да.", [2] = "Нет."}
 		table.sort(answers, function(a, b) return #a < #b end)
 		local a = util.Compress(util.TableToJSON(answers))
@@ -39,7 +56,7 @@ if SERVER then
 			net.WriteData(a)
 		net.Broadcast()
 		current_status = true
-		timer.Create("nAdmin_Vote", 20, 1, function()
+		timer.Create("nAdmin_Vote", 15, 1, function()
 			net.Start("nAdmin_votekick")
 				net.WriteUInt(2, 3)
 			net.Broadcast()
@@ -61,23 +78,6 @@ if SERVER then
 			if first == 1 then
 				pl:Kick("Вас выгнали всеобщим голосованием. Причина: " .. ass2 .. "; голосование создал: " .. ply:Name())
 			end
-			results = {}
-		end)
-		net.Receive("nAdmin_votekick", function(_, ply)
-			if current_status == false then return end
-			local int = net.ReadUInt(3)
-			if int == 1 then
-				if results[ply] then
-					return
-				end
-				local fl = net.ReadFloat()
-				results[ply] = fl
-				net.Start("nAdmin_votekick")
-					net.WriteUInt(3, 3)
-					net.WriteEntity(ply)
-					net.WriteFloat(fl)
-				net.Broadcast()
-			end
 		end)
 	end)
 	nAdmin.SetTAndDesc("votekick", "user", "Запускает голование на кик игрока. arg1 - ник, arg2 - причина.")
@@ -95,15 +95,16 @@ if SERVER then
 			nAdmin.Warn(ply, "Подождите ещё: " .. math.Round(next_Kick - CurTime()) .. " секунд!")
 			return
 		end
-		if table.Count(args) >= 7 then
+		local count = table.Count(args)
+		if count >= 7 then
 			nAdmin.Warn(ply, "Нельзя сделать больше 7 ответов")
 			return
 		end
-		if table.Count(args) < 3 then
+		if count < 3 then
 			return
 		end
-		next_Kick = CurTime() + 60
-		local results = {}
+		results = {}
+		next_Kick = CurTime() + 5
 		local dop = {}
 		local answers = {}
 		local args_copy = table.Copy(args)
@@ -119,7 +120,7 @@ if SERVER then
 			net.WriteData(a)
 		net.Broadcast()
 		current_status = true
-		timer.Create("nAdmin_Vote", 20, 1, function()
+		timer.Create("nAdmin_Vote", 15, 1, function()
 			net.Start("nAdmin_votekick")
 				net.WriteUInt(2, 3)
 			net.Broadcast()
@@ -135,23 +136,6 @@ if SERVER then
 			end
 			local first = table.GetWinningKey(final)
 			nAdmin.WarnAll("В голосовании победил ответ: " .. answers[first])
-			results = {}
-		end)
-		net.Receive("nAdmin_votekick", function(_, ply)
-			if current_status == false then return end
-			local int = net.ReadUInt(3)
-			if int == 1 then
-				if results[ply] then
-					return
-				end
-				local fl = net.ReadFloat()
-				results[ply] = fl
-				net.Start("nAdmin_votekick")
-					net.WriteUInt(3, 3)
-					net.WriteEntity(ply)
-					net.WriteFloat(fl)
-				net.Broadcast()
-			end
 		end)
 	end)
 	nAdmin.SetTAndDesc("vote", "osobenniy2", "Запускает голование на кик игрока. arg1 - что обсуждаем, arg2, arg3, arg4. (необязательно).")
@@ -171,8 +155,8 @@ if SERVER then
 			nAdmin.Warn(ply, "Подождите ещё: " .. math.Round(nextCleanMap - CurTime()) .. " секунд!")
 			return
 		end
+		results = {}
 		nextCleanMap = CurTime() + 1800
-		local results = {}
 		local answers = {[1] = "Да.", [2] = "Нет."}
 		table.sort(answers, function(a, b) return #a < #b end)
 		local a = util.Compress(util.TableToJSON(answers))
@@ -190,7 +174,7 @@ if SERVER then
 			net.WriteData(a)
 		net.Broadcast()
 		current_status = true
-		timer.Create("nAdmin_Vote", 20, 1, function()
+		timer.Create("nAdmin_Vote", 15, 1, function()
 			net.Start("nAdmin_votekick")
 				net.WriteUInt(2, 3)
 			net.Broadcast()
@@ -211,23 +195,6 @@ if SERVER then
 				nAdmin.Countdown(300, function()
 					RunConsoleCommand("gmod_admin_cleanup")
 				end)
-			end
-			results = {}
-		end)
-		net.Receive("nAdmin_votekick", function(_, ply)
-			if current_status == false then return end
-			local int = net.ReadUInt(3)
-			if int == 1 then
-				if results[ply] then
-					return
-				end
-				local fl = net.ReadFloat()
-				results[ply] = fl
-				net.Start("nAdmin_votekick")
-					net.WriteUInt(3, 3)
-					net.WriteEntity(ply)
-					net.WriteFloat(fl)
-				net.Broadcast()
 			end
 		end)
 	end)
@@ -255,9 +222,7 @@ if CLIENT then
 	local results = {}
 	local function create_vote(reason, TB)
 		results = {}
-		local max_ = 0
-		local lerp = -50
-		local count = #TB
+		local count, alpha, max_, lerp, alphaon = #TB, 255, 0, -50, false
 
 		hook.Add("DrawOverlay", "VoteShow", function()
 			lerp = Lerp(FrameTime() * 6, lerp, 30)
@@ -272,17 +237,21 @@ if CLIENT then
 				end
 			end
 
-			surface.SetDrawColor(200, 200, 200)
+			if alphaon then
+				alpha = Lerp(FrameTime() * 4, alpha, 100)
+			end
+
+			surface.SetDrawColor(200, 200, 200, alpha)
 			surface.DrawRect(ScrW() / 2 - w / 2 - 2 - 10, ScrH() - lerp - count * 24, w + 24, 29 + count * 24)
 
-			surface.SetDrawColor(50, 50, 50)
+			surface.SetDrawColor(50, 50, 50, 255)
 			surface.DrawRect(ScrW() / 2 - w / 2 - 10, ScrH() - lerp + 2 - count * 24, w + 20, 25 + count * 24)
 
-			surface.SetTextColor(255, 255, 255)
+			surface.SetTextColor(255, 255, 255, alpha)
 			surface.SetTextPos(ScrW() / 2 - w / 2, ScrH() - lerp + 2 - count * 24) 
 			surface.DrawText(reason)
 			for i = 1, count do
-				surface.SetTextColor(255, 255, 255)
+				surface.SetTextColor(255, 255, 255, alpha)
 				surface.SetTextPos(ScrW() / 2 - w / 2, ScrH() - lerp - count * 24 + i * 24) 
 				surface.DrawText(i .. ". " .. TB[i] .. " (" .. (results[i] or 0) .. ")")
 			end
@@ -297,7 +266,8 @@ if CLIENT then
 						net.WriteFloat(num)
 					net.SendToServer()
 					hook.Remove("PlayerBindPress", "plBindVote")
-					hook.Remove("DrawOverlay", "VoteShow")
+					alphaon = true
+					--hook.Remove("DrawOverlay", "VoteShow")
 					return true
 				end
 			end

@@ -41,12 +41,14 @@ if CLIENT then
 		end
 		ent:SetMuted(true)
 		ent.Muted = true
-		hook.Add("OnPlayerChat","nAdminMute",function(ply)
-			if ply.Muted then
-				return true
-			end
-		end)
 	end)
+
+	hook.Add("OnPlayerChat","nAdminMute",function(ply)
+		if ply.Muted then
+			return true
+		end
+	end)
+
 	nAdmin.AddCommand("unmutecl", function(a)
 		local ent = nAdmin.FindByNick(a[1])
 		if ent == nil then
@@ -55,12 +57,6 @@ if CLIENT then
 		end
 		ent:SetMuted(false)
 		ent.Muted = nil
-		for k, v in ipairs(player.GetAll()) do
-			if v.Muted then
-				return
-			end
-		end
-		hook.Remove("OnPlayerChat","nAdminMute")
 	end)
 	nAdmin.AddCommand("help", function()
 		if not nAdmin.FULLCMDS then

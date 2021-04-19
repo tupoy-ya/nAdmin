@@ -67,13 +67,9 @@ if SERVER then
 		for i = 1, #args do
 			args[i] = args[i + 1]
 		end
-		if pl.B and arg1:find("noclip") then
-			goto skipCheck
-		end
 		if not nAdmin.GetAccess(arg1, pl) then
 			return
 		end
-		::skipCheck::
 		if args[1] == "^" then
 			args[1] = pl:Name()
 		end
@@ -90,9 +86,7 @@ if SERVER then
 
 	net.Receive("nAdmin_CommandExec", function(_, pl)
 		local command = net_ReadString()
-		local int = net_ReadUInt(8)
-		local args = net_ReadData(int)
-		args = util_Decompress(args)
+		local args = net_ReadString()
 		args = util_JSONToTable(args)
 		nAdmin.CommandExec(pl, command, args)
 	end)
@@ -100,6 +94,7 @@ if SERVER then
 	hook.Add("PlayerDisconnected", "nAdminnull", function(pl)
 		plCached[pl] = nil
 	end)
+
 	hook.Add("Think", "nAdminInitWorld", function()
 		local metaENT = FindMetaTable"Entity"
 		function metaENT:Team()
@@ -119,6 +114,7 @@ if SERVER then
 		end
 		hook.Remove("Think", "nAdminInitWorld")
 	end)
+
 	function nAdmin.msg(msg, ply)
 		if not ply then
 			local a = ""
@@ -277,11 +273,10 @@ if CLIENT then
 			return
 		end
 		local a = util_TableToJSON(args)
-		a = util_Compress(a)
+		--a = util_Compress(a)
 		net_Start("nAdmin_CommandExec")
 			net.WriteString(cmd or "")
-			net_WriteUInt(#a, 8)
-			net_WriteData(a, #a)
+			net.WriteString(a)
 		net_SendToServer()
 	end
 
@@ -335,29 +330,26 @@ function nAdmin.FindByNick(nick)
 	nick = string.lower(nick)
 	nick = nick:Trim()
 	local player_GetAll = player.GetAll()
-	local find_ = false
 	for _, v in ipairs(player_GetAll) do
-		if v:Name() == nick then
+		if v:Name():Trim() == nick then
 			ent = v
-			find_ = true
-			break
+			goto skip
 		end
 	end
-	if find_ then
-		goto Skip
-	end
 	for _, v in ipairs(player_GetAll) do
-		local name = v:Name()
+		local name = v:Name():Trim()
 		name = string.lower(name)
 		if name == "^" or name == "*" then
 			ent = v
 			break
 		end
-		if string.find(name, nick, 1, true) then
+		local findplayer = string.find(name, nick, 1, true)
+		if findplayer == 1 or findplayer then
 			ent = v
+			break
 		end
 	end
-	::Skip::
+	::skip::
 	return ent
 end
 
