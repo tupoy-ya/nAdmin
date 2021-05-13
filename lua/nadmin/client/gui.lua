@@ -47,13 +47,15 @@ function nAdmin.mGUI()
 
 	local clist = vgui.Create('DListView', nGUI)
 	clist:Dock(LEFT)
-	clist:DockMargin(0, 20, 0, 0)
+	clist:DockMargin(0, 0, 0, 20)
+	clist:SetPos(0, -30)
 	clist:SetSize(150, 0)
 	clist:SetMultiSelect(false)
 	clist:AddColumn("Команды")
 	local search = vgui.Create('DTextEntry', nGUI)
-	search:SetPos(5, 28)
+	search:SetPos(5, 275)
 	search:SetSize(150, 20)
+	search:SetPlaceholderText'поиск'
 	local changed = ""
 	nGUI.Think = function()
 		local cCount = 0
