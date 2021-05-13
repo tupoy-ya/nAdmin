@@ -41,11 +41,9 @@ end
 
 function SetUserGroupID(stid, group)
 	stid = stid:lower()
-	if (group ~= "user" and SteamIDs[stid] == nil) or (SteamIDs[stid] and SteamIDs[stid].group ~= group) then
-		SteamIDs[stid] = {}
-		SteamIDs[stid].group = group
-		file.Write("nadmin/users.txt", util.TableToJSON(SteamIDs))
-	end
+	SteamIDs[stid] = {}
+	SteamIDs[stid].group = group
+	file.Write("nadmin/users.txt", util.TableToJSON(SteamIDs))
 end
 
 hook.Add("PlayerInitialSpawn", "PlayerAuthSpawn", function(ply)

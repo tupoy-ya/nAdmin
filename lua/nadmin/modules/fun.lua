@@ -67,8 +67,9 @@ hook.Add("PlayerSpawn", "nAdmin_ragdoll", function(ply)
 end)
 
 hook.Add("PlayerDisconnected", "nAdmin_ragdoll", function(ply)
-	if ply.rag then
-		SafeRemoveEntity(ply.rag)
+	local ragdoll = ply.rag
+	if ragdoll then
+		SafeRemoveEntity(ragdoll)
 	end
 end)
 
@@ -84,6 +85,9 @@ nAdmin.AddCommand("slay", true, function(ply, args)
 	if not pl:Alive() then
 		nAdmin.Warn(ply, "Игрок мёртв.")
 		return
+	end
+	if pl:InVehicle() then
+		pl:ExitVehicle()
 	end
 	pl:Kill()
 	nAdmin.WarnAll(ply:Name() .. " убил " .. pl:Name())

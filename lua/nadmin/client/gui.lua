@@ -273,8 +273,16 @@ function nAdmin.mGUI()
 			return
 		end
 		local msg = runCommand:GetText()
-		msg = msg:gsub("\n", ""):gsub(";", ":"):gsub("\"", "\"")
-		LocalPlayer():ConCommand(msg)
+		msg = msg:gsub("\n", ""):gsub(";", ":"):gsub("\"", ""):gsub("\"\"", "")
+		local stringexpl = string.Explode(" ", msg)
+        local b = {}
+		if stringexpl[2] ~= nil then
+			for i = 2, #stringexpl do
+				table.insert(b, stringexpl[i])
+			end
+        end
+        nAdmin.NetCmdExec(_, b)
+		--LocalPlayer():ConCommand(msg)
 	end
 	local copy = vgui.Create('DButton', nGUI)
 	copy:SetText("Скопировать")

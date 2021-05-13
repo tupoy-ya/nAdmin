@@ -25,7 +25,8 @@ end)
 			local _log_lower = _log:lower() .. "s"
 			if limit and limit[_log_lower] then
 				if a:GetCount(_log_lower) > limit[_log_lower] then
-					a:ChatPrint("Проп был удалён. Вы превысили лимит данного типа энтити. (" .. limit[_log_lower] .. ")")
+					a:LimitHit(_log_lower)
+					--a:ChatPrint("Проп был удалён. Вы превысили лимит данного типа энтити. (" .. limit[_log_lower] .. ")")
 					--timer.Simple(0, function()
 						SafeRemoveEntity(a)
 					--end)

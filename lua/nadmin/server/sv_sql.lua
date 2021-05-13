@@ -1,6 +1,6 @@
 if game.SinglePlayer() then
 	nAdmin.Print("Вы находитесь в одиночной игре. Некоторые модули не будут работать!")
-	nAdminDB, nAdminDBFail = nil, nil
+	nAdminDB, nAdminDBFail = getmetatable("---"), getmetatable("---")
 	return
 end
 
@@ -22,3 +22,13 @@ if nAdminDBFail then
 	nAdmin.Print("Не удалось подключиться к базе данных: ", nAdminDBFail)
 	return
 end
+
+function nAdminDB:onConnected()
+	nAdmin.Print("База данных успешно подключена.")
+end
+
+function nAdminDB:onConnectionFailed( err )
+	nAdmin.Print("Ошибка подключения к базе данных!")
+	nAdmin.Print("Ошибка:", err)
+end
+nAdminDB:connect()

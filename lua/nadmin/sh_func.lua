@@ -28,6 +28,7 @@ if SERVER then
 
 	util.AddNetworkString("nadmin_message")
 	util.AddNetworkString("nAdmin_CommandExec")
+	util.AddNetworkString("nadmin_singleplayer")
 
 	local function sendCMDTable(pl)
 		local compress = util_Compress(util_TableToJSON(nAdmin.Commands))
@@ -91,7 +92,7 @@ if SERVER then
 		nAdmin.CommandExec(pl, command, args)
 	end)
 
-	hook.Add("PlayerDisconnected", "nAdminnull", function(pl)
+	hook.Add("PlayerDisconnected", "nAdmin_null", function(pl)
 		plCached[pl] = nil
 	end)
 
@@ -181,10 +182,17 @@ if SERVER then
 		return TF
 	end
 
-	local wrld = Entity(0)
+	local wrld, singleplayer = Entity(0), game.SinglePlayer()
 	concommand.Add("n", function(pl, _, args)
 		if not IsValid(pl) then
 			nAdmin.CommandExec(wrld, args[1], args)
+		end
+		if (singleplayer or pl:IsListenServerHost()) and nAdmin.Commands[args[1]] and nAdmin.Commands[args[1]].SV then
+			nAdmin.CommandExec(pl, args[1], args)
+		elseif (singleplayer or pl:IsListenServerHost()) and not nAdmin.Commands[args[1]] then
+			net.Start'nadmin_singleplayer'
+				net.WriteString(table.concat(args, "\\\\"))
+			net.Send(pl)
 		end
 	end)
 end
@@ -215,52 +223,20 @@ if CLIENT then
 		end
 	end)
 
-	function nAdmin.AutoComplete(cmd, args) -- я вообще не ебу как ее переделать
-		args = string.Trim(args)
-		args = string.lower(args)
-		local e = args:Split(" ")
-		local tbl = {}
-		local cmdFull = ""
-		local a2 = e[2]
-		local s_ = {}
-		for k in next, nAdmin.Commands do
-			table.insert(s_, k)
-		end
-		table.sort(s_)
-		local e1 = e[1]
-		for i = 1, #s_ do
-			local v = s_[i]
-			if string.find(string.lower(v), e1, 1, true) then
-				v = cmd .. " " .. v
-				cmdFull = v
-				if string.sub(v, 3, #v) == e1 then
-					goto skipp
-				end
-				if not a2 or v == e1 then
-					table.insert(tbl, v)
-				end
+	net.Receive("nadmin_singleplayer", function()
+		local args = string.Explode("\\\\", net.ReadString())
+		local cmd = args[1]
+		if nAdmin.Commands[cmd] ~= nil and nAdmin.Commands[cmd].CL == true then
+			for i = 1, #args do
+				args[i] = args[i + 1]
 			end
+			nAdmin.Commands[cmd].func(args)
+			return
 		end
-		::skipp::
-		if a2 and nAdmin.Commands[e1] ~= nil then
-			local players = player.GetAll()
-			for i = 1, #players do
-				local v = players[i]
-				local nick = v:Name()
-				local s = ""
-				if a2 ~= nil then
-					s = string.find(string.lower(nick), e[2], 1, true)
-				else
-					s = true
-				end
-				if s then
-					nick = "\"" .. nick .. "\""
-					nick = cmdFull .. " " .. nick
-					table.insert(tbl, nick)
-				end
-			end
-		end
-		return tbl
+	end)
+
+	function nAdmin.AutoComplete(cmd, args)
+		--todo
 	end
 
 	function nAdmin.NetCmdExec(pl, args)
@@ -278,6 +254,10 @@ if CLIENT then
 			net.WriteString(cmd or "")
 			net.WriteString(a)
 		net_SendToServer()
+	end
+
+	function nAdmin.Run(cmd, ...)
+		return concommand.Run(LocalPlayer(), "n", {cmd, unpack({...})})
 	end
 
 	concommand.Add("n", function(pl, _, args)
@@ -318,7 +298,7 @@ function nAdmin.AddCommand(cmd, autocomplete, func)
 		if autocomplete == true then
 			autocomplete = nAdmin.AutoComplete
 		end
-		nAdmin.Commands[cmd] = {func = func, ac = autocomplete}
+		nAdmin.Commands[cmd] = {func = func, ac = autocomplete, SV = true}
 	else
 		nAdmin.Commands[cmd] = {func = autocomplete, CL = true}
 	end
@@ -326,31 +306,42 @@ end
 
 function nAdmin.FindByNick(nick)
 	local ent
-	nick = nick or ""
-	nick = string.lower(nick)
-	nick = nick:Trim()
 	local player_GetAll = player.GetAll()
-	for _, v in ipairs(player_GetAll) do
-		if v:Name():Trim() == nick then
-			ent = v
-			goto skip
-		end
-	end
-	for _, v in ipairs(player_GetAll) do
-		local name = v:Name():Trim()
-		name = string.lower(name)
-		if name == "^" or name == "*" then
-			ent = v
-			break
-		end
-		local findplayer = string.find(name, nick, 1, true)
-		if findplayer == 1 or findplayer then
+	local pgacount = #player_GetAll
+	for i = 1, pgacount do
+		local v = player_GetAll[i]
+		if v:Name() == nick then
 			ent = v
 			break
 		end
 	end
-	::skip::
-	return ent
+	if not ent then
+		for i = 1, pgacount do
+			local v = player_GetAll[i]
+			local name = v:Name()
+			if name == "^" or name == "*" then
+				ent = v
+				break
+			end
+			local findplayer = string.find(name, nick, 1, true)
+			if findplayer == 1 then
+				ent = v
+				break
+			end
+		end
+	end
+	if not ent then
+		for i = 1, pgacount do
+			local v = player_GetAll[i]
+			local name = v:Name()
+			local findplayer = string.find(name, nick)
+			if findplayer then
+				ent = v
+				break
+			end
+		end
+	end
+	return IsValid(ent) and ent:IsPlayer() and ent or nil
 end
 
 function nAdmin.SetTAndDesc(cmd, T, desc)

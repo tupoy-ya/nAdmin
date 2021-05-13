@@ -19,20 +19,35 @@ if CLIENT or SERVER then
 end
 
 if SERVER then
+	if nAdminDBFail then return end
 	local meta = FindMetaTable'Player'
 
 	function meta:SetPTime(TIME, setnwint)
+		if not IsValid(self) then return end
 		local ACID = self:AccountID()
 		local Q = nAdminDB:query("REPLACE INTO nAdmin_time (infoid, time) VALUES (" .. SQLStr(ACID) .. ", " .. SQLStr(TIME) .. ")")
 		function Q:onError(err)
 			nAdmin.Print("Запрос выдал ошибку: " .. err)
 		end
-		Q:start()
-		if not setnwint then return end
-		self:SetNWInt("TotalTime", TIME)
+		self:GetPTime(function(time)
+			if setnwint then
+				Q:start()
+				return
+			end
+			if TIME > time then
+				Q:start()
+			else
+				nAdmin.Print(self:Name() .. " > что время хуевое какого хуя " .. tostring(TIME) .. " < " .. tostring(time))
+				self:SetPTime(time, true)
+			end
+		end)
+		if setnwint then
+			self:SetNWInt("TotalTime", TIME)
+		end
 	end
 
 	function meta:GetPTime(func)
+		if not IsValid(self) then return end
 		local ACID = self:AccountID()
 		local Q = nAdminDB:query("SELECT time FROM nAdmin_time WHERE infoid = " .. SQLStr(ACID) .. " LIMIT 1")
 		function Q:onError(err)
@@ -49,6 +64,7 @@ if SERVER then
 	end
 
 	function meta:RemovePTime()
+		if not IsValid(self) then return end
 		local ACID = self:AccountID()
 		local Q = nAdminDB:query("DELETE FROM nAdmin_time WHERE infoid = " .. SQLStr(ACID))
 		function Q:onError(err)
@@ -57,24 +73,14 @@ if SERVER then
 		Q:start()
 	end
 
-	function nAdminDB:onConnected()
-		nAdmin.Print("База данных успешно подключена.")
-	end
-
-	function nAdminDB:onConnectionFailed( err )
-		print("Ошибка подключения к базе данных!")
-		print("Ошибка:", err)
-	end
-	nAdminDB:connect()
-
-    hook.Add("PlayerInitialSpawn", "PTime", function(ply)
+    hook.Add("PlayerInitialSpawn", "nAdmin_PTime", function(ply)
         ply:SetNWInt("StartTimeSession", CurTime())
 		ply:GetPTime(function(a)
 			ply:SetNWInt("TotalTime", a)
 		end)
     end)
 
-    hook.Add("PlayerDisconnected", "PTime", function(ply)
+    hook.Add("PlayerDisconnected", "nAdmin_PTime", function(ply)
         ply:SetPTime(ply:GetTotalTime(), false)
     end)
 
@@ -83,6 +89,8 @@ if SERVER then
 			ply:SetPTime(math.Round(ply:GetTotalTime()), false)
 		end
 	end
+
+	savePTime()
 
 	timer.Create("savePTime", 120, 0, savePTime)
 

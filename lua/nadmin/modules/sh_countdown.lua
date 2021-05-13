@@ -66,11 +66,11 @@ if SERVER then
 			net.WriteUInt(0, 1)
             net.WriteFloat(count)
         net.Broadcast()
-		if func then
-			timer.Create("nAdmin_countdown", count, 1, function()
+		timer.Create("nAdmin_countdown", count, 1, function()
+			if func then
 				func()
-			end)
-		end
+			end
+		end)
 	end
 	function nAdmin.StopCountdown()
         net.Start("nAdmin_countdown")

@@ -246,7 +246,7 @@ nAdmin.AddCommand("banid", true, function(ply, args)
 	::skip::
 	nAdmin.AddBan(args[1], m2, args[3]:Trim(), ply, true)
 end)
-nAdmin.SetTAndDesc("banid", "admin", "Банит игрока по SteamID. arg1 - SteamID, arg2 - время [7m, 7h, 7d, 7w], arg3 - причина.")
+nAdmin.SetTAndDesc("banid", "moderator", "Банит игрока по SteamID. arg1 - SteamID, arg2 - время [7m, 7h, 7d, 7w], arg3 - причина.")
 
 nAdmin.AddCommand("unban", true, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "unban")
@@ -332,6 +332,9 @@ nAdmin.AddCommand("jail", true, function(ply, args)
 	net.Start("nAdmin_JailHUD")
 		net.WriteFloat(arg2)
 	net.Send(pl)
+	if pl:InVehicle() then
+		pl:ExitVehicle()
+	end
 end)
 nAdmin.SetTAndDesc("jail", "builderreal", "Садит человека в гулаг. arg1 - ник игрока, arg2 - количество секунд.")
 
