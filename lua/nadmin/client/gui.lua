@@ -283,6 +283,7 @@ function nAdmin.mGUI()
 				table.insert(b, stringexpl[i])
 			end
         end
+		if b[1] == "" then return end
         nAdmin.NetCmdExec(_, b)
 		--LocalPlayer():ConCommand(msg)
 	end

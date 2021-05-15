@@ -1,6 +1,12 @@
 nAdmin = {}
 nAdmin.Commands = {}
 nAdmin.Modules = {}
+nAdmin.Slashes = {
+    ["!"] = "!",
+    ["."] = ".",
+    ["/"] = "/",
+}
+
 
 local table_concat = table.concat
 local util = util
@@ -75,7 +81,9 @@ if SERVER then
 			args[1] = pl:Name()
 		end
 		a.func(pl, args)
-		for _, v in ipairs(player.GetHumans()) do
+		local pls = player.GetAll()
+		for i = 1, #pls do
+			local v = pls[i]
 			if v:IsAdmin() then
 				net_Start("nadmin_message")
 					net_WriteUInt(3, 2)
@@ -189,7 +197,7 @@ if SERVER then
 		end
 		if (singleplayer or pl:IsListenServerHost()) and nAdmin.Commands[args[1]] and nAdmin.Commands[args[1]].SV then
 			nAdmin.CommandExec(pl, args[1], args)
-		elseif (singleplayer or pl:IsListenServerHost()) and not nAdmin.Commands[args[1]] then
+		elseif (singleplayer or (IsValid(pl) and pl:IsListenServerHost())) and not nAdmin.Commands[args[1]] then
 			net.Start'nadmin_singleplayer'
 				net.WriteString(table.concat(args, "\\\\"))
 			net.Send(pl)
@@ -249,16 +257,15 @@ if CLIENT then
 			return
 		end
 		local a = util_TableToJSON(args)
-		--a = util_Compress(a)
 		net_Start("nAdmin_CommandExec")
 			net.WriteString(cmd or "")
 			net.WriteString(a)
 		net_SendToServer()
 	end
 
-	function nAdmin.Run(cmd, ...)
+	--[[function nAdmin.Run(cmd, ...)
 		return concommand.Run(LocalPlayer(), "n", {cmd, unpack({...})})
-	end
+	end]]
 
 	concommand.Add("n", function(pl, _, args)
 		nAdmin.NetCmdExec(pl, args)
@@ -347,12 +354,22 @@ end
 function nAdmin.SetTAndDesc(cmd, T, desc)
 	local tCmds = nAdmin.Commands[cmd]
 	if tCmds == nil then
-		debug.Trace()
-	end
-	if tCmds.T or tCmds.desc then
-		return
+		nAdmin.Print(cmd .. " < команда не найдена! > nAdmin.SetTAndDesc")
 	end
 	table.Merge(nAdmin.Commands[cmd], {T = T, desc = desc})
+end
+
+function nAdmin.CmdHidden(cmd)
+	local tCmds = nAdmin.Commands[cmd]
+	if tCmds == nil then
+		nAdmin.Print(cmd .. " < команда не найдена! > nAdmin.SetTAndDesc")
+	end
+	table.Merge(nAdmin.Commands[cmd], {hidden = true})
+end
+
+function nAdmin.CmdIsHidden(cmd)
+	if nAdmin.Commands[cmd] and nAdmin.Commands[cmd].hidden then return true end
+	return false
 end
 
 function nAdmin.UpdateFiles()

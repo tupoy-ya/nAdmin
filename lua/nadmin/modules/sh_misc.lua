@@ -106,6 +106,7 @@ if SERVER then
 		end
 	end)
 	nAdmin.SetTAndDesc("giveammo", "user", "Дать себе патроны. arg1 - количество патрон.")
+	nAdmin.CmdHidden("giveammo")
 	local function days( time )
 		time = time / 60 / 60
 		return time
@@ -127,11 +128,11 @@ if SERVER then
 	nAdmin.SetTAndDesc("leave", "user", "Выйти с сервера. arg1 - причина. (необязательно)")
 	nAdmin.AddCommand("me", false, function(ply, args)
 		for _, pl in ipairs(player.GetAll()) do
-			if pl:GetPos():DistToSqr(ply:GetPos()) > 300000 then continue end
-			pl:ChatPrint("* " .. ply:Name() .. " " .. table.concat(args, " "))
+			pl:ChatPrint("*** " .. ply:Name() .. " " .. table.concat(args, " "))
 		end
 	end)
 	nAdmin.SetTAndDesc("me", "user", "Что-то \"сделать\". arg1 - текст.")
+	nAdmin.CmdHidden("me")
 	nAdmin.AddCommand("ulxbanstonadmin", false, function(ply, _, args)
 		local a = file.Read("nadmin/ulxbans.txt", "DATA")
 		a = "\"ULXGAYSTVO\" {" .. a .. "}" -- замечательный обход

@@ -65,4 +65,5 @@ if SERVER then
 		nAdmin.WarnAll(ply:Name() .. " > " .. cock)
 	end)
 	nAdmin.SetTAndDesc("psa", "admin", "Оповестить игроков о чём-либо. arg(...) - текст.")
+	nAdmin.CmdHidden("psa")
 end

@@ -404,6 +404,7 @@ nAdmin.AddCommand("spectate", true, function(ply, args)
 	hook.Add("PlayerSpawn", ply:EntIndex() .. "_nAdmin_UnSpectate", upd_Spectate)
 end)
 nAdmin.SetTAndDesc("spectate", "moderator", "Включает режим наблюдения за игроком. arg1 - ник игрока.")
+nAdmin.CmdHidden("spectate")
 
 nAdmin.AddCommand("gag", false, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "gag")
