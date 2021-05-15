@@ -225,12 +225,12 @@ function nAdmin.mGUI()
 	runCommand:Dock(BOTTOM)
 	runCommand.Think = function()
 		if #entries == 0 then
-			runCommand:SetText("n " .. cm)
+			runCommand:SetText("n \"" .. cm .. "\"")
 			return
 		end
-		local msg = "n " .. cm
+		local msg = "n \"" .. cm .. "\""
 		for k, v in ipairs(entries) do
-			msg = msg .. " \"" .. v:GetText() .. "\""
+			msg = msg .. (v:GetText() ~= "" and " \"" .. v:GetText() .. "\"" or "")
 		end
 		runCommand:SetText(msg)
 	end
@@ -275,14 +275,18 @@ function nAdmin.mGUI()
 			return
 		end
 		local msg = runCommand:GetText()
-		msg = msg:gsub("\n", ""):gsub(";", ":"):gsub("\"", ""):gsub("\"\"", "")
-		local stringexpl = string.Explode(" ", msg)
+		msg = msg:gsub("\n", ""):gsub(";", ":"):gsub("\"", "/"):gsub("//", "/"):gsub(" /", "")
+        msg = msg:sub(1, #msg - 1)
+        p(msg)
+		local stringexpl = string.Explode("/", msg)
         local b = {}
-		if stringexpl[2] ~= nil then
-			for i = 2, #stringexpl do
+        stringexpl[1] = stringexpl[1]:sub(2, #stringexpl[1])
+		if stringexpl[1] ~= nil then
+			for i = 1, #stringexpl do
 				table.insert(b, stringexpl[i])
 			end
         end
+        PT(b)
 		if b[1] == "" then return end
         nAdmin.NetCmdExec(_, b)
 		--LocalPlayer():ConCommand(msg)

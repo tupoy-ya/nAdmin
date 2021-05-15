@@ -263,9 +263,9 @@ if CLIENT then
 		net_SendToServer()
 	end
 
-	--[[function nAdmin.Run(cmd, ...)
+	function nAdmin.Run(cmd, ...)
 		return concommand.Run(LocalPlayer(), "n", {cmd, unpack({...})})
-	end]]
+	end
 
 	concommand.Add("n", function(pl, _, args)
 		nAdmin.NetCmdExec(pl, args)
