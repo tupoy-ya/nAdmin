@@ -56,7 +56,7 @@ if SERVER then
 			net.WriteData(a)
 		net.Broadcast()
 		current_status = true
-		timer.Create("nAdmin_Vote", 15, 1, function()
+		timer.Create("nAdmin_Vote", 20, 1, function()
 			net.Start("nAdmin_votekick")
 				net.WriteUInt(2, 3)
 			net.Broadcast()
@@ -120,7 +120,7 @@ if SERVER then
 			net.WriteData(a)
 		net.Broadcast()
 		current_status = true
-		timer.Create("nAdmin_Vote", 15, 1, function()
+		timer.Create("nAdmin_Vote", 20, 1, function()
 			net.Start("nAdmin_votekick")
 				net.WriteUInt(2, 3)
 			net.Broadcast()
@@ -174,7 +174,7 @@ if SERVER then
 			net.WriteData(a)
 		net.Broadcast()
 		current_status = true
-		timer.Create("nAdmin_Vote", 15, 1, function()
+		timer.Create("nAdmin_Vote", 20, 1, function()
 			net.Start("nAdmin_votekick")
 				net.WriteUInt(2, 3)
 			net.Broadcast()

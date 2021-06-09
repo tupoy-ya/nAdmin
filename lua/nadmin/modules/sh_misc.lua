@@ -133,7 +133,7 @@ if SERVER then
 	end)
 	nAdmin.SetTAndDesc("me", "user", "Что-то \"сделать\". arg1 - текст.")
 	nAdmin.CmdHidden("me")
-	nAdmin.AddCommand("ulxbanstonadmin", false, function(ply, _, args)
+	nAdmin.AddCommand("ulxbanstonadmin", false, function(ply, args)
 		local a = file.Read("nadmin/ulxbans.txt", "DATA")
 		a = "\"ULXGAYSTVO\" {" .. a .. "}" -- замечательный обход
 		a = util.KeyValuesToTable(a)

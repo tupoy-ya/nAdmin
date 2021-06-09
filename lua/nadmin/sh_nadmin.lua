@@ -1,4 +1,8 @@
 local meta = FindMetaTable("Player")
+if not meta then
+	print("ЧТО?????????????????")
+	return
+end
 
 local G_Teams = {
 	["superadmin"] = {num = 1, n = "Создатель", clr = Color(200, 0, 0)},
@@ -81,7 +85,7 @@ nAdmin.Limits = {
 		["effects"] = 6,
 	},
 	["builderreal"] = {
-		["props"] = 850,
+		["props"] = 950,
 		["sents"] = 80,
 		["npcs"] = 0,
 		["vehicles"] = 30,
@@ -129,6 +133,7 @@ function meta:IsUserGroup(group)
 end
 
 function meta:IsAdmin()
+	if not (IsValid(self)) then return false end
 	if (self:IsSuperAdmin()) then return true end
 	if (self:Team() <= 2) then return true end
 	return false
@@ -143,6 +148,8 @@ if SERVER then
 		if ent:IsPlayer() then
 			if pl:Team() < ent:Team() and pl:Team() <= 3 then
 				ent:SetMoveType(MOVETYPE_NONE)
+				ent.Freezed = true
+				ent:GodEnable()
 				return true
 			end
 		end
@@ -153,6 +160,8 @@ if SERVER then
 			if pl:Team() < ent:Team() and pl:Team() <= 3 then
 				if pl:KeyPressed(IN_ATTACK2) then return end
 				ent:SetMoveType(MOVETYPE_WALK)
+				ent.Freezed = false
+				ent:GodDisable()
 			end
 		end
 	end)

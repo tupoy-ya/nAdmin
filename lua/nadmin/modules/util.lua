@@ -44,6 +44,7 @@ end
 nAdmin.TbansFromSQL()
 
 function nAdmin.ValidSteamID(sid)
+	if not sid then return end
 	return sid:upper():Trim():match("^STEAM_0:%d:%d+$")
 end
 
@@ -298,15 +299,11 @@ nAdmin.AddCommand("jail", true, function(ply, args)
 		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
 		return
 	end
-	local function pl_Null()
-		pl:SetNWBool("nAdmin_InJail", false)
-	end
-	pl_Null()
 	local arg2 = tonumber(args[2]) or 0
 	if arg2 ~= 0 then
 		nAdmin.WarnAll(ply:Name() .. " засунул в гулаг " .. pl:Name() .. " на " .. arg2 .. " секунд.")
 		timer.Create(tostring(pl) .. "_nAdminJail", arg2, 1, function()
-			pl_Null()
+			pl:SetNWBool("nAdmin_InJail", false)
 		end)
 		goto skip
 	end
@@ -329,9 +326,11 @@ nAdmin.AddCommand("jail", true, function(ply, args)
 			timer.Remove(as .. "nAdmin_ToJail")
 		end
 	end)
-	net.Start("nAdmin_JailHUD")
-		net.WriteFloat(arg2)
-	net.Send(pl)
+	timer.Simple(.2, function()
+		net.Start("nAdmin_JailHUD")
+			net.WriteFloat(arg2)
+		net.Send(pl)
+	end)
 	if pl:InVehicle() then
 		pl:ExitVehicle()
 	end
@@ -352,8 +351,9 @@ nAdmin.AddCommand("unjail", true, function(ply, args)
 	if not pl:GetNWBool("nAdmin_InJail") then
 		return
 	end
-	if timer.Exists(tostring(pl) .. "_nAdminJail") then
-		timer.Remove(tostring(pl) .. "_nAdminJail")
+	local tpl = tostring(pl)
+	if timer.Exists(tpl .. "_nAdminJail") then
+		timer.Remove(tpl .. "_nAdminJail")
 	end
 	pl:SetNWBool("nAdmin_InJail", false)
 	pl:Spawn()
@@ -361,7 +361,30 @@ nAdmin.AddCommand("unjail", true, function(ply, args)
 end)
 nAdmin.SetTAndDesc("unjail", "builderreal", "Освобождает человека с гулага. arg1 - ник игрока.")
 
-hook.Add("PlayerSpawnObject", "restrictJail", function(ply)
+hook.Add("CanTool", "restrictJail", function(ply)
+	if ply:GetNWBool("nAdmin_InJail") or ply.Freezed then
+		return false
+	end
+end)
+
+local alllogs = {
+	"Prop",
+	"Ragdoll",
+	"SENT",
+	"Effect",
+	"Vehicle"
+}
+
+for i = 1, #alllogs do
+	local _log = alllogs[i]
+	hook.Add("PlayerSpawn" .. _log, "restrictJail", function(ply)
+		if ply:GetNWBool("nAdmin_InJail") or ply.Freezed then
+			return false
+		end
+	end)
+end
+
+hook.Add("CanPlayerSuicide", "restrictJail", function(ply)
 	if ply:GetNWBool("nAdmin_InJail") or ply.Freezed then
 		return false
 	end
@@ -591,6 +614,7 @@ nAdmin.AddCommand("freeze", true, function(ply, args)
 	end
 	pl:Freeze(true)
 	pl.Freezed = true
+	pl:GodEnable()
 	nAdmin.WarnAll(ply:Name() .. " зафризил " .. pl:Name())
 end)
 nAdmin.SetTAndDesc("freeze", "e2_coder", "Зафризить/разфризить игрока. arg1 - ник игрока.")
@@ -609,6 +633,7 @@ nAdmin.AddCommand("unfreeze", true, function(ply, args)
 		return
 	end
 	pl:Freeze(false)
+	pl:GodDisable()
 	pl.Freezed = false
 	nAdmin.WarnAll(ply:Name() .. " разфризил " .. pl:Name())
 end)
@@ -632,3 +657,18 @@ nAdmin.AddCommand("ip", true, function(ply, args)
 	nAdmin.Warn(ply, "IP адрес " .. pl:Name() .. ": " .. ip)
 end)
 nAdmin.SetTAndDesc("ip", "admin", "Узнать имя игрока. arg1 - ник игрока.")
+
+nAdmin.AddCommand("bancheck", false, function(ply, args)
+    local stid = args[1]:Trim()
+    if nAdmin.ValidSteamID(stid) then
+        stid = util.SteamIDTo64(stid)
+    end
+    local ban = nAdmin.BanList[stid]
+    if ban then
+        nAdmin.Warn(ply, "Забанил: " .. ban.banned_by .. "; причина: " .. ban.reason .. "; время: " .. (ban.time ~= 0 and string.NiceTime(ban.time - os.time())) or "Бесконечно")
+    else
+        nAdmin.Warn(ply, "SteamID не найден в банах!")
+    end
+end)
+
+nAdmin.SetTAndDesc("bancheck", "admin", "Проверить бан игрока. arg1 - SteamID")

@@ -41,7 +41,7 @@ function nAdmin.mGUI()
 	local title = vgui.Create('DLabel', nGUI)
 	title:SetSize(125, 25)
 	title:SetPos(5, 4)
-	title:SetText("[nAdmin] | BETA")
+	title:SetText("[nAdmin]")
 	title:SetTextColor(Color(230, 230, 230))
 	title:SetFont("nAdmin_desc")
 
@@ -277,7 +277,6 @@ function nAdmin.mGUI()
 		local msg = runCommand:GetText()
 		msg = msg:gsub("\n", ""):gsub(";", ":"):gsub("\"", "/"):gsub("//", "/"):gsub(" /", "")
         msg = msg:sub(1, #msg - 1)
-        p(msg)
 		local stringexpl = string.Explode("/", msg)
         local b = {}
         stringexpl[1] = stringexpl[1]:sub(2, #stringexpl[1])
@@ -286,7 +285,6 @@ function nAdmin.mGUI()
 				table.insert(b, stringexpl[i])
 			end
         end
-        PT(b)
 		if b[1] == "" then return end
         nAdmin.NetCmdExec(_, b)
 		--LocalPlayer():ConCommand(msg)

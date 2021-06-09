@@ -92,7 +92,7 @@ if SERVER then
 
 	savePTime()
 
-	timer.Create("savePTime", 120, 0, savePTime)
+	timer.Create("savePTime", 300, 0, savePTime)
 
 	nAdmin.AddCommand("restoretime", false, function(ply)
 		timer.Simple(1, function()

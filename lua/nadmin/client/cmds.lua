@@ -8,6 +8,11 @@ function nAdmin.OnPlayerChat(pl, txt)
 		if nAdmin.Commands[expl_f] == nil then
 			return
 		end
+		for index, str in pairs(expl) do
+			if str:Trim() == "" then
+				table.remove(expl, index)
+			end
+		end
 		if nAdmin.Commands[expl_f].CL then
 			nAdmin.NetCmdExec(pl, expl)
 		end

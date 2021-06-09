@@ -20,7 +20,7 @@ end)
 
 	for i = 1, #alllogs do
 		local _log = alllogs[i]
-		hook.Add("PlayerSpawned" .. _log, "nAdminLog", function(a, b)
+		hook.Add("PlayerSpawned" .. _log, "nAdminLog", function(a, b, c)
 			local limit = limitss[a:GetUserGroup()]
 			local _log_lower = _log:lower() .. "s"
 			if limit and limit[_log_lower] then
@@ -28,7 +28,11 @@ end)
 					a:LimitHit(_log_lower)
 					--a:ChatPrint("Проп был удалён. Вы превысили лимит данного типа энтити. (" .. limit[_log_lower] .. ")")
 					--timer.Simple(0, function()
-						SafeRemoveEntity(a)
+						if isstring(b) then
+							SafeRemoveEntity(c)
+						else
+							SafeRemoveEntity(b)
+						end
 					--end)
 				end
 			end

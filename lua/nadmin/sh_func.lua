@@ -95,8 +95,7 @@ if SERVER then
 
 	net.Receive("nAdmin_CommandExec", function(_, pl)
 		local command = net_ReadString()
-		local args = net_ReadString()
-		args = util_JSONToTable(args)
+		local args =  util_JSONToTable(net_ReadString())
 		nAdmin.CommandExec(pl, command, args)
 	end)
 
@@ -195,7 +194,7 @@ if SERVER then
 		if not IsValid(pl) then
 			nAdmin.CommandExec(wrld, args[1], args)
 		end
-		if (singleplayer or pl:IsListenServerHost()) and nAdmin.Commands[args[1]] and nAdmin.Commands[args[1]].SV then
+		if (singleplayer or (IsValid(pl) and pl:IsListenServerHost())) and nAdmin.Commands[args[1]] and nAdmin.Commands[args[1]].SV then
 			nAdmin.CommandExec(pl, args[1], args)
 		elseif (singleplayer or (IsValid(pl) and pl:IsListenServerHost())) and not nAdmin.Commands[args[1]] then
 			net.Start'nadmin_singleplayer'
@@ -312,6 +311,7 @@ function nAdmin.AddCommand(cmd, autocomplete, func)
 end
 
 function nAdmin.FindByNick(nick)
+	nick = string.lowerRus(nick)
 	local ent
 	local player_GetAll = player.GetAll()
 	local pgacount = #player_GetAll
@@ -325,7 +325,7 @@ function nAdmin.FindByNick(nick)
 	if not ent then
 		for i = 1, pgacount do
 			local v = player_GetAll[i]
-			local name = v:Name()
+			local name = string.lowerRus(v:Name())
 			if name == "^" or name == "*" then
 				ent = v
 				break
@@ -340,7 +340,7 @@ function nAdmin.FindByNick(nick)
 	if not ent then
 		for i = 1, pgacount do
 			local v = player_GetAll[i]
-			local name = v:Name()
+			local name = string.lowerRus(v:Name())
 			local findplayer = string.find(name, nick)
 			if findplayer then
 				ent = v
