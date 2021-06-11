@@ -1,6 +1,9 @@
 if game.SinglePlayer() then
 	nAdmin.Print("Вы находитесь в одиночной игре. Некоторые модули не будут работать!")
 	nAdminDB, nAdminDBFail = getmetatable("---"), getmetatable("---")
+	function nAdminDB:query() end
+	function nAdminDB:onError() end
+	function nAdminDB:onSuccess() end
 	return
 end
 

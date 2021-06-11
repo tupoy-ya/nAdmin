@@ -36,9 +36,16 @@ if CLIENT then
 
 			surface.SetDrawColor(40, 40, 40)
 			surface.DrawRect(0, lerp, ScrW(), 35)
-
-			local txt_ = ParseE(txt)
-			txt_:Draw(ScrW() / 2 - txt_:GetWide() / 2, lerp - 2)
+			if ec_markup then
+				local txt_ = ParseE(txt)
+				txt_:Draw(ScrW() / 2 - txt_:GetWide() / 2, lerp - 2)
+			else
+				surface.SetFont'nAdmin_PSA'
+				local tx = surface.GetTextSize(txt)
+				surface.SetTextColor(255, 255, 255)
+				surface.SetTextPos(ScrW() / 2 - tx / 2, lerp - 2)
+				surface.DrawText(txt)
+			end
 			if -lerp >= 119 then
 				hook.Remove("DrawOverlay", "nAdmin_PSA")
 			end

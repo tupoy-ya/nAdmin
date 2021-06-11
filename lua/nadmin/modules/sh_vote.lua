@@ -1,7 +1,6 @@
 if SERVER then
 	util.AddNetworkString("nAdmin_votekick")
 	local current_status = false
-	local next_Kick = CurTime()
 	local results = {}
 	net.Receive("nAdmin_votekick", function(_, ply)
 		if current_status == false then return end
@@ -33,12 +32,13 @@ if SERVER then
 			nAdmin.Warn(ply, "Игрока с таким именем нет на сервере!")
 			return
 		end
-		if next_Kick > CurTime() then
-			nAdmin.Warn(ply, "Подождите ещё: " .. math.Round(next_Kick - CurTime()) .. " секунд!")
+		ply.next_Kick = ply.next_Kick or 0
+		if ply.next_Kick > CurTime() then
+			nAdmin.Warn(ply, "Подождите ещё: " .. math.Round(ply.next_Kick - CurTime()) .. " секунд!")
 			return
 		end
 		results = {}
-		next_Kick = CurTime() + 60
+		ply.next_Kick = CurTime() + 120
 		local answers = {[1] = "Да.", [2] = "Нет."}
 		table.sort(answers, function(a, b) return #a < #b end)
 		local a = util.Compress(util.TableToJSON(answers))
@@ -91,10 +91,12 @@ if SERVER then
 		if not check then
 			return
 		end
-		if next_Kick > CurTime() then
-			nAdmin.Warn(ply, "Подождите ещё: " .. math.Round(next_Kick - CurTime()) .. " секунд!")
+		ply.next_Kick = ply.next_Kick or 0
+		if ply.next_Kick > CurTime() then
+			nAdmin.Warn(ply, "Подождите ещё: " .. math.Round(ply.next_Kick - CurTime()) .. " секунд!")
 			return
 		end
+		results = {}
 		local count = table.Count(args)
 		if count >= 7 then
 			nAdmin.Warn(ply, "Нельзя сделать больше 7 ответов")
@@ -104,7 +106,7 @@ if SERVER then
 			return
 		end
 		results = {}
-		next_Kick = CurTime() + 5
+		ply.next_Kick = CurTime() + 120
 		local dop = {}
 		local answers = {}
 		local args_copy = table.Copy(args)
