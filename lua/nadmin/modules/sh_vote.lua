@@ -18,6 +18,44 @@ if SERVER then
 			net.Broadcast()
 		end
 	end)
+	local function startVote(str, args, func, ply)
+		results = {}
+		ply.next_Kick = CurTime() + 120
+		local answers = {}
+		local args_copy = table.Copy(args)
+		for i = 1, #args do
+			answers[i] = args_copy[i + 1]
+		end
+		table.sort(answers, function(a, b) return #a < #b end)
+		local a = util.Compress(util.TableToJSON(answers))
+		net.Start("nAdmin_votekick")
+			net.WriteUInt(1, 3)
+			net.WriteString(str) -- args[1]
+			net.WriteUInt(#a, 16)
+			net.WriteData(a)
+		net.Broadcast()
+		current_status = true
+		timer.Create("nAdmin_Vote", 20, 1, function()
+			net.Start("nAdmin_votekick")
+				net.WriteUInt(2, 3)
+			net.Broadcast()
+			current_status = false
+			local c = table.Count(results)
+			if c == 0 then return end
+			local final = {}
+			for i = 1, #answers do
+				final[i] = 0
+			end
+			for _, vote in next, results do
+				final[vote] = (final[vote] or 0) + 1
+			end
+			local first = table.GetWinningKey(final)
+			nAdmin.WarnAll("В голосовании победил ответ: " .. answers[first])
+			if func then
+				func(first)
+			end
+		end)
+	end
 	nAdmin.AddCommand("votekick", false, function(ply, args)
 		if current_status then
 			nAdmin.Warn(ply, "В данный момент уже идет какое-то голосование!")
@@ -37,48 +75,20 @@ if SERVER then
 			nAdmin.Warn(ply, "Подождите ещё: " .. math.Round(ply.next_Kick - CurTime()) .. " секунд!")
 			return
 		end
-		results = {}
-		ply.next_Kick = CurTime() + 120
-		local answers = {[1] = "Да.", [2] = "Нет."}
-		table.sort(answers, function(a, b) return #a < #b end)
-		local a = util.Compress(util.TableToJSON(answers))
 		local ass = {}
 		for k, v in next, args do
 			if k > 1 then
 				table.insert(ass, v)
 			end
 		end
-		local ass2 = table.concat(ass, " ")
-		net.Start("nAdmin_votekick")
-			net.WriteUInt(1, 3)
-			net.WriteString("Выгнать " .. pl:Name() .. "? (Причина: " .. ass2 .. "; создал: " .. ply:Name() .. ")")
-			net.WriteUInt(#a, 16)
-			net.WriteData(a)
-		net.Broadcast()
-		current_status = true
-		timer.Create("nAdmin_Vote", 20, 1, function()
-			net.Start("nAdmin_votekick")
-				net.WriteUInt(2, 3)
-			net.Broadcast()
-			current_status = false
-			local c = table.Count(results)
-			if c == 0 then return end
-			local final = {}
-			for i = 1, #answers do
-				final[i] = 0
-			end
-			for _, vote in next, results do
-				final[vote] = (final[vote] or 0) + 1
-			end
-			local first = table.GetWinningKey(final)
-			nAdmin.WarnAll("В голосовании победил ответ: " .. answers[first])
+		startVote("Выгнать " .. pl:Name() .. "? (Причина: " .. table.concat(ass, " ") .. "; создал: " .. ply:Name() .. ")", {[1] = "", [2] = "Да", [3] = "Нет"}, function(first)
 			if not IsValid(pl) then
 				nAdmin.WarnAll("Игрок, которого пытались выгнать, вышел с сервера.")
 			end
 			if first == 1 then
-				pl:Kick("Вас выгнали всеобщим голосованием. Причина: " .. ass2 .. "; голосование создал: " .. ply:Name())
+				pl:Kick("Вас выгнали всеобщим голосованием. Причина: " .. table.concat(ass, " ") .. "; голосование создал: " .. ply:Name())
 			end
-		end)
+		end, ply)
 	end)
 	nAdmin.SetTAndDesc("votekick", "user", "Запускает голование на кик игрока. arg1 - ник, arg2 - причина.")
 
@@ -96,49 +106,12 @@ if SERVER then
 			nAdmin.Warn(ply, "Подождите ещё: " .. math.Round(ply.next_Kick - CurTime()) .. " секунд!")
 			return
 		end
-		results = {}
 		local count = table.Count(args)
-		if count >= 7 then
-			nAdmin.Warn(ply, "Нельзя сделать больше 7 ответов")
+		if count >= 7 or count <= 2 then
+			nAdmin.Warn(ply, "Нельзя сделать больше 7 и меньше 2 ответов.")
 			return
 		end
-		if count < 3 then
-			return
-		end
-		results = {}
-		ply.next_Kick = CurTime() + 120
-		local dop = {}
-		local answers = {}
-		local args_copy = table.Copy(args)
-		for i = 1, #args do
-			answers[i] = args_copy[i + 1]
-		end
-		table.sort(answers, function(a, b) return #a < #b end)
-		local a = util.Compress(util.TableToJSON(answers))
-		net.Start("nAdmin_votekick")
-			net.WriteUInt(1, 3)
-			net.WriteString(args[1])
-			net.WriteUInt(#a, 16)
-			net.WriteData(a)
-		net.Broadcast()
-		current_status = true
-		timer.Create("nAdmin_Vote", 20, 1, function()
-			net.Start("nAdmin_votekick")
-				net.WriteUInt(2, 3)
-			net.Broadcast()
-			current_status = false
-			local c = table.Count(results)
-			if c == 0 then return end
-			local final = {}
-			for i = 1, #answers do
-				final[i] = 0
-			end
-			for _, vote in next, results do
-				final[vote] = (final[vote] or 0) + 1
-			end
-			local first = table.GetWinningKey(final)
-			nAdmin.WarnAll("В голосовании победил ответ: " .. answers[first])
-		end)
+		startVote(args[1] .. " (создал: " .. ply:Name() .. ")", args, nil, ply)
 	end)
 	nAdmin.SetTAndDesc("vote", "osobenniy2", "Запускает голование на кик игрока. arg1 - что обсуждаем, arg2, arg3, arg4. (необязательно).")
 
@@ -148,57 +121,19 @@ if SERVER then
 			nAdmin.Warn(ply, "В данный момент уже идет какое-то голосование!")
 			return
 		end
-		local pl = nAdmin.FindByNick(args[1])
-		if pl == nil then
-			nAdmin.Warn(ply, "Игрока с таким именем нет на сервере!")
-			return
-		end
 		if nextCleanMap > CurTime() then
 			nAdmin.Warn(ply, "Подождите ещё: " .. math.Round(nextCleanMap - CurTime()) .. " секунд!")
 			return
 		end
-		results = {}
 		nextCleanMap = CurTime() + 1800
-		local answers = {[1] = "Да.", [2] = "Нет."}
-		table.sort(answers, function(a, b) return #a < #b end)
-		local a = util.Compress(util.TableToJSON(answers))
-		local ass = {}
-		for k, v in next, args do
-			if k > 1 then
-				table.insert(ass, v)
-			end
-		end
-		local ass2 = table.concat(ass, " ")
-		net.Start("nAdmin_votekick")
-			net.WriteUInt(1, 3)
-			net.WriteString(ply:Name() .. " желает очистить карту.")
-			net.WriteUInt(#a, 16)
-			net.WriteData(a)
-		net.Broadcast()
-		current_status = true
-		timer.Create("nAdmin_Vote", 20, 1, function()
-			net.Start("nAdmin_votekick")
-				net.WriteUInt(2, 3)
-			net.Broadcast()
-			current_status = false
-			local c = table.Count(results)
-			if c == 0 then return end
-			local final = {}
-			for i = 1, #answers do
-				final[i] = 0
-			end
-			for _, vote in next, results do
-				final[vote] = (final[vote] or 0) + 1
-			end
-			local first = table.GetWinningKey(final)
-			nAdmin.WarnAll("В голосовании победил ответ: " .. answers[first])
+		startVote(ply:Name() .. " желает очистить карту.", {[1] = "", [2] = "Да", [3] = "Нет"}, function(first)
 			if first == 1 then
 				PrintMessage(3, "Через 5 минут произойдет очистка пропов!")
 				nAdmin.Countdown(300, function()
 					RunConsoleCommand("gmod_admin_cleanup")
 				end)
 			end
-		end)
+		end, ply)
 	end)
 	nAdmin.SetTAndDesc("votecleanmap", "e2_coder", "Запускает голование на очистку карты.")
 

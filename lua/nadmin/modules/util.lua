@@ -122,7 +122,7 @@ function nAdmin.AddBan(ply_, minutes, reas, o, banid_, nospam) -- это уёб�
 	bans[ply_Kick] = {time = banM, reason = reas}
 	nAdmin.BanInSQL(ply_Kick, banM, reas, who_banned)
 	if not nospam then
-		nAdmin.WarnAll(ply_Kick .. " был заблокирован с причиной: " .. bans[ply_Kick].reason .. "; на: " .. str .. "; забанил: " .. who_banned)
+		nAdmin.WarnAll(util.SteamIDFrom64(ply_Kick) .. " был заблокирован с причиной: " .. bans[ply_Kick].reason .. "; на: " .. str .. "; забанил: " .. who_banned)
 	end
 	game.KickID(util.SteamIDFrom64(ply_Kick), "Вы забанены. Причина: " .. bans[ply_Kick].reason .. "; время: " .. str)
 	if discord then
@@ -135,7 +135,7 @@ end
 hook.Add("CheckPassword", "ban_System", function(id)
 	if bans[id] then
 		local reas = bans[id].reason or ""
-		nAdmin.Print(id .. " попытался зайти на сервер, но у него блокировка по причине: " .. reas)
+		nAdmin.Print(util.SteamIDFrom64(id) .. " попытался зайти на сервер, но у него блокировка по причине: " .. reas)
 		if bans[id].time ~= 0 then
 			return false,
 			"Вы забанены на [RU] Уютный Сандбокс. Причина: " .. reas .. "; время до разбана: " .. string.NiceTime(bans[id].time - os.time())
