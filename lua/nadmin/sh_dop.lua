@@ -1,3 +1,4 @@
+local meta = FindMetaTable("Player")
 local string = string
 string.oldupper = string.oldupper or string.upper
 string.oldlower = string.oldlower or string.lower
