@@ -4,7 +4,7 @@ if CLIENT then
 		file.CreateDir("cbox_cache")
 	end
 	if not file.Exists("cbox_cache/msg.mp3", "DATA") then
-		http.Fetch("http://95.181.153.61/media/opoveshalka.mp3", function(a)
+		http.Fetch("http://" .. game.GetIPAddress():sub(1, #game.GetIPAddress() - 6) .. "/media/opoveshalka.mp3", function(a)
 			file.Write("cbox_cache/msg.mp3", a)
 		end)
 	end
@@ -31,15 +31,19 @@ if CLIENT then
 			else
 				lerp = Lerp(FrameTime() * 3, lerp, -120)
 			end
-			surface.SetDrawColor(200, 200, 200)
-			surface.DrawRect(0, lerp, ScrW(), 37)
-
-			surface.SetDrawColor(40, 40, 40)
-			surface.DrawRect(0, lerp, ScrW(), 35)
 			if ec_markup then
 				local txt_ = ParseE(txt)
+				local tall = txt_:GetTall()
+				surface.SetDrawColor(200, 200, 200)
+				surface.DrawRect(0, lerp, ScrW(), tall + 2)
+				surface.SetDrawColor(40, 40, 40)
+				surface.DrawRect(0, lerp, ScrW(), tall)
 				txt_:Draw(ScrW() / 2 - txt_:GetWide() / 2, lerp - 2)
 			else
+				surface.SetDrawColor(200, 200, 200)
+				surface.DrawRect(0, lerp, ScrW(), 35 + 2)
+				surface.SetDrawColor(40, 40, 40)
+				surface.DrawRect(0, lerp, ScrW(), 35)
 				surface.SetFont'nAdmin_PSA'
 				local tx = surface.GetTextSize(txt)
 				surface.SetTextColor(255, 255, 255)

@@ -2,15 +2,10 @@ local bans = {} -- util.JSONToTable(file.Read("nadmin/bans.txt", "DATA") or "{}"
 local next = next
 nAdmin.BanList = bans
 
-local singleplayer = game.SinglePlayer()
-if singleplayer then
-	nAdmin.Print("Модуль util отключен! Сервер запущен в одиночной игре.")
-	return
-end
-
 util.AddNetworkString("nAdmin_JailHUD")
 
 function nAdmin.BanInSQL(steamid, time, reason, banned_by)
+	if not nAdminDB then return false end
 	local Q = nAdminDB:query("REPLACE INTO nAdmin_bans (ind, plyban, reason, time, banned_by) VALUES (" .. os.time() .. ", " .. SQLStr(steamid) .. ", " .. SQLStr(reason) .. ", " .. SQLStr(time) .. ", " .. SQLStr(banned_by) .. ")")
 	function Q:onError(_, err)
 		nAdmin.Print("Запрос выдал ошибку: " .. err)
@@ -22,6 +17,7 @@ function nAdmin.BanInSQL(steamid, time, reason, banned_by)
 end
 
 function nAdmin.TbansFromSQL()
+	if not nAdminDB then return false end
 	local Q = nAdminDB:query("SELECT * FROM nAdmin_bans")
 	function Q:onError(err)
 		nAdmin.Print("Запрос выдал ошибку: " .. err)
@@ -43,12 +39,8 @@ function nAdmin.TbansFromSQL()
 end
 nAdmin.TbansFromSQL()
 
-function nAdmin.ValidSteamID(sid)
-	if not sid then return end
-	return sid:upper():Trim():match("^STEAM_0:%d:%d+$")
-end
-
 function nAdmin.AddBan(ply_, minutes, reas, o, banid_, nospam) -- это уёбищный код, но так как я ленивая залупа я не хочу это переписывать
+	if not nAdminDB then return false end
 	local ply_Kick = nAdmin.FindByNick(ply_)
 	local reason_warn = ""
 	if banid_ then
@@ -183,90 +175,92 @@ end)
 
 local curtime = CurTime()
 
-nAdmin.AddCommand("ban", true, function(ply, args)
-	local check = nAdmin.ValidCheckCommand(args, 3, ply, "ban")
-	if not check then
-		return
-	end
-	if curtime > CurTime() then
-		nAdmin.Warn(ply, "Подождите ещё " .. math.Round(curtime - CurTime()) .. " секунд.")
-		return
-	end
-	curtime = CurTime() + 10
-	local min_ = args[2]
-	local m2 = tonumber(string.sub(min_, 1, #min_ - 1))
-	if tonumber(min_) == 0 then
-		m2 = min_
-		goto skip
-	end
-	if string.EndsWith(min_, "m") then
-		m2 = m2
-	elseif string.EndsWith(min_, "h") then
-		m2 = m2 * 60
-	elseif string.EndsWith(min_, "d") then
-		m2 = m2 * 60 * 24
-	elseif string.EndsWith(min_, "w") then
-		m2 = m2 * 60 * 24 * 7
-	else
-		nAdmin.Warn(ply, "Введите корректное значение 2 аргумента. (Пример: 7m, 7h, 7d, 7w)")
-		return
-	end
-	::skip::
-	nAdmin.AddBan(args[1], m2, args[3], ply)
-end)
-nAdmin.SetTAndDesc("ban", "moderator", "Банит игрока. arg1 - ник, arg2 - время [7m, 7h, 7d, 7w], arg3 - причина.")
+if nAdminDB then
+	nAdmin.AddCommand("ban", true, function(ply, args)
+		local check = nAdmin.ValidCheckCommand(args, 3, ply, "ban")
+		if not check then
+			return
+		end
+		if curtime > CurTime() then
+			nAdmin.Warn(ply, "Подождите ещё " .. math.Round(curtime - CurTime()) .. " секунд.")
+			return
+		end
+		curtime = CurTime() + 10
+		local min_ = args[2]
+		local m2 = tonumber(string.sub(min_, 1, #min_ - 1))
+		if tonumber(min_) == 0 then
+			m2 = min_
+			goto skip
+		end
+		if string.EndsWith(min_, "m") then
+			m2 = m2
+		elseif string.EndsWith(min_, "h") then
+			m2 = m2 * 60
+		elseif string.EndsWith(min_, "d") then
+			m2 = m2 * 60 * 24
+		elseif string.EndsWith(min_, "w") then
+			m2 = m2 * 60 * 24 * 7
+		else
+			nAdmin.Warn(ply, "Введите корректное значение 2 аргумента. (Пример: 7m, 7h, 7d, 7w)")
+			return
+		end
+		::skip::
+		nAdmin.AddBan(args[1], m2, args[3], ply)
+	end)
+	nAdmin.SetTAndDesc("ban", "moderator", "Банит игрока. arg1 - ник, arg2 - время [7m, 7h, 7d, 7w], arg3 - причина.")
 
-nAdmin.AddCommand("banid", true, function(ply, args)
-	local check = nAdmin.ValidCheckCommand(args, 3, ply, "banid")
-	if not check then
-		return
-	end
-	if curtime > CurTime() then
-		nAdmin.Warn(ply, "Подождите ещё " .. math.Round(curtime - CurTime()) .. " секунд.")
-		return
-	end
-	curtime = CurTime() + 10
-	local min_ = args[2]
-	local m2 = tonumber(string.sub(min_, 1, #min_ - 1))
-	if tonumber(min_) == 0 then
-		m2 = min_
-		goto skip
-	end
-	if string.EndsWith(min_, "m") then
-		m2 = m2
-	elseif string.EndsWith(min_, "h") then
-		m2 = m2 * 60
-	elseif string.EndsWith(min_, "d") then
-		m2 = m2 * 60 * 24
-	elseif string.EndsWith(min_, "w") then
-		m2 = m2 * 60 * 24 * 7
-	else
-		nAdmin.Warn(ply, "Введите корректное значение 2 аргумента. (Пример: 7m, 7h, 7d, 7w)")
-		return
-	end
-	::skip::
-	nAdmin.AddBan(args[1], m2, args[3]:Trim(), ply, true)
-end)
-nAdmin.SetTAndDesc("banid", "moderator", "Банит игрока по SteamID. arg1 - SteamID, arg2 - время [7m, 7h, 7d, 7w], arg3 - причина.")
+	nAdmin.AddCommand("banid", true, function(ply, args)
+		local check = nAdmin.ValidCheckCommand(args, 3, ply, "banid")
+		if not check then
+			return
+		end
+		if curtime > CurTime() then
+			nAdmin.Warn(ply, "Подождите ещё " .. math.Round(curtime - CurTime()) .. " секунд.")
+			return
+		end
+		curtime = CurTime() + 10
+		local min_ = args[2]
+		local m2 = tonumber(string.sub(min_, 1, #min_ - 1))
+		if tonumber(min_) == 0 then
+			m2 = min_
+			goto skip
+		end
+		if string.EndsWith(min_, "m") then
+			m2 = m2
+		elseif string.EndsWith(min_, "h") then
+			m2 = m2 * 60
+		elseif string.EndsWith(min_, "d") then
+			m2 = m2 * 60 * 24
+		elseif string.EndsWith(min_, "w") then
+			m2 = m2 * 60 * 24 * 7
+		else
+			nAdmin.Warn(ply, "Введите корректное значение 2 аргумента. (Пример: 7m, 7h, 7d, 7w)")
+			return
+		end
+		::skip::
+		nAdmin.AddBan(args[1], m2, args[3]:Trim(), ply, true)
+	end)
+	nAdmin.SetTAndDesc("banid", "moderator", "Банит игрока по SteamID. arg1 - SteamID, arg2 - время [7m, 7h, 7d, 7w], arg3 - причина.")
 
-nAdmin.AddCommand("unban", true, function(ply, args)
-	local check = nAdmin.ValidCheckCommand(args, 1, ply, "unban")
-	if not check then
-		return
-	end
-	local stid = util.SteamIDTo64(args[1]:Trim())
-	nAdmin.unban(stid)
-	nAdmin.WarnAll(ply:Name().. " разблокировал: " .. stid)
-	if discord then
-		discord.send({embeds = {[1] = {author = {name = util.SteamIDFrom64(stid), url = "http://steamcommunity.com/profiles/".. stid .."/",}, title = "Аккаунт был разбанен.", color = 2123412, description = "Разблокировал: " .. ply:Name() .. "; время: " .. os.date("%H:%M:%S - %d/%m/%Y" , os.time())}}})
-	end
-end)
-nAdmin.SetTAndDesc("unban", "moderator", "Разбанивает игрока. arg1 - SteamID игрока.")
+	nAdmin.AddCommand("unban", true, function(ply, args)
+		local check = nAdmin.ValidCheckCommand(args, 1, ply, "unban")
+		if not check then
+			return
+		end
+		local stid = util.SteamIDTo64(args[1]:Trim())
+		nAdmin.unban(stid)
+		nAdmin.WarnAll(ply:Name().. " разблокировал: " .. stid)
+		if discord then
+			discord.send({embeds = {[1] = {author = {name = util.SteamIDFrom64(stid), url = "http://steamcommunity.com/profiles/".. stid .."/",}, title = "Аккаунт был разбанен.", color = 2123412, description = "Разблокировал: " .. ply:Name() .. "; время: " .. os.date("%H:%M:%S - %d/%m/%Y" , os.time())}}})
+		end
+	end)
+	nAdmin.SetTAndDesc("unban", "moderator", "Разбанивает игрока. arg1 - SteamID игрока.")
 
-nAdmin.AddCommand("bancount", true, function(ply, args)
-	nAdmin.Warn(ply, "В базе данных насчитывается около: " .. table.Count(bans) .. " банов.")
-end)
-nAdmin.SetTAndDesc("bancount", "admin", "Количество игроков в бане.")
+	nAdmin.AddCommand("bancount", true, function(ply, args)
+		nAdmin.Warn(ply, "В базе данных насчитывается около: " .. table.Count(bans) .. " банов.")
+	end)
+	nAdmin.SetTAndDesc("bancount", "admin", "Количество игроков в бане.")
+end
 
 nAdmin.AddCommand("kick", true, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "kick")
@@ -323,6 +317,7 @@ nAdmin.AddCommand("jail", true, function(ply, args)
 			pl:SetPos(vec)
 		else
 			pl:Spawn()
+			pl.Freezed = false
 			timer.Remove(as .. "nAdmin_ToJail")
 		end
 	end)
@@ -355,6 +350,7 @@ nAdmin.AddCommand("unjail", true, function(ply, args)
 	if timer.Exists(tpl .. "_nAdminJail") then
 		timer.Remove(tpl .. "_nAdminJail")
 	end
+	pl.Freezed = false
 	pl:SetNWBool("nAdmin_InJail", false)
 	pl:Spawn()
 	nAdmin.WarnAll(ply:Name() .. " выпустил из гулага " .. pl:Name() .. ".")
@@ -420,7 +416,7 @@ nAdmin.AddCommand("spectate", true, function(ply, args)
 		nAdmin.Print(ply:Name() .. " больше не следит за " .. pl:Name())
 	end)
 	hook.Add("PlayerDisconnected", ply:EntIndex().. "_nAdmin_UnSpectate", function(pl_)
-		if pl_ ~= pl or pl_ ~= ply then return end
+		if pl_ ~= pl then return end
 		del_AllSpectateHooks()
 		nAdmin.Print(ply:Name() .. " больше не следит за " .. pl:Name())
 	end)
@@ -656,7 +652,7 @@ nAdmin.AddCommand("ip", true, function(ply, args)
 	ip = ip:sub(1, ip:find(":") - 1)
 	nAdmin.Warn(ply, "IP адрес " .. pl:Name() .. ": " .. ip)
 end)
-nAdmin.SetTAndDesc("ip", "admin", "Узнать имя игрока. arg1 - ник игрока.")
+nAdmin.SetTAndDesc("ip", "admin", "Узнать IP игрока. arg1 - ник игрока.")
 
 nAdmin.AddCommand("bancheck", false, function(ply, args)
     local stid = args[1]:Trim()
@@ -665,7 +661,7 @@ nAdmin.AddCommand("bancheck", false, function(ply, args)
     end
     local ban = nAdmin.BanList[stid]
     if ban then
-        nAdmin.Warn(ply, "Забанил: " .. ban.banned_by .. "; причина: " .. ban.reason .. "; время: " .. (ban.time ~= 0 and string.NiceTime(ban.time - os.time())) or "Бесконечно")
+        nAdmin.Warn(ply, "Забанил: " .. (ban.banned_by or "???") .. "; причина: " .. (ban.reason or "???") .. "; время: " .. (ban.time ~= 0 and string.NiceTime(ban.time - os.time())) or "Бесконечно")
     else
         nAdmin.Warn(ply, "SteamID не найден в банах!")
     end

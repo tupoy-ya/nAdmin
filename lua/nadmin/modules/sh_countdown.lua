@@ -70,6 +70,7 @@ if SERVER then
 			if func then
 				func()
 			end
+			nAdmin.Print("Отсчёт завершён!")
 		end)
 	end
 	function nAdmin.StopCountdown()

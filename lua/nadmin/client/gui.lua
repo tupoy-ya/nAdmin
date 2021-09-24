@@ -1,6 +1,7 @@
 nAdmin.FULLCMDS = false
 
 surface.CreateFont("nAdmin_desc", {font = "Roboto", size = 18, antialias = true, extended = true})
+surface.CreateFont("nAdmin_desc2", {font = "Roboto", size = 18, antialias = true, extended = true})
 surface.CreateFont("logs", {font = "Roboto Bold", size = 12, antialias = true, extended = true})
 
 if IsValid(nGUI) then
@@ -29,21 +30,37 @@ function nAdmin.mGUI()
 	nGUI:MakePopup()
 	nGUI:SetKeyboardInputEnabled(false)
 	gui.EnableScreenClicker(true)
-	nGUI.Paint = function(self, w, h)
-		draw.RoundedBox(5, 0, 0, w, h, clr)
-		draw.RoundedBox(4, 2, 2, w - 4, h - 4, clr2)
-	end
+	nGUI:ShowCloseButton(false)
+    nGUI.Paint = function(self, w, h)
+        draw.RoundedBox(0, 0, 0, w, h, Color(50, 50, 50))
+        draw.RoundedBox(0, 2, 2, w - 4, h - 4, Color(40, 40, 40))
+        draw.RoundedBox(0, 0, 22, w, 2, Color(50, 50, 50))
+        draw.RoundedBox(0, 2, 2, w - 4, 10, Color(120, 120, 120))
+        draw.RoundedBox(0, 2, 2 + 10, w - 4, 10, Color(140, 140, 140))
+		draw.SimpleText("[nAdmin]", "nAdmin_desc2", 5 + 1, 3 + 1, color_black)
+		draw.SimpleText("[nAdmin]", "nAdmin_desc2", 5, 3, color_white)
+    end
+    local close = nGUI:Add("DButton")
+    close:SetSize(28, 24)
+    close:SetPos(nGUI:GetWide() - 28, 0)
+    close:SetText''
+    close.Paint = function(self, w, h)
+        draw.NoTexture()
+        surface.SetDrawColor(color_black)
+        surface.DrawTexturedRectRotated(w / 2, 12, 16, 2, 45)
+        draw.NoTexture()
+        surface.SetDrawColor(color_black)
+        surface.DrawTexturedRectRotated(w / 2, 12, 16, 2, -45)
+    end
+    close.DoClick = function()
+		nGUI:AlphaTo(0, .1, 0, function()
+			nGUI:Close()
+		end)
+    end
 	nGUI.OnClose = function()
 		gui.EnableScreenClicker(false)
 	end
 	nGUI:SetDeleteOnClose(false)
-
-	local title = vgui.Create('DLabel', nGUI)
-	title:SetSize(125, 25)
-	title:SetPos(5, 4)
-	title:SetText("[nAdmin]")
-	title:SetTextColor(Color(230, 230, 230))
-	title:SetFont("nAdmin_desc")
 
 	local clist = vgui.Create('DListView', nGUI)
 	clist:Dock(LEFT)
@@ -256,10 +273,11 @@ function nAdmin.mGUI()
 		but:SetPos(315, ps:GetTall() + 45)
 	end
 	local logs = vgui.Create("RichText", nGUI)
-	logs:SetSize(200, 200)
+	logs:SetVerticalScrollbarEnabled(false)
+	logs:SetSize(190, 200)
 	logs:SetPos(315, ps:GetTall() + 75)
 	logs.Think = function()
-		logs:SetSize(200, 200 - ps:GetTall())
+		logs:SetSize(190, 200 - ps:GetTall())
 		logs:SetPos(315, ps:GetTall() + 75)
 	end
 	logs.PerformLayout = function()

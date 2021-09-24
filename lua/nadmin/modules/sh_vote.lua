@@ -193,21 +193,22 @@ if CLIENT then
 				surface.DrawText(i .. ". " .. TB[i] .. " (" .. (results[i] or 0) .. ")")
 			end
 		end)
-
-		hook.Add("PlayerBindPress", "plBindVote", function(ply, bind, pressed)
-			if string.find(bind, "slot*") then
-				local num = tonumber(string.sub(bind, #bind, #bind))
-				if TB[num] then
-					net.Start("nAdmin_votekick")
-						net.WriteUInt(1, 3)
-						net.WriteFloat(num)
-					net.SendToServer()
-					hook.Remove("PlayerBindPress", "plBindVote")
-					alphaon = true
-					--hook.Remove("DrawOverlay", "VoteShow")
-					return true
+		timer.Create("vote_bind_nAdmin", 1, 1, function()
+			hook.Add("PlayerBindPress", "plBindVote", function(ply, bind, pressed)
+				if string.find(bind, "slot*") then
+					local num = tonumber(string.sub(bind, #bind, #bind))
+					if TB[num] then
+						net.Start("nAdmin_votekick")
+							net.WriteUInt(1, 3)
+							net.WriteFloat(num)
+						net.SendToServer()
+						hook.Remove("PlayerBindPress", "plBindVote")
+						alphaon = true
+						--hook.Remove("DrawOverlay", "VoteShow")
+						return true
+					end
 				end
-			end
+			end)
 		end)
 	end
 
@@ -226,6 +227,7 @@ if CLIENT then
 		if int == 2 then -- [[ STOP VOTE ]] --
 			hook.Remove("PlayerBindPress", "plBindVote")
 			hook.Remove("DrawOverlay", "VoteShow")
+			timer.Remove("vote_bind_nAdmin")
 			results = {}
 		end
 		if int == 3 then -- [[ + VOTE ]] --

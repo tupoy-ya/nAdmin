@@ -1,16 +1,12 @@
 local meta = FindMetaTable("Player")
 if not meta then
-	print("ЧТО?????????????????")
 	return
 end
 
 local G_Teams = {
 	["superadmin"] = {num = 1, n = "Создатель", clr = Color(200, 0, 0)},
 	["admin"] = {num = 2, n = "Админ", clr = Color(255, 144, 0)},
-	--["Spy"] = {num = 3, n = "Админ", clr = Color(0, 255, 37)},
-	--["vutka"] = {num = 4, n = "Админ", clr = Color(0, 255, 37)},
 	["moderator"] = {num = 3, n = "Модератор", clr = Color(100, 100, 214)},
-	--["oleg"] = {num = 6, n = "Модератор", clr = Color(0, 255, 37)},
 	["osobenniy2"] = {num = 4, n = "Хедбэнгер", clr = Color(229, 0, 237)},
 	["osobenniy"] = {num = 5, n = "Кальянщик", clr = Color(142, 0, 165)},
 	["builderreal"] = {num = 6, n = "Строитель", clr = Color(255, 255, 255)},
@@ -53,12 +49,12 @@ nAdmin.Limits = {
 		["effects"] = 15,
 	},
 	["moderator"] = {
-		["props"] = 650,
+		["props"] = 700,
 		["sents"] = 50,
 		["npcs"] = 0,
 		["vehicles"] = 15,
 		["ragdolls"] = 10,
-		["effects"] = 10,
+		["effects"] = 25,
 	},
 	["oleg"] = {
 		["props"] = 500,
@@ -70,18 +66,18 @@ nAdmin.Limits = {
 	},
 	["osobenniy2"] = {
 		["props"] = 500,
-		["sents"] = 40,
+		["sents"] = 45,
 		["npcs"] = 0,
 		["vehicles"] = 10,
-		["ragdolls"] = 6,
+		["ragdolls"] = 8,
 		["effects"] = 8,
 	},
 	["osobenniy"] = {
 		["props"] = 350,
 		["sents"] = 30,
 		["npcs"] = 0,
-		["vehicles"] = 6,
-		["ragdolls"] = 5,
+		["vehicles"] = 7,
+		["ragdolls"] = 6,
 		["effects"] = 6,
 	},
 	["builderreal"] = {
@@ -144,6 +140,18 @@ function meta:IsSuperAdmin()
 end
 
 if SERVER then
+	hook.Add("PlayerSpawn", "collidefix", function(ply)
+		timer.Simple(0, function()
+			if IsValid(ply) then
+				ply:SetNoCollideWithTeammates(false)
+			end
+		end)
+	end)
+
+	for _, ply in next, player.GetAll() do
+		ply:SetNoCollideWithTeammates(false)
+	end
+
 	hook.Add("PhysgunPickup", "nAdminPhysgunPickupPlayer", function(pl, ent)
 		if ent:IsPlayer() then
 			if pl:Team() < ent:Team() and pl:Team() <= 3 then

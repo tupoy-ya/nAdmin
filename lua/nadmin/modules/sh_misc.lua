@@ -113,12 +113,24 @@ if SERVER then
 	end
 	nAdmin.AddCommand("uptime", false, function(ply, args)
 		timer.Simple(0, function()
-			nAdmin.Warn(ply, "Сервер онлайн уже: " .. math.Round(days(SysTime())) .. " часов.")
+			nAdmin.Warn(ply, "Сервер онлайн уже: " .. math.Round(days(SysTime()), 1) .. " часов.")
 		end)
+	end)
+	nAdmin.AddCommand("strip", false, function(ply, args)
+		if args and next(args) ~= nil and args[1] ~= nil then
+			local ent = nAdmin.FindByNick(args[1])
+			if ent == nil then
+				chat.AddText(Color(150, 150, 150), "Игрока с таким ником нет на сервере!")
+				return
+			end
+			ent:StripWeapons()
+		else
+			ply:StripWeapons()
+		end
 	end)
 	nAdmin.AddCommand("leave", false, function(ply, args)
 		timer.Simple(.5, function()
-			if not args then
+			if not args or next(args) == nil then
 				ply:Kick("Отключился")
 			else
 				ply:Kick("Отключился: " .. table.concat(args, " "))
@@ -127,6 +139,7 @@ if SERVER then
 	end)
 	nAdmin.SetTAndDesc("leave", "user", "Выйти с сервера. arg1 - причина. (необязательно)")
 	nAdmin.AddCommand("me", false, function(ply, args)
+		if ply.Muted then return end
 		for _, pl in ipairs(player.GetAll()) do
 			pl:ChatPrint("*** " .. ply:Name() .. " " .. table.concat(args, " "))
 		end

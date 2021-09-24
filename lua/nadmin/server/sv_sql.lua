@@ -1,19 +1,10 @@
 if game.SinglePlayer() then
 	nAdmin.Print("Вы находитесь в одиночной игре. Некоторые модули не будут работать!")
-	nAdminDB, nAdminDBFail = getmetatable("---"), getmetatable("---")
-	function nAdminDB:query() end
-	function nAdminDB:onError() end
-	function nAdminDB:onSuccess() end
 	return
 end
 
-local a, b = pcall(function() require'mysqloo' end)
-if a then
-	require'mysqloo'
-else
-	nAdmin.Print("gmsv_mysqloo не найден!!! Без него не будет работать модуль playtime!!!")
-	return
-end
+pcall(require,'mysqloo')
+if mysqloo == nil then return end
 
 if not file.Exists("nadmin/dbcfg.txt", "DATA") then
 	file.Write("nadmin/dbcfg.txt", util.TableToJSON({["url"] = "", ["login"] = "", ["pass"] = "", ["dbName"] = "", ["port"] = 3306}))

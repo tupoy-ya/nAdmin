@@ -47,9 +47,9 @@ hook.Add("StartCommand", "vBox", function()
 
 		surface.SetFont'voiceBox'
 
-		local nick = self.ply:Name()
+		local nick = self.ply:NameWithoutTags()
 
-		if utf8.len(self.ply:Name()) > 18 then
+		if utf8.len(self.ply:NameWithoutTags()) > 18 then
 			nick = utf8.sub(nick, 1, 18) .. "..."
 		end
 

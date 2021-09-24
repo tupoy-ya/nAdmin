@@ -44,6 +44,10 @@ function SetUserGroupID(stid, group)
 	SteamIDs[stid] = {}
 	SteamIDs[stid].group = group
 	file.Write("nadmin/users.txt", util.TableToJSON(SteamIDs))
+	local ye = player.GetBySteamID(stid:upper())
+	if IsValid(ye) then
+		ye:SetUserGroup(group)
+	end
 end
 
 hook.Add("PlayerInitialSpawn", "PlayerAuthSpawn", function(ply)

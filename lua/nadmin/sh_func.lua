@@ -175,20 +175,6 @@ if SERVER then
 		return has
 	end
 
-	function nAdmin.GetAccess(cmd, pl)
-		if nAdmin.Commands[cmd].T == nil then
-			return true
-		end
-		if pl:SteamID() == "STEAM_0:0:0" then
-			return true
-		end
-		local TF = pl:Team() <= Global_Teams[nAdmin.Commands[cmd].T].num
-		if TF == false then
-			nAdmin.Warn(pl, "У вас нет прав использовать эту команду.")
-		end
-		return TF
-	end
-
 	local wrld, singleplayer = Entity(0), game.SinglePlayer()
 	concommand.Add("n", function(pl, _, args)
 		if not IsValid(pl) then
@@ -269,6 +255,27 @@ if CLIENT then
 	concommand.Add("n", function(pl, _, args)
 		nAdmin.NetCmdExec(pl, args)
 	end, nAdmin.AutoComplete)
+end
+
+function nAdmin.GetAccess(cmd, pl)
+	if SERVER then
+		if nAdmin.Commands[cmd].T == nil then
+			return true
+		end
+		if pl:SteamID() == "STEAM_0:0:0" then
+			return true
+		end
+		local TF = pl:Team() <= Global_Teams[nAdmin.Commands[cmd].T].num
+		if TF == false then
+			nAdmin.Warn(pl, "У вас нет прав использовать эту команду.")
+		end
+		return TF
+	else
+		if nAdmin.Commands[cmd] == nil or (nAdmin.Commands[cmd] and nAdmin.Commands[cmd].T == nil) then
+			return true
+		end
+		return LocalPlayer():Team() <= Global_Teams[nAdmin.Commands[cmd].T].num
+	end
 end
 
 function PT(...)
@@ -370,6 +377,11 @@ end
 function nAdmin.CmdIsHidden(cmd)
 	if nAdmin.Commands[cmd] and nAdmin.Commands[cmd].hidden then return true end
 	return false
+end
+
+function nAdmin.ValidSteamID(sid)
+	if not sid then return end
+	return sid:upper():Trim():match("^STEAM_0:%d:%d+$")
 end
 
 function nAdmin.UpdateFiles()
