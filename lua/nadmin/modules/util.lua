@@ -70,7 +70,7 @@ function nAdmin.AddBan(ply_, minutes, reas, o, banid_, nospam) -- это уёб�
 		if o:SteamID() == "STEAM_0:0:0" then
 			goto conskip
 		end
-		a = Global_Teams[nGSteamIDs[o:SteamID():lower()].group].num
+		a = Global_Teams[nGSteamIDs[o:AccountID()]].num
 		b = nGSteamIDs[ply_]
 		if b == nil then
 			b = Global_Teams["user"].num
@@ -99,7 +99,7 @@ function nAdmin.AddBan(ply_, minutes, reas, o, banid_, nospam) -- это уёб�
 	end
 	if ply_Kick ~= false and not banid_ and ply_Kick:IsPlayer() then
 		local stid = ply_Kick:SteamID64():lower()
-		bans[stid] = {time = banM, reason = reas}
+		bans[stid] = {time = banM, reason = reas, banned_by = who_banned}
 		nAdmin.BanInSQL(stid, banM, reas, who_banned)
 		if discord then
 			discord.send({embeds = {[1] = {author = {name = ply_Kick:Name() .. " (" .. ply_Kick:SteamID() .. ")", url = "http://steamcommunity.com/profiles/".. ply_Kick:SteamID64() .."/",}, title = "Опа! А вот и бан.", color = 10038562, description = "Был забанен по причине: " .. bans[stid].reason .. ", на: " .. str .. ", админом: " .. who_banned}}})
@@ -111,7 +111,7 @@ function nAdmin.AddBan(ply_, minutes, reas, o, banid_, nospam) -- это уёб�
 		ply_Kick:Kick("Вы забанены. Причина: " .. bans[stid].reason .. "; время: " .. str)
 		goto skipb
 	end
-	bans[ply_Kick] = {time = banM, reason = reas}
+	bans[ply_Kick] = {time = banM, reason = reas, banned_by = who_banned}
 	nAdmin.BanInSQL(ply_Kick, banM, reas, who_banned)
 	if not nospam then
 		nAdmin.WarnAll(util.SteamIDFrom64(ply_Kick) .. " был заблокирован с причиной: " .. bans[ply_Kick].reason .. "; на: " .. str .. "; забанил: " .. who_banned)
@@ -205,7 +205,13 @@ if nAdminDB then
 			return
 		end
 		::skip::
-		nAdmin.AddBan(args[1], m2, args[3], ply)
+		local txt = ""
+		for k, v in next, args do
+			if k >= 3 then
+				txt = txt .. " " .. v
+			end
+		end
+		nAdmin.AddBan(args[1], m2, txt, ply)
 	end)
 	nAdmin.SetTAndDesc("ban", "moderator", "Банит игрока. arg1 - ник, arg2 - время [7m, 7h, 7d, 7w], arg3 - причина.")
 
@@ -238,7 +244,13 @@ if nAdminDB then
 			return
 		end
 		::skip::
-		nAdmin.AddBan(args[1], m2, args[3]:Trim(), ply, true)
+		local txt = ""
+		for k, v in next, args do
+			if k >= 3 then
+				txt = txt .. " " .. v
+			end
+		end
+		nAdmin.AddBan(args[1], m2, txt, ply, true)
 	end)
 	nAdmin.SetTAndDesc("banid", "moderator", "Банит игрока по SteamID. arg1 - SteamID, arg2 - время [7m, 7h, 7d, 7w], arg3 - причина.")
 
@@ -249,7 +261,7 @@ if nAdminDB then
 		end
 		local stid = util.SteamIDTo64(args[1]:Trim())
 		nAdmin.unban(stid)
-		nAdmin.WarnAll(ply:Name().. " разблокировал: " .. stid)
+		nAdmin.WarnAll(ply:Name().. " разблокировал: " .. args[1]:Trim():upper())
 		if discord then
 			discord.send({embeds = {[1] = {author = {name = util.SteamIDFrom64(stid), url = "http://steamcommunity.com/profiles/".. stid .."/",}, title = "Аккаунт был разбанен.", color = 2123412, description = "Разблокировал: " .. ply:Name() .. "; время: " .. os.date("%H:%M:%S - %d/%m/%Y" , os.time())}}})
 		end
@@ -272,9 +284,14 @@ nAdmin.AddCommand("kick", true, function(ply, args)
 		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
 		return
 	end
-	local reason = args[2]
-	if reason then
-		pl:Kick("Вас кикнул " .. ply:Name() .. "; с причиной: " .. reason)
+	local txt = ""
+	for k, v in next, args do
+		if k >= 2 then
+			txt = txt .. " " .. v
+		end
+	end
+	if txt:Trim() ~= "" then
+		pl:Kick("Вас кикнул " .. ply:Name() .. "; с причиной: " .. txt)
 		return
 	end
 	pl:Kick("Вы были кикнуты админом: " .. ply:Name() .. ".")
@@ -396,31 +413,38 @@ nAdmin.AddCommand("spectate", true, function(ply, args)
 		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
 		return
 	end
-	local function upd_Spectate()
-		ply:SetObserverMode(OBS_MODE_IN_EYE)
-		ply:SpectateEntity(pl)
+	local function upd_Spectate(cock)
+		if cock and cock == pl then
+			if not IsValid(ply) then
+				del_AllSpectateHooks()
+			end
+			ply:SetObserverMode(OBS_MODE_IN_EYE)
+			ply:SpectateEntity(pl)
+		end
 	end
-	upd_Spectate()
+	ply:SetObserverMode(OBS_MODE_IN_EYE)
+	ply:SpectateEntity(pl)
 	nAdmin.Print(ply:Name() .. " следит за " .. pl:Name())
+	local index = ply:EntIndex()
 	local function del_AllSpectateHooks()
 		ply:SetObserverMode(0)
 		ply:UnSpectate()
-		hook.Remove("KeyPress", ply:EntIndex().. "_nAdmin_UnSpectate")
-		hook.Remove("PlayerDisconnected", ply:EntIndex().. "_nAdmin_UnSpectate")
-		hook.Remove("PlayerSpawn", ply:EntIndex() .. "_nAdmin_UnSpectate")
+		hook.Remove("KeyPress", index .. "_nAdmin_UnSpectate")
+		hook.Remove("PlayerDisconnected", index .. "_nAdmin_UnSpectate")
+		hook.Remove("PlayerSpawn", index .. "_nAdmin_UnSpectate")
 	end
-	hook.Add("KeyPress", ply:EntIndex().. "_nAdmin_UnSpectate", function(pl_, k)
+	hook.Add("KeyPress", index.. "_nAdmin_UnSpectate", function(pl_, k)
 		if pl_ ~= ply then return end
 		if k ~= 8 and k ~= 16 and k ~= 512 and k ~= 1024 then return end
 		del_AllSpectateHooks()
 		nAdmin.Print(ply:Name() .. " больше не следит за " .. pl:Name())
 	end)
-	hook.Add("PlayerDisconnected", ply:EntIndex().. "_nAdmin_UnSpectate", function(pl_)
+	hook.Add("PlayerDisconnected", index.. "_nAdmin_UnSpectate", function(pl_)
 		if pl_ ~= pl then return end
 		del_AllSpectateHooks()
 		nAdmin.Print(ply:Name() .. " больше не следит за " .. pl:Name())
 	end)
-	hook.Add("PlayerSpawn", ply:EntIndex() .. "_nAdmin_UnSpectate", upd_Spectate)
+	hook.Add("PlayerSpawn", index .. "_nAdmin_UnSpectate", upd_Spectate)
 end)
 nAdmin.SetTAndDesc("spectate", "moderator", "Включает режим наблюдения за игроком. arg1 - ник игрока.")
 nAdmin.CmdHidden("spectate")
@@ -504,14 +528,33 @@ nAdmin.AddCommand("mute", false, function(ply, args)
 		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
 		return
 	end
-	if not pl.Muted then
-		pl.Muted = true
-	else
-		pl.Muted = false
+	if pl.Muted then
+		nAdmin.Warn(ply, "Игрока в муте!")
+		return
 	end
-	nAdmin.WarnAll(ply:Name() .. " " .. (pl.Muted and "запретил" or "разрешил") .. " писать в чат " .. pl:Name().. ".")
+	pl.Muted = true
+	nAdmin.WarnAll(ply:Name() .. " запретил писать в чат " .. pl:Name().. ".")
 end)
-nAdmin.SetTAndDesc("mute", "moderator", "Запретить/разрешить игроку писать в чат. arg1 - ник.")
+nAdmin.SetTAndDesc("mute", "moderator", "Запретить игроку писать в чат. arg1 - ник.")
+
+nAdmin.AddCommand("unmute", false, function(ply, args)
+	local check = nAdmin.ValidCheckCommand(args, 1, ply, "unmute")
+	if not check then
+		return
+	end
+	local pl = nAdmin.FindByNick(args[1])
+	if pl == nil then
+		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
+		return
+	end
+	if not pl.Muted then
+		nAdmin.Warn(ply, "Игрока не в муте!")
+		return
+	end
+	pl.Muted = false
+	nAdmin.WarnAll(ply:Name() .. " разрешил писать в чат " .. pl:Name().. ".")
+end)
+nAdmin.SetTAndDesc("unmute", "moderator", "Разрешить игроку писать в чат. arg1 - ник.")
 
 local function plSay(pl, txt)
 	if pl.Muted then return "" end

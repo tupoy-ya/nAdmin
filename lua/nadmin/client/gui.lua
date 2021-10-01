@@ -170,8 +170,8 @@ function nAdmin.mGUI()
 							bu.DoClick = function()
 								local m = DermaMenu()
 								for k, v in ipairs(player.GetAll()) do
-									m:AddOption(v:Name(), function()
-										val_enter:SetText(v:Name())
+									m:AddOption(v:NameWithoutTags(), function()
+										val_enter:SetText(v:NameWithoutTags())
 									end)
 								end
 								m:SetMaxHeight(500)
@@ -319,7 +319,7 @@ function nAdmin.mGUI()
 		SetClipboardText(runCommand:GetText())
 	end
 	hook.Add("nAdmin_SystimeUpdate", "", function(a, b)
-		if b:find(LocalPlayer():Name()) then
+		if b:find(LocalPlayer():NameWithoutTags()) then
 			b = b .. "; " .. math.Round((SysTime() - a or SysTime()), 5)
 		end
 		logs:InsertColorChange(200, 200, 200, 255)

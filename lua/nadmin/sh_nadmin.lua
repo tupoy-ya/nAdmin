@@ -158,6 +158,7 @@ if SERVER then
 				ent:SetMoveType(MOVETYPE_NONE)
 				ent.Freezed = true
 				ent:GodEnable()
+				ent:Freeze(true)
 				return true
 			end
 		end
@@ -169,6 +170,7 @@ if SERVER then
 				if pl:KeyPressed(IN_ATTACK2) then return end
 				ent:SetMoveType(MOVETYPE_WALK)
 				ent.Freezed = false
+				ent:Freeze(false)
 				ent:GodDisable()
 			end
 		end

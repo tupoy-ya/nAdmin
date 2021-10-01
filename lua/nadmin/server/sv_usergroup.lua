@@ -1,66 +1,105 @@
 local meta = FindMetaTable("Player")
-local _Global_Teams = Global_Teams
 
 local SteamIDs = {}
 _G.nGSteamIDs = {}
 
 local function LoadUsers()
-	local txt = file.Read("nadmin/users.txt", "DATA")
-	if ( !txt ) then
-		MsgN( "nadmin/users.txt не обнаружен! Создаём..." )
-		file.Write("nadmin/users.txt")
-		return
+	if not nAdminDB then return end
+	local Q = nAdminDB:query("SELECT * FROM nAdmin_users")
+	function Q:onError(err)
+		nAdmin.Print("Запрос выдал ошибку: " .. err)
 	end
-	if txt == "" then
-		txt = "{}"
-	end
-	for steamid, v in next, util.JSONToTable(txt) do
-		SteamIDs[steamid] = {}
-		SteamIDs[steamid].group = v.group
+	Q:start()
+	function Q:onSuccess(data)
+		if data then
+			for k, v in next, data do
+				SteamIDs[v.accountid] = v.usergroup
+			end
+			for k, ply in next, player.GetAll() do
+				local steamid = ply:AccountID()
+				if SteamIDs[steamid] == nil then
+					ply:SetUserGroup("user")
+					goto skip
+				end
+				if SteamIDs[steamid] ~= nil then
+					ply:SetUserGroup(SteamIDs[steamid])
+				end
+				::skip::
+			end
+		end
 	end
 	nGSteamIDs = SteamIDs
 end
-
 LoadUsers()
+
 if not file.Exists("nadmin", "DATA") then
 	file.CreateDir("nadmin")
 end
 
 function meta:SetUserGroup(group)
 	self:SetNWString("usergroup", group)
-	timer.Simple(0, function()
-		self:SetTeam(_Global_Teams[group].num)
-	end)
-	local stid = self:SteamID():lower()
-	if (group ~= "user" and SteamIDs[stid] == nil) or (SteamIDs[stid] and SteamIDs[stid].group ~= group) then
-		SteamIDs[stid] = {}
-		SteamIDs[stid].group = group
-		file.Write("nadmin/users.txt", util.TableToJSON(SteamIDs))
+	self:SetTeam(Global_Teams[group].num)
+	local stid = self:AccountID()
+	if (group ~= "user" and SteamIDs[stid] == nil) or (SteamIDs[stid] and SteamIDs[stid] ~= group) then
+		SteamIDs[stid] = group
+		nGSteamIDs = SteamIDs
+		local ACID = self:AccountID()
+		local Q = nAdminDB:query("REPLACE INTO nAdmin_users (accountid, usergroup) VALUES (" .. SQLStr(ACID) .. ", " .. SQLStr(group) .. ")")
+		function Q:onError(err)
+			nAdmin.Print("Запрос выдал ошибку: " .. err)
+		end
+		Q:start()
 	end
 end
 
+local steamidtoacid = function(steamid)
+    local acc32 = tonumber(steamid:sub(11))
+    return (acc32 * 2) + tonumber(steamid:sub(9,9))
+end
+
 function SetUserGroupID(stid, group)
-	stid = stid:lower()
-	SteamIDs[stid] = {}
-	SteamIDs[stid].group = group
-	file.Write("nadmin/users.txt", util.TableToJSON(SteamIDs))
-	local ye = player.GetBySteamID(stid:upper())
+	if nAdmin.ValidSteamID(stid) then
+		stid = steamidtoacid(stid)
+	else
+		return
+	end
+	SteamIDs[stid] = group
+	local Q = nAdminDB:query("REPLACE INTO nAdmin_users (accountid, usergroup) VALUES (" .. SQLStr(stid) .. ", " .. SQLStr(group) .. ")")
+	function Q:onError(err)
+		nAdmin.Print("Запрос выдал ошибку: " .. err)
+	end
+	Q:start()
+	nGSteamIDs = SteamIDs
+	local ye = player.GetByAccountID(stid)
 	if IsValid(ye) then
 		ye:SetUserGroup(group)
 	end
 end
 
 hook.Add("PlayerInitialSpawn", "PlayerAuthSpawn", function(ply)
-	local steamid = ply:SteamID():lower()
-	if (game.SinglePlayer() or ply:IsListenServerHost()) then
-		ply:SetUserGroup("superadmin")
-		return
-	end
-	if (SteamIDs[steamid] == nil) then
-		ply:SetUserGroup("user")
-		return
-	end
-	ply:SetUserGroup(SteamIDs[steamid].group)
+	timer.Simple(0, function()
+		if not IsValid(ply) then return end
+		local steamid = ply:AccountID()
+		if (game.SinglePlayer() or ply:IsListenServerHost()) then
+			ply:SetUserGroup("superadmin")
+			return
+		end
+		if (SteamIDs[steamid] == nil) then
+			ply:SetUserGroup("user")
+			return
+		end
+		ply:SetUserGroup(SteamIDs[steamid])
+	end)
 end)
 
 SetUserGroupID("STEAM_0:0:0", "superadmin")
+
+nAdmin.AddCommand("jsonuserstomysql", false, function(ply, args)
+	local a = file.Read("nadmin/users.txt", "DATA")
+	a = util.JSONToTable(a)
+	for stid, tbl in next, a do
+		SetUserGroupID(stid, tbl.group)
+		print("Success > ", stid, tbl.group)
+	end
+end)
+nAdmin.SetTAndDesc("jsonuserstomysql", "superadmin", "")

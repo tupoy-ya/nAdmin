@@ -39,7 +39,11 @@ nAdmin.AddCommand("weldlag", false, function(ply, args)
 		end
 		if (count or 0) > (minresult or 0) then
 			if lagc == 1 or count == 1 then return end
-			nAdmin.Warn(ply, "Найдены лагающие констрейны: " .. lagc .. '/'.. count .." лагающие пропы (владелец: " .. tostring(owner) .. ")")
+			if IsValid(owner) then
+				nAdmin.Warn(ply, "Найдены лагающие констрейны: " .. lagc .. '/'.. count .." лагающие пропы (владелец: " .. owner:Name() .. ")")
+			else
+				nAdmin.Warn(ply, "Найдены лагающие констрейны: " .. lagc .. '/'.. count .." лагающие пропы (владелец: неизвестен)")
+			end
 		end
 	end
 end)

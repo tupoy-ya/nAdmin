@@ -318,13 +318,17 @@ function nAdmin.AddCommand(cmd, autocomplete, func)
 end
 
 function nAdmin.FindByNick(nick)
+	if nAdmin.ValidSteamID(nick) then
+		local this = player.GetBySteamID(nick)
+		return this ~= false and this or nil
+	end
 	nick = string.lowerRus(nick)
 	local ent
 	local player_GetAll = player.GetAll()
 	local pgacount = #player_GetAll
 	for i = 1, pgacount do
 		local v = player_GetAll[i]
-		if v:Name() == nick then
+		if v:NameWithoutTags() == nick then
 			ent = v
 			break
 		end
@@ -332,7 +336,7 @@ function nAdmin.FindByNick(nick)
 	if not ent then
 		for i = 1, pgacount do
 			local v = player_GetAll[i]
-			local name = string.lowerRus(v:Name())
+			local name = string.lowerRus(v:NameWithoutTags())
 			if name == "^" or name == "*" then
 				ent = v
 				break
@@ -347,7 +351,7 @@ function nAdmin.FindByNick(nick)
 	if not ent then
 		for i = 1, pgacount do
 			local v = player_GetAll[i]
-			local name = string.lowerRus(v:Name())
+			local name = string.lowerRus(v:NameWithoutTags())
 			local findplayer = string.find(name, nick)
 			if findplayer then
 				ent = v
@@ -362,6 +366,7 @@ function nAdmin.SetTAndDesc(cmd, T, desc)
 	local tCmds = nAdmin.Commands[cmd]
 	if tCmds == nil then
 		nAdmin.Print(cmd .. " < команда не найдена! > nAdmin.SetTAndDesc")
+		return
 	end
 	table.Merge(nAdmin.Commands[cmd], {T = T, desc = desc})
 end
@@ -369,7 +374,8 @@ end
 function nAdmin.CmdHidden(cmd)
 	local tCmds = nAdmin.Commands[cmd]
 	if tCmds == nil then
-		nAdmin.Print(cmd .. " < команда не найдена! > nAdmin.SetTAndDesc")
+		nAdmin.Print(cmd .. " < команда не найдена! > nAdmin.CmdHidden")
+		return
 	end
 	table.Merge(nAdmin.Commands[cmd], {hidden = true})
 end
@@ -380,7 +386,7 @@ function nAdmin.CmdIsHidden(cmd)
 end
 
 function nAdmin.ValidSteamID(sid)
-	if not sid then return end
+	if sid == nil then return end
 	return sid:upper():Trim():match("^STEAM_0:%d:%d+$")
 end
 

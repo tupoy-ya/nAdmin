@@ -62,11 +62,11 @@ hook.Add("PlayerSpawn", "nAdmin_buildmode", function(ply)
 end)
 
 nAdmin.AddCommand("noclip", true, function(ply, args)
-	local pl = ply
-	if pl:GetMoveType() == MOVETYPE_WALK then
-		pl:SetMoveType( MOVETYPE_NOCLIP )
-	elseif pl:GetMoveType() == MOVETYPE_NOCLIP then
-		pl:SetMoveType( MOVETYPE_WALK )
+	if ply.Freezed then return end
+	if ply:GetMoveType() == MOVETYPE_WALK then
+		ply:SetMoveType( MOVETYPE_NOCLIP )
+	elseif ply:GetMoveType() == MOVETYPE_NOCLIP then
+		ply:SetMoveType( MOVETYPE_WALK )
 	else
 		nAdmin.Warn(ply, "Сейчас нельзя пользоваться Noclip'ом!")
 	end

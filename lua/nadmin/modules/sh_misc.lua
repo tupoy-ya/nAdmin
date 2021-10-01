@@ -21,17 +21,8 @@ if CLIENT then
 	nAdmin.AddCommand("fullupdate", function()
 		LocalPlayer():ConCommand("record 1;stop")
 	end)
-	nAdmin.AddCommand("g", function(a)
-		gui.OpenURL("https://www.google.com/search?&q=" .. table.concat(a, "+"))
-	end)
-	nAdmin.AddCommand("y", function(a)
-		gui.OpenURL("https://yandex.ru/search/?text=" .. table.concat(a, "%20"))
-	end)
 	nAdmin.AddCommand("browser", function()
 		gui.OpenURL("https://yandex.ru/")
-	end)
-	nAdmin.AddCommand("git", function(a)
-		gui.OpenURL("https://github.com/search?q=" .. table.concat(a, "+"))
 	end)
 	nAdmin.AddCommand("mutecl", function(a)
 		local ent = nAdmin.FindByNick(a[1])
@@ -78,12 +69,9 @@ if CLIENT then
 			p("", "n " .. k .. " -", v.desc or "Нет описания", "Доступен с: " .. (v.T or "Игрок"))
 		end
 	end)
-	nAdmin.SetTAndDesc("g", "user", "Поиск чего-нибудь в Google. arg1 - что-то искать.")
-	nAdmin.SetTAndDesc("git", "user", "Поиск чего-нибудь в GitHub. arg1 - что-то искать.")
 	nAdmin.SetTAndDesc("browser", "user", "Открыть браузер.")
 	nAdmin.SetTAndDesc("mutecl", "user", "Замутить на клиенте игрока. arg1 - ник игрока.")
 	nAdmin.SetTAndDesc("unmutecl", "user", "Размутить на клиенте игрока. arg1 - ник игрока.")
-	nAdmin.SetTAndDesc("y", "user", "Поиск чего-нибудь в Яндексе. arg1 - что-то искать.")
 end
 
 if SERVER then
