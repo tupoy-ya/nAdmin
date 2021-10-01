@@ -25,11 +25,6 @@ CREATE TABLE `nAdmin_users` (
   `usergroup` text NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
-ALTER TABLE `achievements`
-  ADD PRIMARY KEY (`accountid`),
-  ADD UNIQUE KEY `accountid` (`accountid`),
-  ADD UNIQUE KEY `accountid_2` (`accountid`);
-
 ALTER TABLE `nAdmin_bans`
   ADD UNIQUE KEY `ind` (`ind`);
 
