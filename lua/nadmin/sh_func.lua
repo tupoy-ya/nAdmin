@@ -87,7 +87,7 @@ if SERVER then
 			if v:IsAdmin() then
 				net_Start("nadmin_message")
 					net_WriteUInt(3, 2)
-					net.WriteString(pl:Name() .. " > CMD: " .. arg1 .. " " .. table_concat(args) .. "")
+					net.WriteString((IsValid(pl) and pl:NameWithoutTags() or "Консоль") .. " > CMD: " .. arg1 .. " " .. table_concat(args) .. "")
 				net_Send(v)
 			end
 		end
@@ -116,6 +116,11 @@ if SERVER then
 			end
 		end
 		function metaENT:Name()
+			if self == Entity(0) or not IsValid(self) then
+				return "Консоль"
+			end
+		end
+		function metaENT:NameWithoutTags()
 			if self == Entity(0) or not IsValid(self) then
 				return "Консоль"
 			end
@@ -317,7 +322,24 @@ function nAdmin.AddCommand(cmd, autocomplete, func)
 	end
 end
 
+local function found(nick)
+	local player_GetAll = player.GetAll()
+	local pgacount = #player_GetAll
+	for i = 1, pgacount do
+		local v = player_GetAll[i]
+		if v:NameWithoutTags() == nick then
+			return true
+		end
+	end
+end
+
 function nAdmin.FindByNick(nick)
+	if tonumber(nick) ~= nil
+		and IsValid(Entity(nick))
+		and tonumber(nick) < 128
+		and not found(nick) then
+		return Entity(nick)
+	end
 	if nAdmin.ValidSteamID(nick) then
 		local this = player.GetBySteamID(nick)
 		return this ~= false and this or nil
@@ -328,9 +350,18 @@ function nAdmin.FindByNick(nick)
 	local pgacount = #player_GetAll
 	for i = 1, pgacount do
 		local v = player_GetAll[i]
-		if v:NameWithoutTags() == nick then
+		if v:Name() == nick then
 			ent = v
 			break
+		end
+	end
+	if not ent then
+		for i = 1, pgacount do
+			local v = player_GetAll[i]
+			if v:NameWithoutTags() == nick then
+				ent = v
+				break
+			end
 		end
 	end
 	if not ent then

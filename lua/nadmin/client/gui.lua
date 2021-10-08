@@ -121,7 +121,9 @@ function nAdmin.mGUI()
 	local gT = ""
 	local butn
 
+	local onrowselectedplayer
 	clist.OnRowSelected = function(self, rowi, row)
+		onrowselectedplayer = nil
 		for k, v in ipairs(entries) do
 			if IsValid(v) then
 				v:Remove()
@@ -170,7 +172,8 @@ function nAdmin.mGUI()
 							bu.DoClick = function()
 								local m = DermaMenu()
 								for k, v in ipairs(player.GetAll()) do
-									m:AddOption(v:NameWithoutTags(), function()
+									m:AddOption(v:NameWithoutTags() .. " (" .. v:GetName() .. ")", function()
+										onrowselectedplayer = v:EntIndex()
 										val_enter:SetText(v:NameWithoutTags())
 									end)
 								end
@@ -304,6 +307,9 @@ function nAdmin.mGUI()
 			end
         end
 		if b[1] == "" then return end
+		if onrowselectedplayer ~= nil and b[2] then
+			b[2] = onrowselectedplayer
+		end
         nAdmin.NetCmdExec(_, b)
 		--LocalPlayer():ConCommand(msg)
 	end
@@ -319,8 +325,8 @@ function nAdmin.mGUI()
 		SetClipboardText(runCommand:GetText())
 	end
 	hook.Add("nAdmin_SystimeUpdate", "", function(a, b)
-		if b:find(LocalPlayer():NameWithoutTags()) then
-			b = b .. "; " .. math.Round((SysTime() - a or SysTime()), 5)
+		if a then
+			b = b .. "; " .. math.Round((SysTime() - a or SysTime()), 6)
 		end
 		logs:InsertColorChange(200, 200, 200, 255)
 		logs:AppendText("[" .. os.date("%H:%M:%S") .. "] " .. b .. "\n")
