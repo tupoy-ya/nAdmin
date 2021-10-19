@@ -9,7 +9,7 @@ hook.Add("PlayerSay", "nadmin_ChatCommands", function(pl, txt)
 				end
 			end
             if nAdmin.Commands[expl_f] ~= nil then
-                nAdmin.CommandExec(pl, _, expl)
+                nAdmin.CommandExec(pl, expl)
             end
         end)
         if nAdmin.CmdIsHidden(expl_f) then
