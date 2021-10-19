@@ -463,7 +463,7 @@ nAdmin.AddCommand("gag", false, function(ply, args)
 	pl.Gagged = true
 	nAdmin.WarnAll(ply:Name() .. " разрешил говорить в ГЧ " .. pl:Name().. ".")
 end)
-nAdmin.SetTAndDesc("gag", "moderator", "Запретить/разрешить игроку говорить. arg1 - ник.")
+nAdmin.SetTAndDesc("gag", "moderator", "Запретить игроку говорить. arg1 - ник.")
 
 nAdmin.AddCommand("ungag", false, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "ungag")
@@ -478,7 +478,7 @@ nAdmin.AddCommand("ungag", false, function(ply, args)
 	pl.Gagged = false
 	nAdmin.WarnAll(ply:Name() .. " запретил говорить в ГЧ " .. pl:Name() .. ".")
 end)
-nAdmin.SetTAndDesc("ungag", "moderator", "Запретить/разрешить игроку говорить. arg1 - ник.")
+nAdmin.SetTAndDesc("ungag", "moderator", "Разрешить игроку говорить. arg1 - ник.")
 
 local function GagUngag(_, a)
 	if a.Gagged then
