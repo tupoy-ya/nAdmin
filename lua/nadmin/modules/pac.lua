@@ -7,12 +7,14 @@ nAdmin.AddCommand("fixpac", false, function(ply, args)
 	end
 end)
 nAdmin.SetTAndDesc("fixpac", "user", "Фикс PAC3. (делает реквест одежки)")
+nAdmin.ConsoleBlock("fixpac")
 
 nAdmin.AddCommand("wear", false, function(ply, args)
 	if not args[1] then return end
 	ply:ConCommand("pac_wear_parts \"" .. args[1] or '' .."\"")
 end)
 nAdmin.SetTAndDesc("wear", "user", "Надеть одежку из PAC3. arg1 - название пака.")
+nAdmin.ConsoleBlock("wear")
 
 nAdmin.AddCommand("ignorepac", false, function(ply, args)
 	local pl = nAdmin.FindByNick(args[1])
@@ -38,5 +40,5 @@ nAdmin.AddCommand("unignorepac", false, function(ply, args)
 		net.WriteEntity(pl)
 	net.Send(ply)
 end)
-
+nAdmin.ConsoleBlock("unignorepac")
 nAdmin.SetTAndDesc("unignorepac", "user", "Разигнорировать PAC3 игрока. arg1 - ник игрока.")

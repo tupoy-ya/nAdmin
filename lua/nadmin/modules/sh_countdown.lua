@@ -52,9 +52,7 @@ if CLIENT then
 			hook.Remove("HUDPaint", "countdown")
 		end
     end)
-end
-
-if SERVER then
+else
     util.AddNetworkString("nAdmin_countdown")
 	function nAdmin.Countdown(count_, func)
         local count = tonumber(count_)

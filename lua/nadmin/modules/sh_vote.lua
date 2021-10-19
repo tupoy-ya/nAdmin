@@ -81,12 +81,12 @@ if SERVER then
 				table.insert(ass, v)
 			end
 		end
-		startVote("Выгнать " .. pl:Name() .. "? (Причина: " .. table.concat(ass, " ") .. "; создал: " .. ply:Name() .. ")", {[1] = "", [2] = "Да", [3] = "Нет"}, function(first)
+		startVote("Выгнать " .. pl:NameWithoutTags() .. "? (Причина: " .. table.concat(ass, " ") .. "; создал: " .. ply:NameWithoutTags() .. ")", {[1] = "", [2] = "Да", [3] = "Нет"}, function(first)
 			if not IsValid(pl) then
 				nAdmin.WarnAll("Игрок, которого пытались выгнать, вышел с сервера.")
 			end
 			if first == 1 then
-				pl:Kick("Вас выгнали всеобщим голосованием. Причина: " .. table.concat(ass, " ") .. "; голосование создал: " .. ply:Name())
+				pl:Kick("Вас выгнали всеобщим голосованием. Причина: " .. table.concat(ass, " ") .. "; голосование создал: " .. ply:NameWithoutTags())
 			end
 		end, ply)
 	end)
@@ -111,7 +111,12 @@ if SERVER then
 			nAdmin.Warn(ply, "Нельзя сделать больше 7 и меньше 2 ответов.")
 			return
 		end
-		startVote(args[1] .. " (создал: " .. ply:Name() .. ")", args, nil, ply)
+		if type(args[1]) ~= "string" then return end
+		if utf8.len(args[1]) > 48 then
+			nAdmin.Warn(ply, "Нельзя сделать голосование, которое содержит больше 48 символов!")
+			return
+		end
+		startVote(args[1] .. " (создал: " .. ply:NameWithoutTags() .. ")", args, nil, ply)
 	end)
 	nAdmin.SetTAndDesc("vote", "osobenniy2", "Запускает голование на кик игрока. arg1 - что обсуждаем, arg2, arg3, arg4. (необязательно).")
 
@@ -126,7 +131,7 @@ if SERVER then
 			return
 		end
 		nextCleanMap = CurTime() + 1800
-		startVote(ply:Name() .. " желает очистить карту.", {[1] = "", [2] = "Да", [3] = "Нет"}, function(first)
+		startVote(ply:NameWithoutTags() .. " желает очистить карту.", {[1] = "", [2] = "Да", [3] = "Нет"}, function(first)
 			if first == 1 then
 				PrintMessage(3, "Через 5 минут произойдет очистка пропов!")
 				nAdmin.Countdown(300, function()
@@ -152,9 +157,7 @@ if SERVER then
 		nAdmin.WarnAll(ply:Name() .. " отменил голосование.")
 	end)
 	nAdmin.SetTAndDesc("stopvote", "osobenniy2", "Отменить голосование.")
-end
-
-if CLIENT then
+else
 	surface.CreateFont("nAdmin_votekick_Font", {font = "Roboto", size = 24, antialias = true, extended = true})
 	local results = {}
 	local function create_vote(reason, TB)

@@ -102,7 +102,7 @@ function nAdmin.AddBan(ply_, minutes, reas, o, banid_, nospam) -- это уёб�
 		bans[stid] = {time = banM, reason = reas, banned_by = who_banned}
 		nAdmin.BanInSQL(stid, banM, reas, who_banned)
 		if discord then
-			discord.send({embeds = {[1] = {author = {name = ply_Kick:Name() .. " (" .. ply_Kick:SteamID() .. ")", url = "http://steamcommunity.com/profiles/".. ply_Kick:SteamID64() .."/",}, title = "Опа! А вот и бан.", color = 10038562, description = "Был забанен по причине: " .. bans[stid].reason .. ", на: " .. str .. ", админом: " .. who_banned}}})
+			discord.SendMessage("632473866794434567", {embeds = {[1] = {author = {name = ply_Kick:Name() .. " (" .. ply_Kick:SteamID() .. ")", url = "http://steamcommunity.com/profiles/".. ply_Kick:SteamID64() .."/",}, title = "Опа! А вот и бан.", color = 10038562, description = "Был забанен по причине: " .. bans[stid].reason .. ", на: " .. str .. ", заблокировал: " .. who_banned}}})
 		end
 		if not nospam then
 			local msg = ply_Kick:Name() .. " был заблокирован с причиной: " .. bans[stid].reason .. "; на: " .. str .. "; забанил: " .. who_banned
@@ -118,7 +118,7 @@ function nAdmin.AddBan(ply_, minutes, reas, o, banid_, nospam) -- это уёб�
 	end
 	game.KickID(util.SteamIDFrom64(ply_Kick), "Вы забанены. Причина: " .. bans[ply_Kick].reason .. "; время: " .. str)
 	if discord then
-		discord.send({embeds = {[1] = {author = {name = util.SteamIDFrom64(ply_Kick), url = "http://steamcommunity.com/profiles/".. ply_Kick .."/",}, title = "Опа! А вот и бан.", color = 10038562, description = "Был забанен по причине: " .. bans[ply_Kick].reason .. ", на: " .. str .. ", админом: " .. who_banned}}})
+		discord.SendMessage("632473866794434567", {embeds = {[1] = {author = {name = util.SteamIDFrom64(ply_Kick), url = "http://steamcommunity.com/profiles/".. ply_Kick .."/",}, title = "Опа! А вот и бан.", color = 10038562, description = "Был забанен по причине: " .. bans[ply_Kick].reason .. ", на: " .. str .. ", заблокировал: " .. who_banned}}})
 	end
 	::skipb::
 	nAdmin.unbanUpdate()
@@ -263,7 +263,7 @@ if nAdminDB then
 		nAdmin.unban(stid)
 		nAdmin.WarnAll(ply:Name().. " разблокировал: " .. args[1]:Trim():upper())
 		if discord then
-			discord.send({embeds = {[1] = {author = {name = util.SteamIDFrom64(stid), url = "http://steamcommunity.com/profiles/".. stid .."/",}, title = "Аккаунт был разбанен.", color = 2123412, description = "Разблокировал: " .. ply:Name() .. "; время: " .. os.date("%H:%M:%S - %d/%m/%Y" , os.time())}}})
+			discord.SendMessage("632473866794434567", {embeds = {[1] = {author = {name = util.SteamIDFrom64(stid), url = "http://steamcommunity.com/profiles/".. stid .."/",}, title = "Аккаунт был разбанен.", color = 2123412, description = "Разблокировал: " .. ply:Name() .. "; время: " .. os.date("%H:%M:%S - %d/%m/%Y" , os.time())}}})
 		end
 	end)
 	nAdmin.SetTAndDesc("unban", "moderator", "Разбанивает игрока. arg1 - SteamID игрока.")
@@ -294,7 +294,7 @@ nAdmin.AddCommand("kick", true, function(ply, args)
 		pl:Kick("Вас кикнул " .. ply:Name() .. "; с причиной: " .. txt)
 		return
 	end
-	pl:Kick("Вы были кикнуты админом: " .. ply:Name() .. ".")
+	pl:Kick("Вы были кикнуты: " .. ply:Name() .. ".")
 end)
 nAdmin.SetTAndDesc("kick", "moderator", "Кикает игрока. arg1 - ник игрока, arg2 - причина.")
 
@@ -448,6 +448,7 @@ nAdmin.AddCommand("spectate", true, function(ply, args)
 end)
 nAdmin.SetTAndDesc("spectate", "moderator", "Включает режим наблюдения за игроком. arg1 - ник игрока.")
 nAdmin.CmdHidden("spectate")
+nAdmin.ConsoleBlock("spectate")
 
 nAdmin.AddCommand("gag", false, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "gag")
@@ -459,14 +460,25 @@ nAdmin.AddCommand("gag", false, function(ply, args)
 		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
 		return
 	end
-	if not pl.Gagged then
-		pl.Gagged = true
-	else
-		pl.Gagged = false
-	end
-	nAdmin.WarnAll(ply:Name() .. " " .. (pl.Gagged and "запретил" or "разрешил") .. " говорить в ГЧ " .. pl:Name().. ".")
+	pl.Gagged = true
+	nAdmin.WarnAll(ply:Name() .. " разрешил говорить в ГЧ " .. pl:Name().. ".")
 end)
 nAdmin.SetTAndDesc("gag", "moderator", "Запретить/разрешить игроку говорить. arg1 - ник.")
+
+nAdmin.AddCommand("ungag", false, function(ply, args)
+	local check = nAdmin.ValidCheckCommand(args, 1, ply, "ungag")
+	if not check then
+		return
+	end
+	local pl = nAdmin.FindByNick(args[1])
+	if pl == nil then
+		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
+		return
+	end
+	pl.Gagged = false
+	nAdmin.WarnAll(ply:Name() .. " запретил говорить в ГЧ " .. pl:Name() .. ".")
+end)
+nAdmin.SetTAndDesc("ungag", "moderator", "Запретить/разрешить игроку говорить. arg1 - ник.")
 
 local function GagUngag(_, a)
 	if a.Gagged then
@@ -648,9 +660,6 @@ nAdmin.AddCommand("freeze", true, function(ply, args)
 		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
 		return
 	end
-	if pl.Freezed then
-		return
-	end
 	pl:Freeze(true)
 	pl.Freezed = true
 	pl:GodEnable()
@@ -668,15 +677,12 @@ nAdmin.AddCommand("unfreeze", true, function(ply, args)
 		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
 		return
 	end
-	if not pl.Freezed then
-		return
-	end
 	pl:Freeze(false)
 	pl:GodDisable()
 	pl.Freezed = false
 	nAdmin.WarnAll(ply:Name() .. " разфризил " .. pl:Name())
 end)
-nAdmin.SetTAndDesc("unfreeze", "e2_coder", "Зафризить/разфризить игрока. arg1 - ник игрока.")
+nAdmin.SetTAndDesc("unfreeze", "e2_coder", "Разфризить игрока. arg1 - ник игрока.")
 
 nAdmin.AddCommand("ip", true, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "ip")
@@ -709,5 +715,4 @@ nAdmin.AddCommand("bancheck", false, function(ply, args)
         nAdmin.Warn(ply, "SteamID не найден в банах!")
     end
 end)
-
 nAdmin.SetTAndDesc("bancheck", "admin", "Проверить бан игрока. arg1 - SteamID")

@@ -72,9 +72,7 @@ if CLIENT then
 	nAdmin.SetTAndDesc("browser", "user", "Открыть браузер.")
 	nAdmin.SetTAndDesc("mutecl", "user", "Замутить на клиенте игрока. arg1 - ник игрока.")
 	nAdmin.SetTAndDesc("unmutecl", "user", "Размутить на клиенте игрока. arg1 - ник игрока.")
-end
-
-if SERVER then
+else
 	local meta = FindMetaTable("Player")
 	nAdmin.AddCommand("giveammo", false, function(ply, args)
 		local check = nAdmin.ValidCheckCommand(args, 1, ply, "giveammo")
@@ -95,6 +93,7 @@ if SERVER then
 	end)
 	nAdmin.SetTAndDesc("giveammo", "user", "Дать себе патроны. arg1 - количество патрон.")
 	nAdmin.CmdHidden("giveammo")
+	nAdmin.ConsoleBlock("giveammo")
 	local function days( time )
 		time = time / 60 / 60
 		return time
@@ -111,11 +110,16 @@ if SERVER then
 				chat.AddText(Color(150, 150, 150), "Игрока с таким ником нет на сервере!")
 				return
 			end
+			if not ply:IsAdmin() then
+				return
+			end
 			ent:StripWeapons()
 		else
 			ply:StripWeapons()
 		end
 	end)
+	nAdmin.SetTAndDesc("strip", "user", "Убрать всё оружие у вас в инвентаре. arg1 - ник. (необязательно)")
+	nAdmin.ConsoleBlock("strip")
 	nAdmin.AddCommand("leave", false, function(ply, args)
 		timer.Simple(.5, function()
 			if not args or next(args) == nil then
@@ -134,7 +138,8 @@ if SERVER then
 	end)
 	nAdmin.SetTAndDesc("me", "user", "Что-то \"сделать\". arg1 - текст.")
 	nAdmin.CmdHidden("me")
-	nAdmin.AddCommand("ulxbanstonadmin", false, function(ply, args)
+	nAdmin.ConsoleBlock("me")
+	--[[nAdmin.AddCommand("ulxbanstonadmin", false, function(ply, args)
 		local a = file.Read("nadmin/ulxbans.txt", "DATA")
 		a = "\"ULXGAYSTVO\" {" .. a .. "}" -- замечательный обход
 		a = util.KeyValuesToTable(a)
@@ -146,6 +151,7 @@ if SERVER then
 		end
 	end)
 	nAdmin.SetTAndDesc("ulxbanstonadmin", "superadmin", "Перенести файл банов ULX в nAdmin")
+	]]
 		--[[
 	nAdmin.AddCommand("ulxusergroupsstonadmin", false, function(ply, _, args)
 		if not ply:IsSuperAdmin() then return end

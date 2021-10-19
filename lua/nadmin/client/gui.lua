@@ -172,10 +172,17 @@ function nAdmin.mGUI()
 							bu.DoClick = function()
 								local m = DermaMenu()
 								for k, v in ipairs(player.GetAll()) do
-									m:AddOption(v:NameWithoutTags() .. " (" .. v:GetName() .. ")", function()
-										onrowselectedplayer = v:EntIndex()
-										val_enter:SetText(v:NameWithoutTags())
-									end)
+									if nAdmin.UseNickWithoutTags then
+										m:AddOption(v:NameWithoutTags() .. " (" .. v:GetName() .. ")", function()
+											onrowselectedplayer = v:EntIndex()
+											val_enter:SetText(v:NameWithoutTags())
+										end)
+									else
+										m:AddOption(v:NameWithoutTags(), function()
+											onrowselectedplayer = v:EntIndex()
+											val_enter:SetText(v:NameWithoutTags())
+										end)
+									end
 								end
 								m:SetMaxHeight(500)
 								m:Open()

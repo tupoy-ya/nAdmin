@@ -1,21 +1,19 @@
-if CLIENT or SERVER then
-	local meta = FindMetaTable("Player")
+local meta = FindMetaTable("Player")
 
-	function meta:GetTotalTime()
-		return self:GetNWInt("TotalTime", 0) + self:GetSessionTime()
-	end
+function meta:GetTotalTime()
+	return self:GetNWInt("TotalTime", 0) + self:GetSessionTime()
+end
 
-	function meta:GetSessionTime()
-		return CurTime() - self:GetNWInt("StartTimeSession", 0)
-	end
+function meta:GetSessionTime()
+	return CurTime() - self:GetNWInt("StartTimeSession", 0)
+end
 
-	function meta:GetStartTimeSession()
-		return self:GetNWInt("StartTimeSession", 0)
-	end
+function meta:GetStartTimeSession()
+	return self:GetNWInt("StartTimeSession", 0)
+end
 
-	function meta:SetTotalTime(n)
-		ply:SetNWInt("TotalTime", tonumber(n) or ply:GetTotalTime() or 0)
-	end
+function meta:SetTotalTime(n)
+	ply:SetNWInt("TotalTime", tonumber(n) or ply:GetTotalTime() or 0)
 end
 
 if SERVER then
@@ -97,7 +95,7 @@ if SERVER then
 
 	timer.Create("savePTime", 300, 0, savePTime)
 
-	nAdmin.AddCommand("restoretime", false, function(ply)
+	--[[nAdmin.AddCommand("restoretime", false, function(ply)
 		timer.Simple(1, function()
 			--local query = sql.QueryRow("SELECT totaltime FROM utime WHERE player = " .. ply:UniqueID() .. ";")
 			if not nAdminDB then return end
@@ -129,4 +127,5 @@ if SERVER then
 			Q:start()
 		end)
 	end)
+	nAdmin.ConsoleBlock("restoretime")]]
 end

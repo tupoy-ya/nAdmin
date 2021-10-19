@@ -6,7 +6,7 @@ nAdmin.Slashes = {
     ["."] = ".",
     ["/"] = "/",
 }
-
+nAdmin.UseNickWithoutTags = true
 
 local table_concat = table.concat
 local util = util
@@ -64,7 +64,7 @@ if SERVER then
 		end)
 	end)
 
-	function nAdmin.CommandExec(pl, cmd, args)
+	function nAdmin.CommandExec(pl, args)
 		local arg1 = args[1]
 		local a = nAdmin.Commands[arg1]
 		if a == nil then
@@ -81,22 +81,22 @@ if SERVER then
 			args[1] = pl:Name()
 		end
 		a.func(pl, args)
-		local pls = player.GetAll()
+		local pls, admins = player.GetAll(), {}
 		for i = 1, #pls do
 			local v = pls[i]
 			if v:IsAdmin() then
-				net_Start("nadmin_message")
-					net_WriteUInt(3, 2)
-					net.WriteString((IsValid(pl) and pl:NameWithoutTags() or "Консоль") .. " > CMD: " .. arg1 .. " " .. table_concat(args) .. "")
-				net_Send(v)
+				table.insert(admins, v)
 			end
 		end
+		net_Start("nadmin_message")
+			net_WriteUInt(3, 2)
+			net.WriteString((IsValid(pl) and pl:NameWithoutTags() or "Консоль") .. " > CMD: " .. arg1 .. " " .. table_concat(args) .. "")
+		net_Send(admins)
 	end
 
 	net.Receive("nAdmin_CommandExec", function(_, pl)
-		local command = net_ReadString()
 		local args =  util_JSONToTable(net_ReadString())
-		nAdmin.CommandExec(pl, command, args)
+		nAdmin.CommandExec(pl, args)
 	end)
 
 	hook.Add("PlayerDisconnected", "nAdmin_null", function(pl)
@@ -182,11 +182,12 @@ if SERVER then
 
 	local wrld, singleplayer = Entity(0), game.SinglePlayer()
 	concommand.Add("n", function(pl, _, args)
-		if not IsValid(pl) then
-			nAdmin.CommandExec(wrld, args[1], args)
+		if not IsValid(pl) and (nAdmin.Commands[args[1]] and not nAdmin.Commands[args[1]].ConsoleBlock) then
+			nAdmin.CommandExec(wrld, args)
+			return
 		end
 		if (singleplayer or (IsValid(pl) and pl:IsListenServerHost())) and nAdmin.Commands[args[1]] and nAdmin.Commands[args[1]].SV then
-			nAdmin.CommandExec(pl, args[1], args)
+			nAdmin.CommandExec(pl, args)
 		elseif (singleplayer or (IsValid(pl) and pl:IsListenServerHost())) and not nAdmin.Commands[args[1]] then
 			net.Start'nadmin_singleplayer'
 				net.WriteString(table.concat(args, "\\\\"))
@@ -248,7 +249,6 @@ if CLIENT then
 		end
 		local a = util_TableToJSON(args)
 		net_Start("nAdmin_CommandExec")
-			net.WriteString(cmd or "")
 			net.WriteString(a)
 		net_SendToServer()
 	end
@@ -336,7 +336,7 @@ end
 function nAdmin.FindByNick(nick)
 	if tonumber(nick) ~= nil
 		and IsValid(Entity(nick))
-		and tonumber(nick) < 128
+		and tonumber(nick) <= 128
 		and not found(nick) then
 		return Entity(nick)
 	end
@@ -402,6 +402,15 @@ function nAdmin.SetTAndDesc(cmd, T, desc)
 	table.Merge(nAdmin.Commands[cmd], {T = T, desc = desc})
 end
 
+function nAdmin.ConsoleBlock(cmd)
+	local tCmds = nAdmin.Commands[cmd]
+	if tCmds == nil then
+		nAdmin.Print(cmd .. " < команда не найдена! > nAdmin.ConsoleBlock")
+		return
+	end
+	table.Merge(nAdmin.Commands[cmd], {consoleblock = true})
+end
+
 function nAdmin.CmdHidden(cmd)
 	local tCmds = nAdmin.Commands[cmd]
 	if tCmds == nil then
@@ -461,3 +470,8 @@ function nAdmin.UpdateFiles()
 end
 
 nAdmin.UpdateFiles()
+
+if not nAdmin.UseNickWithoutTags then
+	local meta = FindMetaTable'Player'
+	meta.NameWithoutTags = meta.Name
+end

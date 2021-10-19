@@ -64,9 +64,7 @@ if CLIENT then
 		local txt = net.ReadString()
 		nAdmin.PSA(txt)
 	end)
-end
-
-if SERVER then
+else
 	util.AddNetworkString("nAdmin_PSA")
 	nAdmin.AddCommand("psa", false, function(ply, args)
 		local cock = table.concat(args, " ")
