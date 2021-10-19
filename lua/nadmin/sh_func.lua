@@ -473,5 +473,5 @@ nAdmin.UpdateFiles()
 
 if not nAdmin.UseNickWithoutTags then
 	local meta = FindMetaTable'Player'
-	meta.NameWithoutTags = meta.Name
+	meta.NameWithoutTags = meta.GetName
 end
