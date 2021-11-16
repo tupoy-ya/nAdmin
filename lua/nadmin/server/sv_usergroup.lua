@@ -64,16 +64,19 @@ function SetUserGroupID(stid, group)
 		return
 	end
 	SteamIDs[stid] = group
-	local Q = nAdminDB:query("REPLACE INTO nAdmin_users (accountid, usergroup) VALUES (" .. SQLStr(stid) .. ", " .. SQLStr(group) .. ")")
-	function Q:onError(err)
-		nAdmin.Print("Запрос выдал ошибку: " .. err)
-	end
-	Q:start()
 	nGSteamIDs = SteamIDs
 	local ye = player.GetByAccountID(stid)
 	if IsValid(ye) then
 		ye:SetUserGroup(group)
 	end
+	if not nAdminDB then
+		return
+	end
+	local Q = nAdminDB:query("REPLACE INTO nAdmin_users (accountid, usergroup) VALUES (" .. SQLStr(stid) .. ", " .. SQLStr(group) .. ")")
+	function Q:onError(err)
+		nAdmin.Print("Запрос выдал ошибку: " .. err)
+	end
+	Q:start()
 end
 
 hook.Add("PlayerInitialSpawn", "PlayerAuthSpawn", function(ply)
@@ -93,13 +96,3 @@ hook.Add("PlayerInitialSpawn", "PlayerAuthSpawn", function(ply)
 end)
 
 SetUserGroupID("STEAM_0:0:0", "superadmin")
-
-nAdmin.AddCommand("jsonuserstomysql", false, function(ply, args)
-	local a = file.Read("nadmin/users.txt", "DATA")
-	a = util.JSONToTable(a)
-	for stid, tbl in next, a do
-		SetUserGroupID(stid, tbl.group)
-		print("Success > ", stid, tbl.group)
-	end
-end)
-nAdmin.SetTAndDesc("jsonuserstomysql", "superadmin", "")

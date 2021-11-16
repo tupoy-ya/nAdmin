@@ -1,6 +1,6 @@
 hook.Add("EntityTakeDamage", "nAdmin_buildmode", function(target, dmg)
 	local attacker = dmg:GetAttacker()
-	if attacker.B or target.B then
+	if (attacker.B or target.B) and target:GetClass() ~= "fishing_mod_seagull" then
 		return true
 	end
 end)
@@ -18,7 +18,7 @@ nAdmin.AddCommand("build", false, function(ply, args)
 	ply.NoB = true
 	timer.Simple(3, function()
 		if not IsValid(ply) then return end
-		nAdmin.WarnAll(ply:Name() .. " вошёл в режим строительства.")
+		nAdmin.WarnAll(ply:NameWithoutTags() .. " вошёл в режим строительства.")
 		ply:SetNWBool("inBuild", true)
 		ply.B = true
 		ply:GodEnable()
@@ -26,6 +26,7 @@ nAdmin.AddCommand("build", false, function(ply, args)
 	end)
 end)
 nAdmin.SetTAndDesc("build", "user", "Включить режим строительства.")
+nAdmin.ConsoleBlock("build")
 
 nAdmin.AddCommand("pvp", false, function(ply, args)
 	if ply.NoB then return end
@@ -39,7 +40,7 @@ nAdmin.AddCommand("pvp", false, function(ply, args)
 	ply.NoB = true
 	timer.Simple(3, function()
 		if not IsValid(ply) then return end
-		nAdmin.WarnAll(ply:Name() .. " вошёл в ПВП-режим.")
+		nAdmin.WarnAll(ply:NameWithoutTags() .. " вошёл в ПВП-режим.")
 		ply:SetNWBool("inBuild", false)
 		ply.B = false
 		ply:GodDisable()
@@ -48,6 +49,7 @@ nAdmin.AddCommand("pvp", false, function(ply, args)
 	end)
 end)
 nAdmin.SetTAndDesc("pvp", "user", "Включить ПВП-режим.")
+nAdmin.ConsoleBlock("pvp")
 
 hook.Add("PlayerNoClip", "nAdmin_buildmode", function(ply)
 	if ply.B then
@@ -62,7 +64,7 @@ hook.Add("PlayerSpawn", "nAdmin_buildmode", function(ply)
 end)
 
 nAdmin.AddCommand("noclip", true, function(ply, args)
-	if ply.Freezed then return end
+	if ply.Freezed or ply.InVirus or ply.InGunGame then return end
 	if ply:GetMoveType() == MOVETYPE_WALK then
 		ply:SetMoveType( MOVETYPE_NOCLIP )
 	elseif ply:GetMoveType() == MOVETYPE_NOCLIP then
@@ -72,3 +74,4 @@ nAdmin.AddCommand("noclip", true, function(ply, args)
 	end
 end)
 nAdmin.SetTAndDesc("noclip", "noclip", "Включает/выключает Noclip. /noclip или n noclip.")
+nAdmin.ConsoleBlock("noclip")

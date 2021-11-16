@@ -28,6 +28,7 @@ nAdmin.AddCommand("ragdoll", true, function(ply, args)
 	pl:StripWeapons()
 	pl.nospawn = true
 	pl.rag = ragdoll
+	ragdoll.player = pl
 end)
 
 nAdmin.AddCommand("unragdoll", true, function(ply, args)

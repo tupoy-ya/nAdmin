@@ -133,8 +133,8 @@ if SERVER then
 		nextCleanMap = CurTime() + 1800
 		startVote(ply:NameWithoutTags() .. " желает очистить карту.", {[1] = "", [2] = "Да", [3] = "Нет"}, function(first)
 			if first == 1 then
-				PrintMessage(3, "Через 5 минут произойдет очистка пропов!")
-				nAdmin.Countdown(300, function()
+				PrintMessage(3, "Через 2 минуты произойдет очистка пропов!")
+				nAdmin.Countdown(120, function()
 					RunConsoleCommand("gmod_admin_cleanup")
 				end)
 			end

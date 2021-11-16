@@ -95,7 +95,7 @@ if SERVER then
 
 	timer.Create("savePTime", 300, 0, savePTime)
 
-	--[[nAdmin.AddCommand("restoretime", false, function(ply)
+	nAdmin.AddCommand("restoretime", false, function(ply)
 		timer.Simple(1, function()
 			--local query = sql.QueryRow("SELECT totaltime FROM utime WHERE player = " .. ply:UniqueID() .. ";")
 			if not nAdminDB then return end
@@ -127,5 +127,5 @@ if SERVER then
 			Q:start()
 		end)
 	end)
-	nAdmin.ConsoleBlock("restoretime")]]
+	nAdmin.ConsoleBlock("restoretime")
 end

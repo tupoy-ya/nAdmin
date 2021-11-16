@@ -60,6 +60,7 @@ if SERVER then
 
 	hook.Add("PlayerInitialSpawn", "nAdmin_TCommands", function(ply)
 		timer.Simple(5, function()
+			if not IsValid(ply) then return end
 			sendCMDTable(ply)
 		end)
 	end)
@@ -373,17 +374,6 @@ function nAdmin.FindByNick(nick)
 				break
 			end
 			local findplayer = string.find(name, nick, 1, true)
-			if findplayer == 1 then
-				ent = v
-				break
-			end
-		end
-	end
-	if not ent then
-		for i = 1, pgacount do
-			local v = player_GetAll[i]
-			local name = string.lowerRus(v:NameWithoutTags())
-			local findplayer = string.find(name, nick)
 			if findplayer then
 				ent = v
 				break

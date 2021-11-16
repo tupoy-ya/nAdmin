@@ -3,48 +3,33 @@ local p, limitss, tostring, meta = p, nAdmin.Limits, tostring, FindMetaTable'Pla
 hook.Add("PlayerCheckLimit", "limits", function(pl, limit, cur, dMax)
 	local a = limitss[pl:GetUserGroup()]
 	if a and a[limit] then
-		if cur > a[limit] then
+		local getcount = cur
+		if pl.IsEquipped and pl:IsEquipped("+limit") then
+			getcount = getcount * 0.75
+		end
+		if getcount > a[limit] then
 			return false
 		end
 	end
 end)
 
---hook.Add("InitPostEntity", "nAdmin_loadlogs", function()
-	local alllogs = {
-		"Prop",
-		"Ragdoll",
-		"SENT",
-		"Effect",
-		"Vehicle"
-	}
 
-	for i = 1, #alllogs do
-		local _log = alllogs[i]
-		hook.Add("PlayerSpawned" .. _log, "nAdminLog", function(a, b, c)
-			local limit = limitss[a:GetUserGroup()]
-			local _log_lower = _log:lower() .. "s"
-			if limit and limit[_log_lower] then
-				local getcount = a:GetCount(_log_lower)
-				if a.IsEquipped and a:IsEquipped("+limit") then
-					getcount = getcount * 0.75
-				end
-				if getcount >= limit[_log_lower] then
-					a:LimitHit(_log_lower)
-					if isstring(b) then
-						SafeRemoveEntity(c)
-					else
-						SafeRemoveEntity(b)
-					end
-				end
-			end
-			--p(1)
-			Msg(a:Name() .. " заспавнил: " .. tostring(b) .. "\n")
-		end)
-	end
+local alllogs = {
+	"Prop",
+	"Ragdoll",
+	"SENT",
+	"Effect",
+	"Vehicle",
+	"NPC"
+}
 
-	hook.Add("CanTool", "nAdminLog", function(a, _, b)
-		Msg(a:Name() .. " использовал инструмент: " .. tostring(b) .. "\n")
+for i = 1, #alllogs do
+	local _log = alllogs[i]
+	hook.Add("PlayerSpawned" .. _log, "nAdminLog", function(a, b, c)
+		Msg(a:NameWithoutTags() .. " заспавнил: " .. tostring(b) .. "\n")
 	end)
+end
 
-	hook.Remove("InitPostEntity", "nAdmin_loadlogs")
---end)
+hook.Add("CanTool", "nAdminLog", function(a, _, b)
+	Msg(a:NameWithoutTags() .. " использовал инструмент: " .. tostring(b) .. "\n")
+end)

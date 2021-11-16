@@ -284,10 +284,10 @@ function nAdmin.mGUI()
 	end
 	local logs = vgui.Create("RichText", nGUI)
 	logs:SetVerticalScrollbarEnabled(false)
-	logs:SetSize(190, 200)
+	logs:SetSize(180, 200)
 	logs:SetPos(315, ps:GetTall() + 75)
 	logs.Think = function()
-		logs:SetSize(190, 200 - ps:GetTall())
+		logs:SetSize(180, 200 - ps:GetTall())
 		logs:SetPos(315, ps:GetTall() + 75)
 	end
 	logs.PerformLayout = function()

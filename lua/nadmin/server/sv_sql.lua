@@ -1,14 +1,16 @@
-if game.SinglePlayer() then
-	nAdmin.Print("Вы находитесь в одиночной игре. Некоторые модули не будут работать!")
-	return
+if file.Exists("bin/gmsv_mysqloo_*.dll", "LUA") then
+	pcall(require,'mysqloo')
 end
 
-pcall(require,'mysqloo')
-if mysqloo == nil then return end
+if not mysqloo then
+	nAdmin.Print("Модуль MYSQLoo не найден. Некоторые функции не будут работать.")
+	return
+end
 
 if not file.Exists("nadmin/dbcfg.txt", "DATA") then
 	file.Write("nadmin/dbcfg.txt", util.TableToJSON({["url"] = "", ["login"] = "", ["pass"] = "", ["dbName"] = "", ["port"] = 3306}))
 end
+
 local mysqlConnect = util.JSONToTable(file.Read("nAdmin/dbcfg.txt", "DATA"))
 nAdminDB, nAdminDBFail = mysqloo.connect(mysqlConnect["url"], mysqlConnect["login"], mysqlConnect["pass"], mysqlConnect["dbName"], math.Round(mysqlConnect["port"]))
 

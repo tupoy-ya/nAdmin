@@ -75,6 +75,7 @@ if CLIENT then
 else
 	local meta = FindMetaTable("Player")
 	nAdmin.AddCommand("giveammo", false, function(ply, args)
+		if ply.InVirus then return end
 		local check = nAdmin.ValidCheckCommand(args, 1, ply, "giveammo")
 		if not check then
 			return
