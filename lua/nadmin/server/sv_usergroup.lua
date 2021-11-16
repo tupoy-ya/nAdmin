@@ -37,15 +37,15 @@ if not file.Exists("nadmin", "DATA") then
 end
 
 function meta:SetUserGroup(group)
-	if not nAdminDB then
-		return
-	end
 	self:SetNWString("usergroup", group)
 	self:SetTeam(Global_Teams[group].num)
 	local stid = self:AccountID()
 	if (group ~= "user" and SteamIDs[stid] == nil) or (SteamIDs[stid] and SteamIDs[stid] ~= group) then
 		SteamIDs[stid] = group
 		nGSteamIDs = SteamIDs
+		if not nAdminDB then
+			return
+		end
 		local ACID = self:AccountID()
 		local Q = nAdminDB:query("REPLACE INTO nAdmin_users (accountid, usergroup) VALUES (" .. SQLStr(ACID) .. ", " .. SQLStr(group) .. ")")
 		function Q:onError(err)
