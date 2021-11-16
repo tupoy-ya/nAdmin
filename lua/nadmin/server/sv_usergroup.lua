@@ -37,6 +37,9 @@ if not file.Exists("nadmin", "DATA") then
 end
 
 function meta:SetUserGroup(group)
+	if not nAdminDB then
+		return
+	end
 	self:SetNWString("usergroup", group)
 	self:SetTeam(Global_Teams[group].num)
 	local stid = self:AccountID()
