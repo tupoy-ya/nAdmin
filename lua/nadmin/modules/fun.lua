@@ -29,6 +29,11 @@ nAdmin.AddCommand("ragdoll", true, function(ply, args)
 	pl.nospawn = true
 	pl.rag = ragdoll
 	ragdoll.player = pl
+	timer.Simple(0, function()
+		if IsValid(ragdoll) then
+			ragdoll.fuck = true
+		end
+	end)
 end)
 
 nAdmin.AddCommand("unragdoll", true, function(ply, args)

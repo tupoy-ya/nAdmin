@@ -36,10 +36,11 @@ if not file.Exists("nadmin", "DATA") then
 	file.CreateDir("nadmin")
 end
 
-function meta:SetUserGroup(group)
+function meta:SetUserGroup(group, temp)
 	self:SetNWString("usergroup", group)
 	self:SetTeam(Global_Teams[group].num)
 	local stid = self:AccountID()
+	if temp then return end
 	if (group ~= "user" and SteamIDs[stid] == nil) or (SteamIDs[stid] and SteamIDs[stid] ~= group) then
 		SteamIDs[stid] = group
 		nGSteamIDs = SteamIDs
@@ -82,6 +83,7 @@ function SetUserGroupID(stid, group)
 	Q:start()
 end
 
+
 hook.Add("PlayerInitialSpawn", "PlayerAuthSpawn", function(ply)
 	timer.Simple(0, function()
 		if not IsValid(ply) then return end
@@ -92,6 +94,11 @@ hook.Add("PlayerInitialSpawn", "PlayerAuthSpawn", function(ply)
 		end
 		if (SteamIDs[steamid] == nil) then
 			ply:SetUserGroup("user")
+			return
+		end
+		if (ply.IsFullyAuthenticated and not ply:IsFullyAuthenticated()) then
+			ply:SetUserGroup("user", true)
+			nAdmin.Warn(ply, "Ваш Steam аккаунт не был полностью авторизован на сервере.")
 			return
 		end
 		ply:SetUserGroup(SteamIDs[steamid])

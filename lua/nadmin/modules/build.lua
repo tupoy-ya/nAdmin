@@ -10,10 +10,6 @@ nAdmin.AddCommand("build", false, function(ply, args)
 	if ply.InGunGame then return end
 	local inB = ply:GetNWBool("inBuild")
 	if inB then return end
-	if ply:InVehicle() then
-		nAdmin.Warn(ply, "Вы в машине!")
-		return
-	end
 	nAdmin.Warn(ply, "Входим в режим строительства...")
 	ply.NoB = true
 	timer.Simple(3, function()
@@ -32,14 +28,13 @@ nAdmin.AddCommand("pvp", false, function(ply, args)
 	if ply.NoB then return end
 	local inB = ply:GetNWBool("inBuild")
 	if not inB then return end
-	if ply:InVehicle() then
-		nAdmin.Warn(ply, "Вы в машине!")
-		return
-	end
 	nAdmin.Warn(ply, "Входим в режим ПВП...")
 	ply.NoB = true
 	timer.Simple(3, function()
 		if not IsValid(ply) then return end
+		if ply:InVehicle() then
+			ply:ExitVehicle()
+		end
 		nAdmin.WarnAll(ply:NameWithoutTags() .. " вошёл в ПВП-режим.")
 		ply:SetNWBool("inBuild", false)
 		ply.B = false
@@ -65,10 +60,11 @@ end)
 
 nAdmin.AddCommand("noclip", true, function(ply, args)
 	if ply.Freezed or ply.InVirus or ply.InGunGame then return end
-	if ply:GetMoveType() == MOVETYPE_WALK then
-		ply:SetMoveType( MOVETYPE_NOCLIP )
-	elseif ply:GetMoveType() == MOVETYPE_NOCLIP then
-		ply:SetMoveType( MOVETYPE_WALK )
+	local movetype = ply:GetMoveType()
+	if movetype == MOVETYPE_WALK then
+		ply:SetMoveType(MOVETYPE_NOCLIP)
+	elseif movetype == MOVETYPE_NOCLIP then
+		ply:SetMoveType(MOVETYPE_WALK)
 	else
 		nAdmin.Warn(ply, "Сейчас нельзя пользоваться Noclip'ом!")
 	end

@@ -154,7 +154,7 @@ if SERVER then
 			net.WriteUInt(2, 3)
 		net.Broadcast()
 		current_status = false
-		nAdmin.WarnAll(ply:Name() .. " отменил голосование.")
+		nAdmin.WarnAll(ply:NameWithoutTags() .. " отменил голосование.")
 	end)
 	nAdmin.SetTAndDesc("stopvote", "osobenniy2", "Отменить голосование.")
 else
@@ -238,7 +238,7 @@ else
 			local fl = net.ReadFloat()
 			if not IsValid(ent) then return end
 			results[fl] = (results[fl] or 0) + 1
-			notification.AddLegacy(((ent:IsPlayer() and ent:Name()) or "???") .. " проголосовал за: " .. ((cT and cT[fl]) or "???"), NOTIFY_GENERIC, 3)
+			notification.AddLegacy(((ent:IsPlayer() and ent:NameWithoutTags()) or "???") .. " проголосовал за: " .. ((cT and cT[fl]) or "???"), NOTIFY_GENERIC, 3)
 			surface.PlaySound("buttons/button9.wav")
 		end
 	end)

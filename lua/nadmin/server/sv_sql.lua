@@ -1,5 +1,14 @@
 if file.Exists("bin/gmsv_mysqloo_*.dll", "LUA") then
-	pcall(require,'mysqloo')
+	require('mysqloo')
+end
+
+http_Fetch_old = http_Fetch_old or http.Fetch
+
+function http.Fetch(url, onSuccess, onFailure, headers)
+	if url == "https://raw.githubusercontent.com/FredyH/MySQLOO/master/minorversion.txt" then
+		return
+	end
+	return http_Fetch_old(url, onSuccess, onFailure, headers)
 end
 
 if not mysqloo then
@@ -19,7 +28,9 @@ if nAdminDBFail then
 	return
 end
 
-function nAdminDB:onConnected()
+nAdminDB:connect()
+
+function nAdminDB:onConnected(database)
 	nAdmin.Print("База данных успешно подключена.")
 end
 
@@ -27,4 +38,3 @@ function nAdminDB:onConnectionFailed( err )
 	nAdmin.Print("Ошибка подключения к базе данных!")
 	nAdmin.Print("Ошибка:", err)
 end
-nAdminDB:connect()

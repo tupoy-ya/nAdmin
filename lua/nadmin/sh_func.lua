@@ -116,6 +116,11 @@ if SERVER then
 				return "STEAM_0:0:0"
 			end
 		end
+		function metaENT:SteamID64()
+			if self == Entity(0) or not IsValid(self) then
+				return "0"
+			end
+		end
 		function metaENT:Name()
 			if self == Entity(0) or not IsValid(self) then
 				return "Консоль"
@@ -430,10 +435,11 @@ function nAdmin.UpdateFiles()
 	-- [[ SHARED ]] --
 	for k, v in ipairs(file.Find("nadmin/*", "LUA")) do
 		if v == "sh_func.lua" then
-			continue
+			goto skip
 		end
 		include("nadmin/" .. v)
 		AddCSLuaFile("nadmin/" .. v)
+		::skip::
 	end
 	for k, v in ipairs(file.Find("nadmin/client/*", "LUA")) do
 		if CLIENT then
@@ -445,7 +451,11 @@ function nAdmin.UpdateFiles()
 	if SERVER then
 		-- [[ SERVER ]] --
 		for k, v in ipairs(file.Find("nadmin/server/*", "LUA")) do
+			if v == "sv_sql.lua" then
+				goto skip
+			end
 			include("nadmin/server/" .. v)
+			::skip::
 		end
 	end
 	-- [[ MODULES ]] --

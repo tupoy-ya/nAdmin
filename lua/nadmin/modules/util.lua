@@ -48,7 +48,7 @@ function nAdmin.AddBan(ply_, minutes, reas, o, banid_, nospam) -- это уёб�
 	if not nAdminDB then return false end
 	local ply_Kick = nAdmin.FindByNick(ply_)
 	local reason_warn = ""
-	if ply_Kick == o or o:SteamID() == ply_ then
+	if ply_Kick == o then
 		nAdmin.Warn(o, "Вы не можете забанить самого себя!")
 		return
 	end
@@ -71,6 +71,10 @@ function nAdmin.AddBan(ply_, minutes, reas, o, banid_, nospam) -- это уёб�
 		end
 		local this = steamidtoacid(ply_)
 		ply_ = util.SteamIDTo64(ply_)
+		if ply_ == o:SteamID64() then
+			nAdmin.Warn(o, "Вы не можете забанить самого себя!")
+			return
+		end
 		local a
 		local b
 		if o:SteamID() == "STEAM_0:0:0" then
@@ -133,13 +137,31 @@ end
 hook.Add("CheckPassword", "ban_System", function(id)
 	if bans[id] then
 		local reas = bans[id].reason or ""
+		if reas:Trim() == "" then
+			reas = "Нет причины"
+		end
 		nAdmin.Print(util.SteamIDFrom64(id) .. " попытался зайти на сервер, но у него блокировка по причине: " .. reas)
 		if bans[id].time ~= 0 then
 			return false,
-			"Вы забанены на [RU] Уютный Сандбокс. Причина: " .. reas .. "; время до разбана: " .. string.NiceTime(bans[id].time - os.time())
+			"Вы заблокированы на [RU] Уютный Сандбокс. Причина: " .. reas .. "; время до разбана: " .. string.NiceTime(bans[id].time - os.time())
 		else
 			return false,
-			"Вы забанены на [RU] Уютный Сандбокс. Причина: " .. reas .. "; время до разбана: Никогда"
+			"Вы заблокированы на [RU] Уютный Сандбокс. Причина: " .. reas .. "; время до разбана: Никогда"
+		end
+	end
+end)
+
+hook.Add("PlayerAuthed", "ban_System", function(ply)
+	local t = bans[ply:OwnerSteamID64()]
+	if t then
+		local steamid = ply:SteamID()
+		ply:Kick("Заблокирован")
+		if t.time == 0 then
+			nAdmin.AddBan(steamid, 0, t.reason or "Нет причины", Entity(0), true, true)
+		else
+			if t.time - os.time() > 0 then
+				nAdmin.AddBan(steamid, t.time - os.time(), t.reason or "Нет причины", Entity(0), true, true)
+			end
 		end
 	end
 end)
@@ -317,9 +339,10 @@ nAdmin.AddCommand("jail", true, function(ply, args)
 		return
 	end
 	local arg2 = tonumber(args[2]) or 0
+	local tostr = tostring(pl)
 	if arg2 ~= 0 then
 		nAdmin.WarnAll(ply:NameWithoutTags() .. " засунул в гулаг " .. pl:NameWithoutTags() .. " на " .. arg2 .. " секунд.")
-		timer.Create(tostring(pl) .. "_nAdminJail", arg2, 1, function()
+		timer.Create(tostr .. "_nAdminJail", arg2, 1, function()
 			pl:SetNWBool("nAdmin_InJail", false)
 		end)
 		goto skip
@@ -330,9 +353,10 @@ nAdmin.AddCommand("jail", true, function(ply, args)
 	pl:SetPos(vec)
 	local plName = pl:NameWithoutTags()
 	local as = tostring(pl)
-	timer.Create(as .. "nAdmin_ToJail", .05, 0, function()
+	timer.Create(as .. "nAdmin_ToJail", 0, 0, function()
 		if not pl:IsValid() then
 			timer.Remove(as .. "nAdmin_ToJail")
+			timer.Remove(tostr .. "_nAdminJail")
 			nAdmin.WarnAll(plName .. " вышел из игры во время нахождения в гулаге!")
 			return
 		end
@@ -344,7 +368,7 @@ nAdmin.AddCommand("jail", true, function(ply, args)
 			timer.Remove(as .. "nAdmin_ToJail")
 		end
 	end)
-	timer.Simple(.2, function()
+	timer.Simple(.35, function()
 		net.Start("nAdmin_JailHUD")
 			net.WriteFloat(arg2)
 		net.Send(pl)
@@ -452,7 +476,7 @@ nAdmin.AddCommand("spectate", true, function(ply, args)
 	end)
 	hook.Add("PlayerSpawn", index .. "_nAdmin_UnSpectate", upd_Spectate)
 end)
-nAdmin.SetTAndDesc("spectate", "moderator", "Включает режим наблюдения за игроком. arg1 - ник игрока.")
+nAdmin.SetTAndDesc("spectate", "osobenniy2", "Включает режим наблюдения за игроком. arg1 - ник игрока.")
 nAdmin.CmdHidden("spectate")
 nAdmin.ConsoleBlock("spectate")
 
@@ -503,6 +527,10 @@ nAdmin.AddCommand("goto", false, function(ply, args)
 		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
 		return
 	end
+	if ply == pl then
+		nAdmin.Warn(ply, "Вы не можете телепортироваться к самому себе.")
+		return
+	end
 	ply.OldPositionTP = ply:GetPos()
 	ply:SetPos(pl:EyePos() + Vector(pl:EyeAngles():Right()[1], 0, 0) * 150)
 end)
@@ -518,6 +546,7 @@ nAdmin.AddCommand("return", false, function(ply, args)
 		return
 	end
 	pl:SetPos(pl.OldPositionTP)
+	pl.OldPositionTP = nil
 end)
 nAdmin.SetTAndDesc("return", "builderreal", "Телепортироваться к игроку. arg1 - ник (необязательно).")
 
@@ -529,6 +558,10 @@ nAdmin.AddCommand("bring", false, function(ply, args)
 	local pl = nAdmin.FindByNick(args[1])
 	if pl == nil then
 		nAdmin.Warn(ply, "Игрока с таким ником нет на сервере.")
+		return
+	end
+	if ply == pl then
+		nAdmin.Warn(ply, "Вы не можете телепортироваться к самому себе.")
 		return
 	end
 	pl.OldPositionTP = pl:GetPos()
@@ -547,13 +580,13 @@ nAdmin.AddCommand("mute", false, function(ply, args)
 		return
 	end
 	if pl.Muted then
-		nAdmin.Warn(ply, "Игрока в муте!")
+		nAdmin.Warn(ply, "Игрока в муте.")
 		return
 	end
 	pl.Muted = true
 	nAdmin.WarnAll(ply:NameWithoutTags() .. " запретил писать в чат " .. pl:NameWithoutTags().. ".")
 end)
-nAdmin.SetTAndDesc("mute", "moderator", "Запретить игроку писать в чат. arg1 - ник.")
+nAdmin.SetTAndDesc("mute", "osobenniy2", "Запретить игроку писать в чат. arg1 - ник.")
 
 nAdmin.AddCommand("unmute", false, function(ply, args)
 	local check = nAdmin.ValidCheckCommand(args, 1, ply, "unmute")
@@ -572,7 +605,7 @@ nAdmin.AddCommand("unmute", false, function(ply, args)
 	pl.Muted = false
 	nAdmin.WarnAll(ply:NameWithoutTags() .. " разрешил писать в чат " .. pl:NameWithoutTags().. ".")
 end)
-nAdmin.SetTAndDesc("unmute", "moderator", "Разрешить игроку писать в чат. arg1 - ник.")
+nAdmin.SetTAndDesc("unmute", "osobenniy2", "Разрешить игроку писать в чат. arg1 - ник.")
 
 local function plSay(pl, txt)
 	if pl.Muted then return "" end

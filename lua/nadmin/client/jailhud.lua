@@ -40,7 +40,7 @@ net.Receive("nAdmin_JailHUD", function()
 		surface.SetTextPos(ScrW() / 2 - w / 2, ScrH() / 2 - 125)
 		surface.DrawText("Вам осталось сидеть: " .. b .. " секунд.")
 
-		if (isnumber(b) and b < 0) or not LocalPlayer():GetNWBool("nAdmin_InJail") then
+		if not LocalPlayer():GetNWBool("nAdmin_InJail") then
 			hook.Remove("HUDPaint", "nAdmin_JailHUD")
 		end
 	end)

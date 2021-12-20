@@ -50,10 +50,13 @@ if SERVER then
 		if not nAdminDB then return end
 		local ACID = self:AccountID()
 		local Q = nAdminDB:query("SELECT time FROM nAdmin_time WHERE infoid = " .. SQLStr(ACID) .. " LIMIT 1")
+		Q:start()
 		function Q:onError(err)
 			nAdmin.Print("Запрос выдал ошибку: " .. err)
 		end
-		Q:start()
+		function Q:onAborted(err)
+			nAdmin.Print("Запрос выдал аборт: " .. err)
+		end
 		function Q:onSuccess(data)
 			if data and data[1] then
 				func(data[1].time)
@@ -80,7 +83,12 @@ if SERVER then
 			ply:SetNWInt("TotalTime", a)
 		end)
     end)
-
+	for k, ply in next, player.GetAll() do
+	    ply:SetNWInt("StartTimeSession", CurTime())
+		ply:GetPTime(function(a)
+			ply:SetNWInt("TotalTime", a)
+		end)
+	end
     hook.Add("PlayerDisconnected", "nAdmin_PTime", function(ply)
         ply:SetPTime(ply:GetTotalTime(), false)
     end)
@@ -94,38 +102,4 @@ if SERVER then
 	savePTime()
 
 	timer.Create("savePTime", 300, 0, savePTime)
-
-	nAdmin.AddCommand("restoretime", false, function(ply)
-		timer.Simple(1, function()
-			--local query = sql.QueryRow("SELECT totaltime FROM utime WHERE player = " .. ply:UniqueID() .. ";")
-			if not nAdminDB then return end
-			local ACID = ply:AccountID()
-			local Q = nAdminDB:query("SELECT * FROM `ulxtime` WHERE `player` = " .. ply:UniqueID())
-			function Q:onError(err)
-				nAdmin.Print("Запрос выдал ошибку: " .. err)
-			end
-			function Q:onSuccess(data)
-				if data and data[1] and IsValid(ply) then
-					ply:GetPTime(function(a)
-						if not IsValid(ply) then return end
-						if a > data[1].totaltime then
-							ply:ChatPrint("В базе данных число меньше чем на сервере. Отмена восстановлению часов.")
-							return
-						end
-						ply:SetPTime(data[1].totaltime + (10 * 60 * 60), true)
-						ply:ChatPrint("Восстановлено!")
-						timer.Simple(3, function()
-							if not IsValid(ply) then return end
-							local a = nAdminDB:query("DELETE FROM `ulxtime` WHERE `player` = " .. ply:UniqueID() .. ";")
-							a:start()
-						end)
-					end)
-				else
-					ply:ChatPrint("Ваше время не найдено.")
-				end
-			end
-			Q:start()
-		end)
-	end)
-	nAdmin.ConsoleBlock("restoretime")
 end
