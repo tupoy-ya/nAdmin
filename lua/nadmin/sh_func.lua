@@ -435,10 +435,11 @@ function nAdmin.UpdateFiles()
 	-- [[ SHARED ]] --
 	for k, v in ipairs(file.Find("nadmin/*", "LUA")) do
 		if v == "sh_func.lua" then
-			continue
+			goto skip
 		end
 		include("nadmin/" .. v)
 		AddCSLuaFile("nadmin/" .. v)
+		::skip::
 	end
 	for k, v in ipairs(file.Find("nadmin/client/*", "LUA")) do
 		if CLIENT then
@@ -450,7 +451,11 @@ function nAdmin.UpdateFiles()
 	if SERVER then
 		-- [[ SERVER ]] --
 		for k, v in ipairs(file.Find("nadmin/server/*", "LUA")) do
+			if v == "sv_sql.lua" then
+				goto skip
+			end
 			include("nadmin/server/" .. v)
+			::skip::
 		end
 	end
 	-- [[ MODULES ]] --
