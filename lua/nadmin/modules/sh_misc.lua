@@ -123,6 +123,9 @@ else
 	nAdmin.ConsoleBlock("strip")
 	nAdmin.AddCommand("leave", false, function(ply, args)
 		timer.Simple(.5, function()
+			if not IsValid(ply) then
+				return
+			end
 			if not args or next(args) == nil then
 				ply:Kick("Отключился")
 			else
@@ -133,37 +136,14 @@ else
 	nAdmin.SetTAndDesc("leave", "user", "Выйти с сервера. arg1 - причина. (необязательно)")
 	nAdmin.AddCommand("me", false, function(ply, args)
 		if ply.Muted then return end
+		local dist, name, targs = ply:GetPos(), ply:Name(), table.concat(args, " ")
 		for _, pl in ipairs(player.GetAll()) do
-			pl:ChatPrint("*** " .. ply:Name() .. " " .. table.concat(args, " "))
+			if dist:DistToSqr(pl:GetPos()) < 500000 then
+				pl:ChatPrint("*** " .. name .. " " .. targs)
+			end
 		end
 	end)
 	nAdmin.SetTAndDesc("me", "user", "Что-то \"сделать\". arg1 - текст.")
 	nAdmin.CmdHidden("me")
 	nAdmin.ConsoleBlock("me")
-	--[[nAdmin.AddCommand("ulxbanstonadmin", false, function(ply, args)
-		local a = file.Read("nadmin/ulxbans.txt", "DATA")
-		a = "\"ULXGAYSTVO\" {" .. a .. "}" -- замечательный обход
-		a = util.KeyValuesToTable(a)
-		for stid, tbl in next, a do
-			if tbl.reason == nil then
-				tbl.reason = "Нет причины."
-			end
-			nAdmin.AddBan(stid, tonumber(os.time()) - tonumber(tbl.time), tbl.reason, ply, true, true)
-		end
-	end)
-	nAdmin.SetTAndDesc("ulxbanstonadmin", "superadmin", "Перенести файл банов ULX в nAdmin")
-	]]
-		--[[
-	nAdmin.AddCommand("ulxusergroupsstonadmin", false, function(ply, _, args)
-		if not ply:IsSuperAdmin() then return end
-		local a = file.Read("nadmin/ulxusergroups.txt", "DATA")
-		a = "\"ULXGAYSTVO\" {" .. a .. "}" -- замечательный обход
-		a = util.KeyValuesToTable(a)
-		for stid, tbl in next, a do
-			SetUserGroupID(stid, tbl.group)
-		end
-		p("есть ошибка? да и похуй")
-	end)
-	nAdmin.SetTAndDesc("ulxusergroupsstonadmin", "superadmin", "")
-	]]--
 end

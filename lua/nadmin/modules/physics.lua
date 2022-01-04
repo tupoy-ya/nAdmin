@@ -40,7 +40,7 @@ nAdmin.AddCommand("weldlag", false, function(ply, args)
 		if (count or 0) > (minresult or 0) then
 			if lagc == 1 or count == 1 then return end
 			if IsValid(owner) then
-				nAdmin.Warn(ply, "Найдены лагающие констрейны: " .. lagc .. '/'.. count .." лагающие пропы (владелец: " .. owner:Name() .. ")")
+				nAdmin.Warn(ply, "Найдены лагающие констрейны: " .. lagc .. '/'.. count .." лагающие пропы (владелец: " .. owner:NameWithoutTags() .. ")")
 			else
 				nAdmin.Warn(ply, "Найдены лагающие констрейны: " .. lagc .. '/'.. count .." лагающие пропы (владелец: неизвестен)")
 			end
@@ -60,7 +60,7 @@ nAdmin.AddCommand("fp", true, function(ply)
 			end
 		end
 	end
-	nAdmin.WarnAll(ply:Name() .. " зафризил все энтити.")
+	nAdmin.WarnAll(ply:NameWithoutTags() .. " зафризил все энтити.")
 end)
 nAdmin.SetTAndDesc("fp", "builderreal", "Зафризить все энтити.")
 
@@ -79,7 +79,7 @@ nAdmin.AddCommand("fppl", true, function(ply, args)
 			end
 		end
 	end
-	nAdmin.WarnAll(ply:Name() .. " зафризил энтити " .. pl:Name() .. ".")
+	nAdmin.WarnAll(ply:NameWithoutTags() .. " зафризил энтити " .. pl:NameWithoutTags() .. ".")
 end)
 nAdmin.SetTAndDesc("fppl", "noclip", "Зафризить энтити какого-то игрока. arg1 - ник игрока.")
 

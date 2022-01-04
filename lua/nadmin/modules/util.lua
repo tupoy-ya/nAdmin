@@ -580,7 +580,7 @@ nAdmin.AddCommand("mute", false, function(ply, args)
 		return
 	end
 	if pl.Muted then
-		nAdmin.Warn(ply, "Игрока в муте.")
+		nAdmin.Warn(ply, "Игрок в муте.")
 		return
 	end
 	pl.Muted = true
@@ -599,7 +599,7 @@ nAdmin.AddCommand("unmute", false, function(ply, args)
 		return
 	end
 	if not pl.Muted then
-		nAdmin.Warn(ply, "Игрока не в муте!")
+		nAdmin.Warn(ply, "Игрок не в муте!")
 		return
 	end
 	pl.Muted = false

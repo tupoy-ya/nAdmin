@@ -28,10 +28,9 @@ nAdmin.AddCommand("ragdoll", true, function(ply, args)
 	pl:StripWeapons()
 	pl.nospawn = true
 	pl.rag = ragdoll
-	ragdoll.player = pl
 	timer.Simple(0, function()
-		if IsValid(ragdoll) then
-			ragdoll.fuck = true
+		if IsValid(ragdoll) and IsValid(pl) then
+			ragdoll.player = pl
 		end
 	end)
 end)

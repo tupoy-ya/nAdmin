@@ -7,7 +7,7 @@ end)
 
 nAdmin.AddCommand("build", false, function(ply, args)
 	if ply.NoB then return end
-	if ply.InGunGame then return end
+	if ply.InGunGame or ply.InVirus then return end
 	local inB = ply:GetNWBool("inBuild")
 	if inB then return end
 	nAdmin.Warn(ply, "Входим в режим строительства...")
