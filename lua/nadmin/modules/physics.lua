@@ -88,11 +88,9 @@ nAdmin.AddCommand("fmp", true, function(ply, args)
    for _, v in ipairs(ents.FindByClass("prop_physics")) do
        if v:CPPIGetOwner() == ply then
            local a = v:GetPhysicsObject()
-           if a:IsMotionEnabled() == true then
-               if a:IsValid() then
-                   a:EnableMotion(false)
-                   b = b + 1
-               end
+           if IsValid(a) and a:IsMotionEnabled() == true then
+                a:EnableMotion(false)
+                b = b + 1
            end
        end
    end
